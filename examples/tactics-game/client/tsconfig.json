@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "noEmit": true,
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@tactics/turn-grid": ["../packages/turn-grid/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "../packages/turn-grid/src/**/*.ts"],
+  "exclude": ["../packages/turn-grid/src/**/*.test.ts"]
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tactics Game</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0d1017;
+        overflow: hidden;
+        font-family: system-ui, sans-serif;
+      }
+      #game {
+        position: absolute;
+        inset: 0;
+      }
+      #auth {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+      #auth-guest {
+        font: 600 20px system-ui, sans-serif;
+        padding: 14px 28px;
+        border: 0;
+        border-radius: 8px;
+        background: #4c8bf5;
+        color: #fff;
+        cursor: pointer;
+      }
+      /* HUD: turn indicator + End Turn button, overlaid on the canvas. */
+      #hud {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 8;
+        display: none;
+        align-items: center;
+        gap: 12px;
+      }
+      #turn-indicator {
+        font: 600 18px system-ui, sans-serif;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 8px 14px;
+        border-radius: 8px;
+      }
+      #end-turn {
+        font: 600 15px system-ui, sans-serif;
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 8px;
+        background: #e0a53f;
+        color: #201a10;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="hud">
+      <div id="turn-indicator">Team A turn</div>
+      <button id="end-turn" type="button">End Turn</button>
+    </div>
+    <div id="auth">
+      <button id="auth-guest" type="button">Play as Guest</button>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "tactics-game",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal runnable turn-based grid TACTICS reference game — proves the GameKit dev kit supports a non-real-time genre. Standalone install (NOT part of the toolkit pnpm workspace).",
+  "scripts": {
+    "server": "tsx server/src/index.ts",
+    "test:turn-grid": "node node_modules/tsx/dist/cli.mjs packages/turn-grid/src/index.test.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
+  }
+}

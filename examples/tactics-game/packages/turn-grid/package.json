@@ -1,0 +1,12 @@
+{
+  "name": "@tactics/turn-grid",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Pure, genre-reusable turn-based grid logic (grid+passability, BFS reachable-tiles, team rotation, move/attack validation). NO Phaser/Colyseus deps.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "node ../../node_modules/tsx/dist/cli.mjs src/index.test.ts"
+  }
+}
