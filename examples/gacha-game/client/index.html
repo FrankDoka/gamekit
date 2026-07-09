@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gacha Game</title>
+    <style>
+      :root {
+        --bg: #12101a;
+        --panel: #1c1930;
+        --panel-2: #262040;
+        --accent: #b57cff;
+        --accent-2: #ffcf5c;
+        --text: #ece9f5;
+        --muted: #9a93b8;
+        --r5: #ffb04a;
+        --r4: #b57cff;
+        --r3: #5aa0e0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: radial-gradient(1200px 700px at 50% -10%, #241f3d, var(--bg));
+        color: var(--text);
+        font-family: system-ui, sans-serif;
+      }
+      #app {
+        max-width: 900px;
+        margin: 0 auto;
+        min-height: 100%;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+      }
+      /* --- Auth overlay --- */
+      #auth {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+        background: radial-gradient(900px 500px at 50% 30%, #2a2350, var(--bg));
+      }
+      #auth-guest {
+        font: 600 20px system-ui, sans-serif;
+        padding: 14px 30px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent), #8a52e0);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(140, 90, 230, 0.4);
+      }
+      /* --- Top bar --- */
+      #topbar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--panel);
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+      #title {
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      #currency {
+        font-weight: 700;
+        color: var(--accent-2);
+      }
+      .nav {
+        display: flex;
+        gap: 8px;
+      }
+      .nav button {
+        font: 600 14px system-ui, sans-serif;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .nav button.active {
+        background: var(--accent);
+        color: #fff;
+      }
+      /* --- Screens --- */
+      #screen {
+        display: none;
+        flex: 1;
+      }
+      .card {
+        background: var(--panel);
+        border-radius: 14px;
+        padding: 20px;
+      }
+      h2 {
+        margin: 0 0 12px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .btn {
+        font: 600 16px system-ui, sans-serif;
+        padding: 12px 22px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent), #8a52e0);
+        color: #fff;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: var(--panel-2);
+        color: var(--text);
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .banner-art {
+        width: 100%;
+        max-width: 480px;
+        border-radius: 12px;
+        display: block;
+        margin: 0 auto 16px;
+      }
+      /* --- Unit cards / grids --- */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .unit {
+        background: var(--panel-2);
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+        border: 2px solid transparent;
+        position: relative;
+      }
+      .unit.r5 {
+        border-color: var(--r5);
+      }
+      .unit.r4 {
+        border-color: var(--r4);
+      }
+      .unit.r3 {
+        border-color: var(--r3);
+      }
+      .unit img {
+        width: 88px;
+        height: 88px;
+        image-rendering: pixelated;
+        border-radius: 8px;
+      }
+      .unit .name {
+        font-weight: 600;
+        margin-top: 6px;
+      }
+      .unit .stars {
+        font-size: 13px;
+      }
+      .unit .stars.r5 {
+        color: var(--r5);
+      }
+      .unit .stars.r4 {
+        color: var(--r4);
+      }
+      .unit .stars.r3 {
+        color: var(--r3);
+      }
+      .unit .count {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .pity-tag {
+        position: absolute;
+        top: 6px;
+        left: 8px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #201a10;
+        background: var(--accent-2);
+        border-radius: 5px;
+        padding: 1px 5px;
+      }
+      .pity-bar {
+        margin-top: 8px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="topbar">
+        <div id="title">Dawnlight Beacon</div>
+        <div id="currency">✦ 0</div>
+        <div class="nav">
+          <button id="nav-home" type="button">Home</button>
+          <button id="nav-summon" type="button">Summon</button>
+          <button id="nav-roster" type="button">Roster</button>
+        </div>
+      </div>
+      <div id="screen"></div>
+    </div>
+    <div id="auth">
+      <button id="auth-guest" type="button">Play as Guest</button>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "@gacha/summon",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Pure, genre-reusable gacha summon logic (seeded RNG, weighted banner drop table, hard-pity guarantee, roster/currency bookkeeping). NO express/DOM deps.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./banner": "./src/banner.ts"
+  },
+  "scripts": {
+    "test": "node ../../node_modules/tsx/dist/cli.mjs src/index.test.ts"
+  }
+}

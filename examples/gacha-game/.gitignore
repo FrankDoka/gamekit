@@ -1,0 +1,29 @@
+# dependencies (each sub-project installs its own, isolated from the toolkit workspace)
+node_modules/
+server/node_modules/
+client/node_modules/
+packages/summon/node_modules/
+
+# build output
+dist/
+client/dist/
+*.tsbuildinfo
+
+# capture/screenshot output — regenerable, never commit
+_capture*/
+_v_*/
+captures/
+_shots/
+
+# generated placeholder art is committed (small, PIL-generated); nothing else generated here
+
+# Asset Bank generated, per-game state. Self-populating — never commit, never copy
+# from another game. Locations follow toolkit-config's ASSETS_ROOT / ASSETS_METADATA_ROOT.
+assets-bank-metadata/
+assets-bank/**/_review/
+assets-bank/**/_promotion-plans/
+.session-token
+.review.lock
+
+# local env (copy .env.example -> .env and fill in)
+.env

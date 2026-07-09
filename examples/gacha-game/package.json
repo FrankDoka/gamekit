@@ -1,0 +1,14 @@
+{
+  "name": "gacha-game",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal runnable GACHA / collection reference game — proves the GameKit dev kit supports a menu-driven, non-real-time, request/response genre. Standalone install (NOT part of the toolkit pnpm workspace).",
+  "scripts": {
+    "server": "tsx server/src/index.ts",
+    "test:summon": "node node_modules/tsx/dist/cli.mjs packages/summon/src/index.test.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
+  }
+}
