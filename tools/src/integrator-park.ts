@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { gameRoot } from "./toolkit-config.js";
+import { gameRoot, integrationBranch } from "./toolkit-config.js";
 
 const REUSABLE_WORKTREE = process.env.INTEGRATOR_WORKTREE ?? `${gameRoot()}-integrator`;
 const IDLE_BRANCH = "codex/integrator-standby";
+const MAIN_BRANCH = integrationBranch();
 
 const git = (cwd: string, args: string[]): string => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 const gitRun = (cwd: string, args: string[]): void => {
@@ -37,14 +38,14 @@ if (status) {
 
 const currentBranch = git(REUSABLE_WORKTREE, ["branch", "--show-current"]);
 if (currentBranch !== IDLE_BRANCH) {
-  if (!gitQuiet(REUSABLE_WORKTREE, ["merge-base", "--is-ancestor", currentBranch, "master"])) {
-    console.error(`integrator:park: ${currentBranch} is not merged into master; merge before parking`);
+  if (!gitQuiet(REUSABLE_WORKTREE, ["merge-base", "--is-ancestor", currentBranch, MAIN_BRANCH])) {
+    console.error(`integrator:park: ${currentBranch} is not merged into ${MAIN_BRANCH}; merge before parking`);
     process.exit(1);
   }
   gitRun(REUSABLE_WORKTREE, ["switch", IDLE_BRANCH]);
 }
 
-gitRun(REUSABLE_WORKTREE, ["merge", "--ff-only", "master"]);
+gitRun(REUSABLE_WORKTREE, ["merge", "--ff-only", MAIN_BRANCH]);
 if (currentBranch !== IDLE_BRANCH) {
   gitRun(REUSABLE_WORKTREE, ["branch", "-d", currentBranch]);
 }

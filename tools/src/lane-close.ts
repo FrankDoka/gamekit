@@ -16,10 +16,11 @@
 import { execFileSync, execSync } from "node:child_process";
 import * as fs from "node:fs";
 import { join } from "node:path";
-import { gameRoot } from "./toolkit-config.js";
+import { gameRoot, integrationBranch } from "./toolkit-config.js";
 import { ensureLanesDir, lanesDir, updateLaneRegistry } from "./lane-registry";
 
 const ROOT = process.cwd();
+const MAIN_BRANCH = integrationBranch();
 const PRIMARY_ROOT = (process.env.LANE_CLOSE_PRIMARY_ROOT ?? gameRoot()).replace(/\\/g, "/").replace(/\/+$/, "");
 const LANES_JSON = join(PRIMARY_ROOT, "tools", "_lanes", "lanes.json");
 const INTEGRATOR_LOCK = join(lanesDir(PRIMARY_ROOT), ".integrator.lock");
@@ -344,9 +345,9 @@ function sweep(forceDirty: boolean): number {
 
 function deleteBranchIfMergedToMaster(branch: string): void {
   try {
-    git(PRIMARY_ROOT, ["merge-base", "--is-ancestor", branch, "master"]);
+    git(PRIMARY_ROOT, ["merge-base", "--is-ancestor", branch, MAIN_BRANCH]);
   } catch {
-    console.log(`[lane-close] branch ${branch} not deleted — verify it is merged to master`);
+    console.log(`[lane-close] branch ${branch} not deleted — verify it is merged to ${MAIN_BRANCH}`);
     return;
   }
   try {
@@ -369,7 +370,7 @@ function verifyLaneBranchMerged(wt: string, force: boolean): { ok: true; branch:
     return { ok: false };
   }
   try {
-    git(PRIMARY_ROOT, ["merge-base", "--is-ancestor", branch, "master"]);
+    git(PRIMARY_ROOT, ["merge-base", "--is-ancestor", branch, MAIN_BRANCH]);
     return { ok: true, branch, tip };
   } catch {
     if (!force) {

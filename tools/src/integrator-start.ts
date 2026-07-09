@@ -1,10 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { gameRoot } from "./toolkit-config.js";
+import { gameRoot, integrationBranch } from "./toolkit-config.js";
 
 const REUSABLE_WORKTREE = process.env.INTEGRATOR_WORKTREE ?? `${gameRoot()}-integrator`;
 const CANONICAL_ROOT = gameRoot();
 const IDLE_BRANCH = "codex/integrator-standby";
+const MAIN_BRANCH = integrationBranch();
 
 const branch = process.argv[2];
 if (!branch) {
@@ -54,16 +55,16 @@ if (gitQuiet(REUSABLE_WORKTREE, ["rev-parse", "--verify", branch])) {
   process.exit(1);
 }
 
-const masterHead = git(CANONICAL_ROOT, ["rev-parse", "master"]);
+const masterHead = git(CANONICAL_ROOT, ["rev-parse", MAIN_BRANCH]);
 const reusableHead = git(REUSABLE_WORKTREE, ["rev-parse", "HEAD"]);
 if (masterHead !== reusableHead) {
-  console.error(`integrator:start: ${IDLE_BRANCH} is not at current master; run pnpm integrator:park after master is updated`);
-  console.error(`  master:   ${masterHead}`);
+  console.error(`integrator:start: ${IDLE_BRANCH} is not at current ${MAIN_BRANCH}; run pnpm integrator:park after ${MAIN_BRANCH} is updated`);
+  console.error(`  ${MAIN_BRANCH}:   ${masterHead}`);
   console.error(`  reusable: ${reusableHead}`);
   process.exit(1);
 }
 
-git(REUSABLE_WORKTREE, ["switch", "-c", branch, "master"]);
+git(REUSABLE_WORKTREE, ["switch", "-c", branch, MAIN_BRANCH]);
 console.log("[integrator:start] ready");
 console.log(`  worktree: ${REUSABLE_WORKTREE}`);
 console.log(`  branch:   ${branch}`);

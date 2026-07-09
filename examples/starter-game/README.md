@@ -1,11 +1,14 @@
 # starter-game — the GameKit reference game
 
 A tiny, runnable game that implements the [GameKit](../../README.md) contract end to end. It exists
-to (a) **prove** the toolkit's seams work and (b) be the **fork-point** for a new game — copy this
-folder, rename it, and replace the placeholder rectangles with real art and systems.
+to (a) **prove** the toolkit's seams work and (b) be the **fork-point** for a new game — the fastest
+way to fork it is `pnpm create:game <name>` from the toolkit root (copies this folder, rewires
+names/title/README, writes `.env.example`, seeds `docs/state/*` harness stubs). Then replace the
+placeholder art with your own.
 
-It is intentionally minimal: **one zone, one controllable entity.** A solid-green ground, a
-rectangle per connected player, WASD/click-to-move over a Colyseus server, rendered with Phaser 4.
+It is intentionally minimal: **one zone, one WASD/click-controllable player.** A tiled-grass ground
+(the promoted-registry → layout → texture asset-pipeline demo), player sprites, a static "Guide" NPC,
+and a few server-spawned slimes — synced over a Colyseus server and rendered with Phaser 4.
 
 ## Layout
 

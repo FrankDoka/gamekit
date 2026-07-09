@@ -29,7 +29,7 @@
 import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { gameRoot } from "./toolkit-config.js";
+import { gameRoot, integrationBranch } from "./toolkit-config.js";
 import {
   ensureLanesDir,
   lanesDir,
@@ -283,8 +283,8 @@ function main(): number {
 
   if (!assertPrimaryCwd()) return 1;
 
-  // 1. worktree + branch off master
-  git(ROOT, ["worktree", "add", worktree, "-b", branch, "master"]);
+  // 1. worktree + branch off the integration branch
+  git(ROOT, ["worktree", "add", worktree, "-b", branch, integrationBranch()]);
   console.log(`[lane-spawn] worktree created: ${worktree} (${branch})`);
 
   if (existsSync(join(worktree, "node_modules"))) {

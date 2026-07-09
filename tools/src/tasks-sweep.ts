@@ -1,8 +1,10 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { integrationBranch } from "./toolkit-config.js";
 
 const ROOT = process.cwd();
+const MAIN_BRANCH = integrationBranch();
 const TASKS_DIR = join(ROOT, "docs", "tasks");
 const ARCHIVE_DIR = join(TASKS_DIR, "archive");
 const TOOL_TESTS_DIR = join(ROOT, "tools", "src");
@@ -118,10 +120,10 @@ function commitExists(ref: string): boolean {
 function isMergedToMaster(file: string, text: string): boolean {
   const branch = branchForCard(file, text);
   if (gitOk(["rev-parse", "--verify", "--quiet", branch])) {
-    return gitOk(["merge-base", "--is-ancestor", branch, "master"]);
+    return gitOk(["merge-base", "--is-ancestor", branch, MAIN_BRANCH]);
   }
   const hash = firstStatusHash(text);
-  return Boolean(hash && commitExists(hash) && gitOk(["merge-base", "--is-ancestor", hash, "master"]));
+  return Boolean(hash && commitExists(hash) && gitOk(["merge-base", "--is-ancestor", hash, MAIN_BRANCH]));
 }
 
 function resolveMarkdownTarget(mdAbs: string, target: string): string | null {
@@ -219,8 +221,8 @@ function main(): number {
   console.log(`[tasks:sweep] updated markdown link file(s)=${updatedLinks}`);
   console.log(`[tasks:sweep] moved=${plans.length}`);
   console.log(`[tasks:sweep] after top-level cards=${afterCards.length} lacking-MERGED=${afterLackingMerged}`);
-  const master = gitMaybe(["rev-parse", "--short", "master"]);
-  if (master) console.log(`[tasks:sweep] master=${master}`);
+  const master = gitMaybe(["rev-parse", "--short", MAIN_BRANCH]);
+  if (master) console.log(`[tasks:sweep] ${MAIN_BRANCH}=${master}`);
   return 0;
 }
 

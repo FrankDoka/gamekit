@@ -7,7 +7,7 @@
  * Saves <outDir>/zone-<label>.png for each framing.
  */
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import { relative as pathRelative, resolve as pathResolve } from "node:path";
 import { CAMERA_NATIVE_BASIS_HEIGHT, PLAYER_FOOT_OFFSET_Y, getCameraZoomForViewportHeight } from "@gamekit/game-contract";
@@ -462,6 +462,27 @@ function resolveStageProofSpec(argv: readonly string[]): StageProofSpec {
 let managedDevkit: ChildProcess | undefined;
 let editorDevkitOrigin = `http://127.0.0.1:${DEVKIT_PORT}`;
 
+// Default framing map when no --map=<id> is given. The editor thin-slice + the
+// prior-game proofs still key on EDITOR_MAP_ID, so prefer it WHEN that map's
+// content actually exists (the prior game's editor map). For any other game (e.g. the reference
+// starter-game) that map is absent, so fall back to the first authored zone
+// layout — this keeps the plain/sweep capture game-agnostic instead of throwing
+// on a hardcoded map id. Never throws: returns EDITOR_MAP_ID if nothing is found
+// so the downstream readMapBounds error message stays intact.
+function resolveDefaultMapId(): string {
+  if (existsSync(`content/maps/${EDITOR_MAP_ID}.json`) || existsSync(`content/zones/${EDITOR_MAP_ID}.layout.json`)) {
+    return EDITOR_MAP_ID;
+  }
+  const zonesDir = "content/zones";
+  if (existsSync(zonesDir)) {
+    const firstLayout = readdirSync(zonesDir)
+      .filter((f) => f.endsWith(".layout.json"))
+      .sort()[0];
+    if (firstLayout) return firstLayout.slice(0, -".layout.json".length);
+  }
+  return EDITOR_MAP_ID;
+}
+
 async function main(): Promise<void> {
   const outDir = process.argv[2] ?? "tools/_capture";
   if (process.argv.includes("--player-facing-proof")) {
@@ -472,11 +493,11 @@ async function main(): Promise<void> {
   const mapArg = process.argv.find((arg) => arg.startsWith("--map="));
   const targetMapId = mapArg?.slice("--map=".length);
   const sweepMode = process.argv.includes("--sweep");
-  const sweepBounds = sweepMode ? readMapBounds(targetMapId ?? EDITOR_MAP_ID) : undefined;
-  // Framings derive purely from the target map's own bounds+spawn (no hardcoded per-game
-  // table). With no --map, fall back to the editor's default map so the editor flow keeps
-  // a sensible framing.
-  const framingMapId = targetMapId ?? EDITOR_MAP_ID;
+  // With no --map, resolve the default framing map from the game's own content
+  // (prefers the editor map when present, else the first authored zone) so the
+  // plain/sweep path works for any game, not just the one that ships EDITOR_MAP_ID.
+  const framingMapId = targetMapId ?? resolveDefaultMapId();
+  const sweepBounds = sweepMode ? readMapBounds(framingMapId) : undefined;
   const shots = sweepBounds
     ? buildSweepShots(sweepBounds.width, sweepBounds.height, GAMEPLAY_ZOOM)
     : boundsDerivedShots(framingMapId);

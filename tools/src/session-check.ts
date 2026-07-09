@@ -1,11 +1,12 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative } from "node:path";
-import { gameRoot, assetsRoot as defaultAssetsRoot } from "./toolkit-config.js";
+import { gameRoot, assetsRoot as defaultAssetsRoot, integrationBranch } from "./toolkit-config.js";
 
 const CANONICAL_ROOT = gameRoot();
 const REUSABLE_WORKTREE = process.env.INTEGRATOR_WORKTREE ?? `${gameRoot()}-integrator`;
 const IDLE_BRANCH = "codex/integrator-standby";
+const MAIN_BRANCH = integrationBranch();
 
 const ROOT = process.cwd();
 
@@ -81,12 +82,12 @@ function countArchiveResolvedCandidates(): number {
 const topLevel = normalizePath(git(ROOT, ["rev-parse", "--show-toplevel"]));
 const branch = git(ROOT, ["branch", "--show-current"]) || "(detached)";
 const head = git(ROOT, ["rev-parse", "--short", "HEAD"]);
-const masterHead = gitMaybe(ROOT, ["rev-parse", "--short", "master"]);
+const masterHead = gitMaybe(ROOT, ["rev-parse", "--short", MAIN_BRANCH]);
 const porcelain = rawLines(gitMaybe(ROOT, ["status", "--short"]));
 const dirtyFiles = porcelain.map(statusPath);
-const branchFiles = branch === "master" ? [] : lines(gitMaybe(ROOT, ["diff", "--name-only", "master...HEAD"]));
+const branchFiles = branch === MAIN_BRANCH ? [] : lines(gitMaybe(ROOT, ["diff", "--name-only", `${MAIN_BRANCH}...HEAD`]));
 const changedFiles = unique([...dirtyFiles, ...branchFiles]);
-const unpushedCommits = branch === "master" ? [] : lines(gitMaybe(ROOT, ["log", "--oneline", "master..HEAD"]));
+const unpushedCommits = branch === MAIN_BRANCH ? [] : lines(gitMaybe(ROOT, ["log", "--oneline", `${MAIN_BRANCH}..HEAD`]));
 
 const worktreeText = gitMaybe(ROOT, ["worktree", "list"]);
 const worktrees = lines(worktreeText).map((line) => {
@@ -132,11 +133,11 @@ if (touchedCodeOrTooling && !touchedDevlog) {
 if ((touchedCodeOrTooling || touchedDocs) && !touchedHotState) {
   notes.push("Consider whether session-brief, handoff, or project-memory need a concise current-state update.");
 }
-if (branch !== "master" && unpushedCommits.length > 0) {
+if (branch !== MAIN_BRANCH && unpushedCommits.length > 0) {
   try {
-    execFileSync("git", ["merge-base", "--is-ancestor", branch, "master"], { cwd: ROOT, stdio: "ignore" });
+    execFileSync("git", ["merge-base", "--is-ancestor", branch, MAIN_BRANCH], { cwd: ROOT, stdio: "ignore" });
   } catch {
-    notes.push(`Branch ${branch} is not merged into master yet; merge before parking.`);
+    notes.push(`Branch ${branch} is not merged into ${MAIN_BRANCH} yet; merge before parking.`);
   }
 }
 if (reusable && reusable.branch !== IDLE_BRANCH && normalizePath(ROOT) !== REUSABLE_WORKTREE) {
@@ -155,7 +156,7 @@ console.log("[session:check] location");
 console.log(`  root:    ${topLevel}`);
 console.log(`  branch:  ${branch}`);
 console.log(`  head:    ${head}`);
-if (masterHead) console.log(`  master:  ${masterHead}`);
+if (masterHead) console.log(`  ${MAIN_BRANCH}:  ${masterHead}`);
 console.log(`  status:  ${porcelain.length === 0 ? "clean" : `${porcelain.length} changed item(s)`}`);
 
 console.log("\n[session:check] worktrees");
@@ -191,7 +192,7 @@ if (topLevel === REUSABLE_WORKTREE) {
   if (branch === IDLE_BRANCH) {
     console.log("  parked on standby");
   } else if (canPark) {
-    console.log("  after merging to master, run: pnpm integrator:park");
+    console.log(`  after merging to ${MAIN_BRANCH}, run: pnpm integrator:park`);
   } else {
     console.log("  finish/stage/commit/merge before parking");
   }

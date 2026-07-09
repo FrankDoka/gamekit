@@ -1,6 +1,6 @@
 import { spawn, execFile, type ChildProcess } from "node:child_process";
 import { createConnection } from "node:net";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, openSync } from "node:fs";
+import { closeSync, createReadStream, createWriteStream, existsSync, mkdirSync, openSync } from "node:fs";
 import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -407,6 +407,9 @@ export class DevkitHub {
       stdio: ["ignore", logFd, logFd],
       windowsHide: true,
     });
+    // Child inherited its own dup of logFd via stdio; close the parent's copy on every
+    // path (incl. the throw below) so restarts don't leak one fd per launch.
+    closeSync(logFd);
     child.unref();
     if (!child.pid) throw new Error(`failed to launch ${service}`);
     this.children.set(child.pid, child);
@@ -975,7 +978,12 @@ export class DevkitHub {
     const payload = await this.context.readRequestJson(request);
     const fileName = typeof payload.file === "string" ? payload.file : "";
     const restorePath = path.resolve(this.backupsRoot, fileName);
-    if (!restorePath.startsWith(this.backupsRoot) || !restorePath.endsWith(".sql") || !existsSync(restorePath)) {
+    // Boundary-safe containment: a bare startsWith would accept a sibling like
+    // `<repoRoot>/backups-evil/x.sql` (shared "backups" prefix, no separator). Compare
+    // via path.relative so `..`-escapes and sibling dirs are rejected.
+    const rel = path.relative(this.backupsRoot, restorePath);
+    const insideBackups = rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+    if (!insideBackups || !restorePath.endsWith(".sql") || !existsSync(restorePath)) {
       this.context.sendJson(response, 400, { ok: false, error: "restore file must be an existing .sql backup" });
       return;
     }

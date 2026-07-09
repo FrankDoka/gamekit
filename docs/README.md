@@ -5,8 +5,11 @@ asset bank, art + audio pipelines, an in-browser DevKit, zone/capture/smoke tool
 optional harness for building the game with parallel AI coding sessions. It ships no game: you wire
 your game to it by implementing [`@gamekit/game-contract`](../packages/game-contract/).
 
-Start at the repo [README](../README.md) for setup and the "wire a new game" steps. This folder is
-the deeper reference, split into two tracks.
+Start at the repo [README](../README.md) for setup and the "wire a new game" steps — the fastest of
+which is `pnpm create:game <name>`, which scaffolds a fresh game from
+[examples/starter-game](../examples/starter-game) (copies it, rewires names/title/README, writes
+`.env.example`, and seeds `docs/state/*` harness stubs). This folder is the deeper reference, split
+into two tracks.
 
 ---
 

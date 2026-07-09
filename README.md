@@ -5,8 +5,9 @@ A game-agnostic toolkit for building 2D games: an **Asset Bank + DevKit**, **art
 sessions. It ships no game — you wire yours by implementing `@gamekit/game-contract`.
 
 **A runnable reference game lives in [examples/starter-game](examples/starter-game)** — one zone,
-one controllable entity (Colyseus + Phaser 4). It's the fastest way to start: copy it, rename, and
-replace the placeholder rectangles with real art. The docs deep-dive is in [docs/README.md](docs/README.md).
+one controllable entity (Colyseus + Phaser 4). It's the fastest way to start: scaffold a copy with
+`pnpm create:game <name>` (see below), then replace the placeholder rectangles with real art. The
+docs deep-dive is in [docs/README.md](docs/README.md).
 
 ## What's inside
 
@@ -20,10 +21,19 @@ replace the placeholder rectangles with real art. The docs deep-dive is in [docs
 
 ## How a new game plugs in
 
-**Fastest path: fork the reference game.** [examples/starter-game](examples/starter-game) is a
-working, minimal game (Colyseus server + Phaser 4 client + contract-conformant content) that every
-game-aware tool already runs against. Copy it, rename, and grow it — its README shows the exact
-runtime surface the tools expect. The steps below explain the seams if you'd rather wire from scratch.
+**Fastest path: scaffold from the reference game.** [examples/starter-game](examples/starter-game)
+is a working, minimal game (Colyseus server + Phaser 4 client + contract-conformant content) that
+every game-aware tool already runs against. Run:
+
+```sh
+pnpm create:game my-rpg            # add --dir <path> to place it elsewhere; --dry-run to preview
+```
+
+`create:game` (`tools/src/create-game.ts`) copies the starter game (minus install/build/capture
+artifacts) into a sibling `../my-rpg/`, rewires its package names + client `<title>` + README, writes
+a `.env.example` (`GAME_ROOT` + the toolkit env vars), and seeds `docs/state/*` AI-harness stubs. It
+never mutates `examples/starter-game`. Then grow the copy — its README shows the exact runtime surface
+the tools expect. The steps below explain the seams if you'd rather wire from scratch.
 
 The game-aware tools depend on **`@gamekit/game-contract`** (`packages/game-contract/`) — a
 types-only interface (map manifests, zone layout, chat events, editor metadata, render constants)
@@ -109,6 +119,7 @@ prior-game-specific gates (visual-proof, zoom-lock, zone-DoD, lane-branch push b
 - [x] **Verified standalone:** `pnpm -r typecheck` green · `pnpm test` 148 passed / 2 skipped · `pnpm selftest` green
 - [x] Fully de-branded — no source-game name remains anywhere in the repo; deployment couplings are env seams (`GAME_ONLINE_HOST`, `GAME_SERVER_PACKAGE`/`GAME_CLIENT_PACKAGE`)
 - [x] **Runnable reference game** at [examples/starter-game](examples/starter-game) — Colyseus + Phaser 4; `zone:validate`/`lint`/`export` green; `capture:zone` (sweep + plain) boots + screenshots it; cross-client `move.to` replication verified
+- [x] **One-command scaffolder** `pnpm create:game <name>` (`tools/src/create-game.ts`) — copies the reference game, rewires package names/title/README, writes `.env.example`, seeds `docs/state/*` harness stubs (`--dry-run` previews); never mutates the template
 
 ### Known residuals (intentional — legitimate game-wiring seams or later slices)
 

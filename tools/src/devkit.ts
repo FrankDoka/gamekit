@@ -1,9 +1,9 @@
-import { exec, spawn, execSync } from "node:child_process";
+import { exec, execFile, spawn, execSync } from "node:child_process";
 import { promisify } from "node:util";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createConnection } from "node:net";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, openSync } from "node:fs";
+import { closeSync, existsSync, openSync } from "node:fs";
 import { mkdir, readFile, readdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,6 +29,7 @@ import { generateDungeon, WALL, FLOOR } from "@gamekit/game-contract";
 import { emitLayout } from "@gamekit/game-contract";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 /** Run a repo command off the event loop; concatenates stdout+stderr on failure
  * (fixes the `a ?? "" + b` precedence bug that silently dropped stderr). */
@@ -52,8 +53,20 @@ async function runRepoCommand(command: string, timeoutMs: number): Promise<{ ok:
  * (defect found, OR python/Pillow/numpy missing, OR any other failure) refuses promotion —
  * "promoted" must always mean "gated", the same contract the bank server already enforces. */
 async function checkAssetDefectGate(sourceAbs: string): Promise<{ ok: boolean; output: string }> {
-  const quoted = `"${sourceAbs.replace(/"/g, '\\"')}"`;
-  return runRepoCommand(`python tools/asset-cleanup/fringe.py check ${quoted}`, 30000);
+  // No shell: pass the source path as a discrete argv entry so paths containing shell
+  // metacharacters (&, ^, %, spaces, parens on Windows) can't mis-parse and wrongly refuse
+  // a clean asset. Non-zero exit (defect, or python/Pillow/numpy missing) still fails closed.
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      "python",
+      ["tools/asset-cleanup/fringe.py", "check", sourceAbs],
+      { cwd: repoRoot, encoding: "utf8", timeout: 30000 },
+    );
+    return { ok: true, output: `${stdout}${stderr}` };
+  } catch (err) {
+    const e = err as { stdout?: string; stderr?: string; message?: string };
+    return { ok: false, output: `${e.stdout ?? ""}${e.stderr ?? ""}` || (e.message ?? String(err)) };
+  }
 }
 
 type QueueSummary = {
@@ -458,6 +471,9 @@ function spawnToolServerLogged(scriptRel: string, scriptArgs: string[], logPath:
     stdio: ["ignore", logFd, logFd],
     windowsHide: true,
   });
+  // The detached child inherited its own dup of logFd via stdio; close the parent's copy
+  // so a devkit that restarts tool servers repeatedly does not leak one fd per launch.
+  closeSync(logFd);
   child.on("error", (err) => console.error(`[devkit] failed to launch ${scriptRel}:`, err.message));
   child.unref();
   return child.pid ?? null;

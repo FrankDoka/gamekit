@@ -10,6 +10,7 @@
  * often edits them; blocking findings exit nonzero.
  */
 import { execFileSync } from "node:child_process";
+import { integrationBranch } from "./toolkit-config.js";
 
 type Finding = {
   severity: "BLOCK" | "REVIEW";
@@ -84,7 +85,7 @@ function main(): number {
   const branch = process.argv[2];
   if (!branch) usage();
 
-  const mergeBase = git(["merge-base", "master", branch]);
+  const mergeBase = git(["merge-base", integrationBranch(), branch]);
   const files = git(["diff", "--name-only", `${mergeBase}..${branch}`]).split(/\r?\n/).filter(Boolean);
   const diff = git(["diff", "--unified=0", `${mergeBase}..${branch}`, "--", ".", ...BINARY_EXCLUDES]);
   const added = diffAddedLines(diff);

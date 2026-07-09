@@ -21,6 +21,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { integrationBranch } from "./toolkit-config.js";
 
 // Thresholds (owner-retunable): above EITHER bound the diff is L → VERIFIER-FIRST.
 const L_ADDED_LINES = 300;
@@ -34,7 +35,7 @@ function git(...args: string[]): string {
 function main(): void {
   const args = process.argv.slice(2);
   const target = args.find((a) => !a.startsWith("--"));
-  const base = args.includes("--base") ? args[args.indexOf("--base") + 1]! : "master";
+  const base = args.includes("--base") ? args[args.indexOf("--base") + 1]! : integrationBranch();
   if (!target) {
     console.error("usage: pnpm intake:brief <branch-or-lane> [--base master]");
     process.exitCode = 2;

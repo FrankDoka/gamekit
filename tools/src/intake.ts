@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
-import { gameRoot } from "./toolkit-config.js";
+import { gameRoot, integrationBranch } from "./toolkit-config.js";
 import { evaluateAnimValidatorArtifacts } from "./anim-validator-gate";
 import { lanesDir, readLaneRegistry } from "./lane-registry";
 import type { LaneEntry } from "./lane-registry";
@@ -388,7 +388,7 @@ function rebaseOntoMaster(worktree: string, verdict: IntakeVerdict): number | nu
     verdict.rebase = { status: "skip", output_tail: "INTAKE_SKIP_REBASE=1", conflicted_files: [] };
     return null;
   }
-  const rebase = gitResult(worktree, ["rebase", "master"]);
+  const rebase = gitResult(worktree, ["rebase", integrationBranch()]);
   if (rebase.status === 0) {
     verdict.rebase = { status: "pass", output_tail: outputTail(`${rebase.stdout}\n${rebase.stderr}`), conflicted_files: [] };
     // A rebase rewrites the lane commit; keep the verdict hash = the mergeable tip.
