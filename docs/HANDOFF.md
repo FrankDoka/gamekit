@@ -54,9 +54,10 @@ plus `pnpm capture:tactics` / `pnpm capture:gacha`. Inspect the PNGs yourself �
 4. **Mobile:** only gacha got touch/portrait; action + tactics clients are desktop-only.
 5. **DX polish:** a cross-platform `pnpm dev` launcher for scaffolded games; a "skip selftest without
    Python" note; quiet the `git dubious ownership` warning during `pnpm test`.
-6. **Infra:** open a PR to confirm `.github/workflows/ci.yml` goes green in real Actions; flesh out
-   `db/schema.sql` (currently a marker); verify which asset tools are turnkey vs. bring-your-own
-   (`audio:*` needs an ElevenLabs key; `imagegen:extract` was generation-engine-specific).
+6. **Infra:** ~~confirm `.github/workflows/ci.yml` goes green in real Actions~~ **done 2026-07-09**
+   — PR #1's "standalone gates" job passed (first real run). Remaining: flesh out `db/schema.sql`
+   (currently a marker — roadmap Phase 3); verify which asset tools are turnkey vs. bring-your-own
+   (`audio:*` needs an ElevenLabs key; `imagegen:extract` was generation-engine-specific — Phase 7).
 7. **Minor:** `capture-zone.ts` keeps `EDITOR_MAP_ID = "map_harbor_outskirts"` as a harmless default;
    `procgen/dungeon.ts` has an `Int16Array` roomId cap (footgun only at huge room counts).
 
