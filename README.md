@@ -20,7 +20,7 @@ in the generated game's README.
 # 1. Set up the toolkit itself (from this repo root)
 pnpm install                 # installs the toolkit workspace (tools + packages/*)
 pnpm -r typecheck            # green
-pnpm test                    # vitest — ~148 pass
+pnpm test                    # vitest — 244 passed / 2 skipped
 pnpm selftest                # Python asset-fixture gates (needs Python 3.11 + Pillow + numpy)
 
 # 2. Scaffold your own real-time game (copies examples/starter-game as a sibling ../my-first-game/)

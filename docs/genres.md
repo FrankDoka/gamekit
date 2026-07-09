@@ -116,8 +116,10 @@ So `pnpm capture:zone` / `pnpm smoke:*` fully drive **only** the real-time start
 alternative genres stay inspectable anyway (each exposes a genre-appropriate global), and both were
 verified with a small standalone Playwright drive (the `_shots/` each game produced at build).
 
-**Roadmap:** a **turn-based smoke sibling** (read `units[]`-by-team instead of players-by-session)
-and a **request/response smoke sibling** (read the HTTP `state` / `__GACHA` instead of a room) would
-let those two genres use the capture/smoke tooling. This is the intended finding — the genres fit
-the *conventions*; only the one action-specific tool needs siblings. We deliberately did **not**
-modify `tools/` to force a fit.
+**Roadmap:** the *capture* siblings already shipped (`pnpm capture:tactics` / `pnpm capture:gacha`
+— thin per-genre scripts); the remaining gap is the smoke **state reader**: a **turn-based sibling**
+(read `units[]`-by-team instead of players-by-session) and a **request/response sibling** (read the
+HTTP `state` / `__GACHA` instead of a room) would let those two genres use the full smoke suite.
+This is the intended finding — the genres fit the *conventions*; only the one action-specific tool
+needs siblings. We deliberately did **not** modify `tools/` to force a fit. The unification plan is
+[roadmap.md](roadmap.md) Phase 2 (one capture engine + three `GameDriver`s).
