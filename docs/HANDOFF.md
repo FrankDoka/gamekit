@@ -60,6 +60,11 @@ plus `pnpm capture:tactics` / `pnpm capture:gacha`. Inspect the PNGs yourself �
    (`audio:*` needs an ElevenLabs key; `imagegen:extract` was generation-engine-specific — Phase 7).
 7. **Minor:** `capture-zone.ts` keeps `EDITOR_MAP_ID = "map_harbor_outskirts"` as a harmless default;
    `procgen/dungeon.ts` has an `Int16Array` roomId cap (footgun only at huge room counts).
+8. **Port hygiene [tools · S]:** example-game docs default to Vite 5173 + the 26xx server family —
+   the same ports the owner's real game uses (inherited at extraction; an orphaned example server
+   on 2610 hijacked the owner's game client on 2026-07-09). Change the examples' documented
+   defaults to non-colliding ports (e.g. 461x/519x), and make capture/genre-harness runs verify
+   their spawned servers actually exit at teardown.
 
 ## Gotchas / hard-won lessons (don't relearn these)
 - **The Edit tool clobbers large files.** Bit us on `tools/src/capture-zone.ts` back when it was
