@@ -18,6 +18,12 @@ into two tracks.
 The tools you use to build and ship game content. Overview and per-category map:
 [tools/README.md](../tools/README.md).
 
+**Starting a game?** Read [genres.md](genres.md) first — it maps your genre (pixel tactics, gacha
+mobile, action MMO/roguelike) to one of the three forkable [reference games](../examples/) and is
+honest about what each fork gives vs. what you build. [systems.md](systems.md) catalogs the reusable
+pure systems those forks carry (`@gamekit/game-contract`, `@tactics/turn-grid`, `@gacha/summon`, and
+the three server patterns).
+
 | Area | Entry point | Runs standalone? |
 |---|---|---|
 | **Asset Bank** — catalog / review / rate / promote art + audio | `pnpm devkit` → asset review; `pnpm bank:*` | Yes (operates on your assets) |

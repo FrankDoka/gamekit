@@ -7,6 +7,10 @@ real-time genres: the same server/client/asset conventions as the action
 
 It is intentionally minimal: **one board, two teams, two units each.**
 
+![tactics-game — 12×10 grid, two teams, rock obstacles, and a selected unit's BFS move range highlighted](screenshot.png)
+
+_(see the multi-genre overview in [docs/genres.md](../../docs/genres.md).)_
+
 - **Board:** 12×10 tiles at 64px, with 6 impassable "rock" tiles (a 2×2 block in the middle
   plus a few scattered).
 - **Teams:** A (blue) starts on the left, B (red) on the right — 2 units each.

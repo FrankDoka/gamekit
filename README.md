@@ -4,10 +4,32 @@ A game-agnostic toolkit for building 2D games: an **Asset Bank + DevKit**, **art
 **zone + capture/smoke tooling**, and an **AI-dev harness** for building with parallel AI coding
 sessions. It ships no game — you wire yours by implementing `@gamekit/game-contract`.
 
-**A runnable reference game lives in [examples/starter-game](examples/starter-game)** — one zone,
-one controllable entity (Colyseus + Phaser 4). It's the fastest way to start: scaffold a copy with
-`pnpm create:game <name>` (see below), then replace the placeholder rectangles with real art. The
-docs deep-dive is in [docs/README.md](docs/README.md).
+**Three runnable reference games live in [examples/](examples/)** — one per genre — so the kit reads
+as a multi-genre baseline, not an action engine. Fork the one closest to your game (see
+[Genres / reference games](#genres--reference-games) and the full guide in
+[docs/genres.md](docs/genres.md)). The fastest path for a real-time game is `pnpm create:game <name>`
+(see below), then replace the placeholder art. The docs deep-dive is in [docs/README.md](docs/README.md).
+
+## Genres / reference games
+
+Three self-contained, forkable reference games prove the same conventions carry three genres. Full
+guide: [docs/genres.md](docs/genres.md).
+
+| Genre | Starter | Server pattern | Client / UI | Extracted engine | Fork it |
+|---|---|---|---|---|---|
+| Real-time action | [starter-game](examples/starter-game/) | Real-time Colyseus room (`move.to`, per-tick sync) | Phaser world | *(room + contract IS the demo)* | `pnpm create:game <name>` |
+| Turn-based tactics | [tactics-game](examples/tactics-game/) | Authoritative-turn Colyseus room (intent-validated, no tick) | Phaser grid | [`@tactics/turn-grid`](examples/tactics-game/packages/turn-grid/) | copy `examples/tactics-game/` |
+| Gacha / collection | [gacha-game](examples/gacha-game/) | Request/response Express HTTP API (no room/socket) | DOM screens | [`@gacha/summon`](examples/gacha-game/packages/summon/) | copy `examples/gacha-game/` |
+
+| ![starter-game](examples/starter-game/screenshot.png) | ![tactics-game](examples/tactics-game/screenshot.png) | ![gacha-game](examples/gacha-game/screenshot.png) |
+|:---:|:---:|:---:|
+| real-time action | turn-based tactics | gacha / collection |
+
+**Which do I fork?** Online pixel tactics → `tactics-game` (add classes/abilities/maps); gacha mobile
+→ `gacha-game` (add touch input, responsive layout, more banners, a battle screen); action MMO /
+roguelike → `starter-game`. See [docs/genres.md](docs/genres.md) for what each fork gives vs. what
+you build, the reusable systems ([docs/systems.md](docs/systems.md)), and the known toolkit
+limitation (the smoke/capture reader drives only the real-time genre today).
 
 ## What's inside
 
@@ -120,6 +142,7 @@ prior-game-specific gates (visual-proof, zoom-lock, zone-DoD, lane-branch push b
 - [x] Fully de-branded — no source-game name remains anywhere in the repo; deployment couplings are env seams (`GAME_ONLINE_HOST`, `GAME_SERVER_PACKAGE`/`GAME_CLIENT_PACKAGE`)
 - [x] **Runnable reference game** at [examples/starter-game](examples/starter-game) — Colyseus + Phaser 4; `zone:validate`/`lint`/`export` green; `capture:zone` (sweep + plain) boots + screenshots it; cross-client `move.to` replication verified
 - [x] **One-command scaffolder** `pnpm create:game <name>` (`tools/src/create-game.ts`) — copies the reference game, rewires package names/title/README, writes `.env.example`, seeds `docs/state/*` harness stubs (`--dry-run` previews); never mutates the template
+- [x] **Three genre starters shipped** — [starter-game](examples/starter-game) (real-time action), [tactics-game](examples/tactics-game) (turn-based grid, extracts [`@tactics/turn-grid`](examples/tactics-game/packages/turn-grid/)), [gacha-game](examples/gacha-game) (request/response gacha, extracts [`@gacha/summon`](examples/gacha-game/packages/summon/)); each self-contained + forkable, with a committed screenshot; consolidated in [docs/genres.md](docs/genres.md) + [docs/systems.md](docs/systems.md)
 
 ### Known residuals (intentional — legitimate game-wiring seams or later slices)
 

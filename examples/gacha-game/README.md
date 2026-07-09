@@ -12,6 +12,10 @@ the point: GameKit's conventions don't assume a socket/room runtime.
 
 It is intentionally minimal: **one banner, one summon engine, three screens.**
 
+![gacha-game — the Summon screen: banner art, Pull x1 / x10, and a x10 result reveal with a 5★ pity pull](screenshot.png)
+
+_(see the multi-genre overview in [docs/genres.md](../../docs/genres.md).)_
+
 - **Home:** shows currency + pity progress, buttons to Summon / Roster.
 - **Summon:** banner art, `Pull x1` / `Pull x10`, a result reveal of each pulled unit's rarity.
 - **Roster:** a grid of owned units with rarity and duplicate counts.

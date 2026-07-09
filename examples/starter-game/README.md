@@ -10,6 +10,10 @@ It is intentionally minimal: **one zone, one WASD/click-controllable player.** A
 (the promoted-registry → layout → texture asset-pipeline demo), player sprites, a static "Guide" NPC,
 and a few server-spawned slimes — synced over a Colyseus server and rendered with Phaser 4.
 
+![starter-game — real-time zone: player, Guide NPC, and slimes on tiled grass](screenshot.png)
+
+_(captured with `pnpm capture:zone`; see the multi-genre overview in [docs/genres.md](../../docs/genres.md).)_
+
 ## Layout
 
 ```
