@@ -1,0 +1,18 @@
+{
+  "name": "@gamekit/rng",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seeded, deterministic RNG — mulberry32 stream plus a stateful Rng (int/bool/pick/shuffle/weighted). Pure TypeScript, zero runtime deps.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

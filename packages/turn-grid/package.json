@@ -1,0 +1,18 @@
+{
+  "name": "@gamekit/turn-grid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure turn-based grid logic — passability, BFS movement range, team rotation, and legal move/attack validation. Zero runtime deps; no Phaser/Colyseus/DOM.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

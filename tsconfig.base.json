@@ -18,7 +18,8 @@
     "verbatimModuleSyntax": false,
     "baseUrl": ".",
     "paths": {
-      "@gamekit/game-contract": ["packages/game-contract/src/index.ts"]
+      "@gamekit/game-contract": ["packages/game-contract/src/index.ts"],
+      "@gamekit/rng": ["packages/rng/src/index.ts"]
     }
   }
 }

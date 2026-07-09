@@ -1,83 +1,52 @@
 # Systems — the reusable modules the kit ships
 
-GameKit isn't just tooling; it ships a small set of **pure, testable systems** that a game reuses.
-This catalog covers what each one is, where it lives, that forking a template carries it along, and
-why it's a pure/testable module. For the genre-to-starter mapping, see [genres.md](genres.md).
+GameKit isn't just tooling; it ships a **core-systems library**: pure, tested, zero-dependency
+`@gamekit/*` packages a game reuses. There are two ways to consume them, and both are first-class:
 
-Two shapes of reusable system exist here:
+- **Library model** — build your game in this workspace (or install the packages) and depend on
+  `@gamekit/*` directly. DRY, versioned, one source of truth.
+- **Fork model** — copy a reference template (`examples/*`). Each template **embeds a snapshot** of the
+  genre engine it needs, so a fork stays self-contained and copy-portable.
 
-1. **The contract** — one top-level package the toolkit reads every game through.
-2. **Extracted genre engines** — pure horizontals that live *inside* the reference templates so a
-   fork stays self-contained.
-3. **Server patterns** — the three server runtimes, each demonstrated by a starter.
+For the genre-to-starter mapping, see [genres.md](genres.md).
 
 ---
 
-## 1. `@gamekit/game-contract` — the spatial content contract
+## The core-systems library (`packages/*`)
 
-- **Lives in:** [`packages/game-contract/`](../packages/game-contract/) (a real top-level workspace
-  package, `@gamekit/game-contract`).
-- **What it does:** the single interface the game-aware toolkit (`capture:zone`, `zone:*`,
-  `smoke:*`, DevKit) reads a game through — map manifests, zone layout (bounds / spawn / collision
-  grid), chat + intent message shapes, editor metadata, render constants + asset-scale, plus generic
-  reference algorithms (camera math, collision, procgen: `mulberry32`, `dungeon`, `emitter`). See
-  [`src/index.ts`](../packages/game-contract/src/index.ts) for the full re-export surface.
-- **Pure / testable:** types + generic algorithms only — **no game logic**. The toolkit imports
-  ONLY from `@gamekit/game-contract`, never from a specific game's source tree, so a game either
-  points these accessors at its own modules or re-exports its real `shared/` symbols under this
-  package name. `pnpm --filter @gamekit/game-contract typecheck` is green standalone.
-- **Forking:** every reference game already conforms to it, so a fork inherits a validated content
-  shape on day one.
+Every package is pure TypeScript — **no Phaser / Colyseus / Express / DOM**, zero runtime deps — and
+ships **vitest tests that validate its API** (so it's proven, not speculative). All are workspace
+members: `pnpm -r typecheck` and `pnpm test` cover them.
 
-## 2. Extracted genre engines
+| Package | What it gives any game | Tests |
+|---|---|---|
+| [`@gamekit/game-contract`](../packages/game-contract/) | The **spatial content contract** the game-aware toolkit (`capture:zone`, `zone:*`, `smoke:*`, DevKit) reads a game through — map manifests, zone layout (bounds/spawn/collision), message shapes, editor metadata, render constants, + generic algorithms (camera math, collision, procgen). | (typecheck) |
+| [`@gamekit/rng`](../packages/rng/) | Seeded, deterministic RNG — `mulberry32` + `int`/`bool`/`pick`/`shuffle`/`weighted`. The one home for randomness; `game-contract`'s procgen re-exports `mulberry32` from here. | 18 |
+| [`@gamekit/save`](../packages/save/) | Versioned save serializer with a **migration chain** (`defineSave`/`serialize`/`deserialize`) + xp/level **progression** curves (`levelForXp`/`xpForLevel`/`xpToNextLevel`). | 20 |
+| [`@gamekit/stats`](../packages/stats/) | A stat block with named **modifiers** (flat / percentAdd / percentMult) and a defined stacking order, add/remove by id or source, clamping, derived stats. RPG attributes, tactics unit stats, gacha power. | 14 |
+| [`@gamekit/inventory`](../packages/inventory/) | A **slot/stack inventory** — `add`/`remove`/`move`/`count`/`has` with capacity + `maxStack`, merge/split/swap, overflow returns. Action loot, gacha roster, crafting mats. | 19 |
+| [`@gamekit/turn-grid`](../packages/turn-grid/) | Turn-based grid engine — BFS reachable-tiles (blocked terrain + occupancy), team rotation, legal move/attack validation. Server authority + client highlights share it. | 16 |
+| [`@gamekit/summon`](../packages/summon/) | Gacha engine — seeded weighted rarity table, **hard pity**, pure `pull`/`pullMany` reducers, currency/roster bookkeeping. | 9 |
 
-Both are written with **zero framework dependencies** and shipped with a plain `node:assert` test
-(no test-framework dep), so they run with a bare `tsx` invocation. They live inside their templates
-by design (see the honest note below).
+`turn-grid` and `summon` are the **canonical** versions; `examples/tactics-game` and
+`examples/gacha-game` embed a **snapshot** of each so a fork stays self-contained (fork model). Edit
+the canonical package for the library model; the template copy is the fork's own to grow. The four
+core systems (`rng`, `save`, `stats`, `inventory`) are library-only — a game adopts what it needs.
 
-### `@tactics/turn-grid` — turn-based grid logic
+### Why this is "contract v2"
 
-- **Lives in:** [`examples/tactics-game/packages/turn-grid/`](../examples/tactics-game/packages/turn-grid/)
-  (`@tactics/turn-grid`).
-- **What it does:** grid model + passability (`makeGrid`, `inBounds`, `isPassable`), **BFS
-  reachable-tiles** (`reachableTiles`, `isReachable` — 4-connected, honors blocked terrain and
-  occupied tiles), turn order / team rotation (`nextActiveTeam`, `teamTurnComplete`, `beginTeamTurn`,
-  `winner`), and legal-move / legal-attack validation (`validateMove`, `validateAttack`).
-- **Pure / testable:** no Phaser, no Colyseus. Both the server (authoritative validation) and the
-  client (move-range highlights) import this **one** module, so the highlighted tiles match server
-  truth by construction. Test: [`src/index.test.ts`](../examples/tactics-game/packages/turn-grid/src/index.test.ts)
-  (11 `node:assert` cases — BFS range/blocked/occupancy + rotation/validation).
-- **Forking:** copying `tactics-game/` carries the engine + its test with the game.
+`@gamekit/game-contract` stays the **spatial** contract the toolkit reads (maps/zones/assets). The
+generic, non-spatial game systems every genre needs — RNG, save, stats, inventory, turn/grid,
+summon — now live in their **own** packages instead of being crammed into the spatial contract or
+reinvented per game. A menu-driven game (gacha) uses `rng`/`save`/`inventory`/`summon` and never
+touches `game-contract`; a spatial game uses both. That separation is the v2.
 
-### `@gacha/summon` — gacha pull logic
+---
 
-- **Lives in:** [`examples/gacha-game/packages/summon/`](../examples/gacha-game/packages/summon/)
-  (`@gacha/summon`).
-- **What it does:** seeded RNG (`makeRng`, `nextRandom` — mulberry32, deterministic), weighted banner
-  drop table (per-rarity rates + uniform pick within a band), **hard-pity guarantee** (forces a 5★ at
-  `hardPity5`, resets the counter on any 5★), pure reducers (`pull` / `pullMany` thread state without
-  mutation, so the same seed + banner replays identically), and currency/roster bookkeeping
-  (`pullCost`, `canAfford`, `rosterList`). The reference banner is [`src/banner.ts`](../examples/gacha-game/packages/summon/src/banner.ts).
-- **Pure / testable:** no Express, no DOM. Both the server (authoritative pulls) and the client
-  (banner/rarity display) import this **one** module, so the two ends can never disagree about the
-  drop table. Test: [`src/index.test.ts`](../examples/gacha-game/packages/summon/src/index.test.ts)
-  (11 `node:assert` cases — RNG determinism, **drop rates within ±0.02 over 20 000 pulls**, hard pity
-  forces + resets, currency/roster bookkeeping).
-- **Forking:** copying `gacha-game/` carries the engine + its test with the game.
-
-### Honest gap — engines live inside their templates, not as shared top-level packages
-
-`turn-grid` and `summon` are **not** shared top-level `packages/*` (only `game-contract` is). They
-live inside their reference games. This is **deliberate for fork-portability**: a fork must be
-self-contained and copy-portable, so the genre engine ships *with* the game you clone rather than as
-an external dependency you'd have to also vendor. Each is written pure and each README notes it
-"could later graduate to a top-level `packages/*`" if a second genre needs the same horizontal —
-until then, keeping it in the fork is the feature, not a shortcoming.
-
-## 3. The three server patterns
+## The three server patterns
 
 Each reference game demonstrates one server runtime shape. The toolkit assumes none of them — the
-`#auth-guest` guest entry, `GAMEKIT_SMOKE_RUN_ID` boot-log handshake, and inspectable global are the
+`#auth-guest` guest entry, `GAMEKIT_SMOKE_RUN_ID` boot-log handshake, and an inspectable global are the
 only conventions, and all three honor them.
 
 | Pattern | Demonstrated by | Shape |
@@ -87,6 +56,6 @@ only conventions, and all three honor them.
 | **Request/response HTTP** | [gacha-game `server/`](../examples/gacha-game/server/) | Express JSON API — `POST /api/guest`, `GET /api/state`, `POST /api/summon`; no socket, no room, no tick; state changes only in response to a request. |
 
 **Toolkit-tooling caveat:** the smoke/capture state reader
-([`tools/src/smoke/state.ts`](../tools/src/smoke/state.ts)) currently drives only the real-time
-room. See the [genres.md roadmap note](genres.md#known-limitation--roadmap--the-smokecapture-reader-is-action-only)
-for the turn-based and request/response smoke siblings that would extend it.
+([`tools/src/smoke/state.ts`](../tools/src/smoke/state.ts)) drives only the real-time room; the
+`capture:tactics` / `capture:gacha` siblings cover the other two genres. See the
+[genres.md roadmap note](genres.md#known-limitation--roadmap--the-smokecapture-reader-is-action-only).

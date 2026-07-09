@@ -1,20 +1,18 @@
 /**
- * Deterministic RNG — mulberry32 + makeRng. Ported VERBATIM from
- * majidmanzarpour/threejs-procedural-dungeon (MIT). A single mulberry32 stream threaded through
- * every generation stage is what makes a seed rebuild the exact same dungeon. Game-agnostic.
+ * Deterministic RNG — mulberry32 + makeRng. The `mulberry32` stream now lives in
+ * `@gamekit/rng` (ported VERBATIM from majidmanzarpour/threejs-procedural-dungeon, MIT) and is
+ * re-exported here so procgen/dungeon/emitter keep using the same symbol. A single mulberry32
+ * stream threaded through every generation stage is what makes a seed rebuild the exact same
+ * dungeon. Game-agnostic.
+ *
+ * The `Rng` interface + `makeRng` below are game-contract's own procgen-shaped helper API
+ * (f/i/pick/chance/raw/gauss) and are intentionally kept here — they are a different surface
+ * from `@gamekit/rng`'s `Rng` class.
  */
 
-/** Raw mulberry32 stream: 32-bit seed in, () => float in [0,1). */
-export function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return function (): number {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+/** Raw mulberry32 stream: 32-bit seed in, () => float in [0,1). Re-exported from @gamekit/rng. */
+export { mulberry32 } from "@gamekit/rng";
+import { mulberry32 } from "@gamekit/rng";
 
 export interface Rng {
   /** uniform float in [a, b) */

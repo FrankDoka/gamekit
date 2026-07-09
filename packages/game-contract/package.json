@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@gamekit/rng": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

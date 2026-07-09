@@ -1,0 +1,19 @@
+{
+  "name": "@gamekit/summon",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure gacha summon logic — seeded RNG, weighted banner drop table, hard-pity guarantee, and roster/currency reducers. Zero runtime deps; no express/DOM/server deps.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./banner": "./src/banner.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
