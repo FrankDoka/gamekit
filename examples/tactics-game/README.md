@@ -102,6 +102,14 @@ node node_modules/tsx/dist/cli.mjs packages/turn-grid/src/index.test.ts
 #   - use "End Turn" to pass the turn
 ```
 
+> Each `pnpm install --ignore-workspace` ends with `ERR_PNPM_IGNORED_BUILDS: … esbuild…` and a
+> non-zero exit — **expected, not a failure** (pnpm skips one native post-install script; the game
+> still boots). Ignore it.
+>
+> **Windows (PowerShell):** the boot lines use POSIX inline-env syntax. In PowerShell set the vars
+> first, e.g. `$env:PORT='2600'; $env:ALLOW_GUEST_LOGIN='true'; $env:GAMEKIT_SMOKE_RUN_ID='probe'; node ../node_modules/tsx/dist/cli.mjs src/index.ts`
+> (and `$env:VITE_COLYSEUS_URL='ws://127.0.0.1:2600'` for the client). Or run them from Git Bash as written.
+
 ## How it demonstrates the turn-based genre on GameKit
 
 It reuses the action starter's conventions **exactly** — isolated `pnpm install

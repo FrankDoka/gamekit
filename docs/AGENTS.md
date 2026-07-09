@@ -2,6 +2,8 @@
 
 Shared instructions for AI collaborators working on a game built with this toolkit.
 Replace `<GAME>` / `<repo root>` with your project's name and path when you adopt this file.
+**First time adopting the harness? Read [adopting-the-harness.md](adopting-the-harness.md) first** —
+it maps every convention below onto the real scripts and the state docs `create:game` seeds.
 
 ## Project Root
 
@@ -19,7 +21,9 @@ hard-wired — point these at wherever your project keeps them):
 2. Read the current cold-start state doc (e.g. `docs/state/session-brief.md`).
 3. Read the active-session snapshot (e.g. `docs/state/active-sessions.md`), then run
    `git worktree list` before any edit.
-4. Read the context-routing map only far enough to route the current task.
+4. Read the context-routing map, **if the project keeps one**, only far enough to route the current
+   task. (This doc is optional and is NOT scaffolded by `create:game` — small projects route from
+   the brief alone; see [adopting-the-harness.md](adopting-the-harness.md) Step 2.)
 5. Read the resume-cursor doc (e.g. `docs/state/handoff.md`) only when resuming detailed prior
    work or when the brief points there.
 6. Read the durable project-memory doc only when durable history/current-state detail is needed
@@ -149,13 +153,17 @@ pnpm capture:zone <outDir> # headless zone capture (see "Seeing The Game")
 ## Seeing The Game (visual verification — do not re-derive this)
 
 **You are NOT blind. Don't hunt for a way to see the game or ask the owner for screenshots — use
-the built-in tool** (available once a game is wired):
+the built-in capture tool** (available once a game is wired). The reader is
+`tools/src/capture-zone.ts`; the toolkit does **not** ship a `pnpm capture:zone` script (only
+`capture:tactics` / `capture:gacha` for those genres), so run it against your game via `GAME_ROOT`:
 
 ```text
-pnpm capture:zone <outDir>     # e.g. pnpm capture:zone tools/_capture
+GAME_ROOT=<abs path to your game> tsx tools/src/capture-zone.ts <outDir>   # e.g. <outDir>=tools/_capture
 ```
 
-It boots the game's server + client, logs in as guest, joins the spawn zone, pans the camera to
+If your game repo adds a `capture:zone` script that sets `GAME_ROOT`, `pnpm capture:zone <outDir>`
+works too. It boots the game's server + client, logs in as guest, joins the spawn zone, pans the
+camera to
 several framings and writes a PNG each into `<outDir>`. Open them and look before declaring ANY
 visual change (zone/tile/prop/decal/rendering/camera) done; then iterate. Reframe via the `SHOTS`
 array in `tools/src/capture-zone.ts`. Shimmer is a *motion* artifact (compare frames, not one

@@ -106,6 +106,14 @@ node node_modules/tsx/dist/cli.mjs packages/summon/src/index.test.ts
 #   - Roster -> your owned units with rarity + duplicate counts
 ```
 
+> Each `pnpm install --ignore-workspace` ends with `ERR_PNPM_IGNORED_BUILDS: … esbuild…` and a
+> non-zero exit — **expected, not a failure** (pnpm skips one native post-install script; the game
+> still boots). Ignore it.
+>
+> **Windows (PowerShell):** the boot lines use POSIX inline-env syntax. In PowerShell set the vars
+> first, e.g. `$env:PORT='2610'; $env:ALLOW_GUEST_LOGIN='true'; $env:GAMEKIT_SMOKE_RUN_ID='probe'; node ../node_modules/tsx/dist/cli.mjs src/index.ts`
+> (and `$env:VITE_API_BASE='http://127.0.0.1:2610'` for the client). Or run them from Git Bash as written.
+
 `globalThis.__GACHA = { token, banner, state, screen, lastResults }` is exposed so the app is
 inspectable/driveable from devtools or a smoke harness — same spirit as the action starter's
 `globalThis.__GAME`.

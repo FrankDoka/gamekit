@@ -86,7 +86,11 @@ class GameScene extends Phaser.Scene {
       this.selectedUnitId = null;
     });
 
-    void this.connect();
+    // Fire-and-forget connect, but surface a failed join instead of letting it
+    // become a silent unhandled rejection (server down / bad COLYSEUS_URL).
+    this.connect().catch((err) => {
+      console.error("[game] failed to join room:", err);
+    });
   }
 
   private tileFromWorld(wx: number, wy: number): { tx: number; ty: number } {

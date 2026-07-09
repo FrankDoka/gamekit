@@ -7,7 +7,8 @@ The builder who creates or edits this protocol must not run the test in the same
 
 Give each fresh session only the canonical **Boot Order docs from [AGENTS.md](../AGENTS.md)**
 (AGENTS.md itself plus the state docs it routes to, applying its own only-when-needed rules), plus
-**no more than one routed doc** named by the brief, handoff, or context map.
+**no more than one routed doc** named by the brief, handoff, or context-routing map (if the project
+keeps one — it is optional; see [adopting-the-harness.md](../adopting-the-harness.md) Step 2).
 
 Do not give archives by default. Opening any archive-sized doc during the probe counts as a
 base-context leak unless the task explicitly routes there.

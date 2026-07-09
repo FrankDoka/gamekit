@@ -211,16 +211,25 @@ toolkit's game-aware tools run against it with \`cwd = this folder\`.
 ## Run it
 
 \`\`\`sh
-# one-time install (isolated — each sub-project installs its own deps)
-pnpm install --ignore-workspace                 # root: tsx
-cd server && pnpm install --ignore-workspace && cd ..
-cd client && pnpm install --ignore-workspace && cd ..
+# one-time install (isolated — each sub-project installs its own deps).
+# --config.dangerouslyAllowAllBuilds=true auto-approves esbuild's build (it ships prebuilt
+# binaries, so the "build" is a no-op) — this is what makes the isolated install exit 0.
+pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true                 # root: tsx
+cd server && pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true && cd ..
+cd client && pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true && cd ..
 
 # boot the server + client manually
 (cd server && PORT=2567 ALLOW_GUEST_LOGIN=true node ../node_modules/tsx/dist/cli.mjs src/index.ts)
 (cd client && VITE_COLYSEUS_URL=ws://127.0.0.1:2567 node node_modules/vite/bin/vite.js --host 127.0.0.1)
 # open the printed URL, click "Play as Guest", move with WASD / click
 \`\`\`
+
+> Without the \`--config.dangerouslyAllowAllBuilds=true\` flag, the install still works but ends with a
+> harmless \`ERR_PNPM_IGNORED_BUILDS: … esbuild…\` + non-zero exit (a pnpm prompt, not a real failure).
+>
+> **Windows (PowerShell):** the boot lines use POSIX inline-env syntax. In PowerShell set the vars
+> first, e.g. \`$env:PORT='2567'; $env:ALLOW_GUEST_LOGIN='true'; node ../node_modules/tsx/dist/cli.mjs src/index.ts\`
+> (and \`$env:VITE_COLYSEUS_URL='ws://127.0.0.1:2567'\` for the client). Or run from Git Bash as written.
 
 ## Exercise the toolkit against it
 
@@ -423,10 +432,16 @@ const printNextSteps = (targetDir: string, toolkitRel: string): void => {
   console.log("Next steps:");
   console.log(`  1. Install deps (isolated from the toolkit workspace):`);
   console.log(`       cd "${targetPosix}"`);
-  console.log(`       pnpm install --ignore-workspace`);
-  console.log(`       cd server && pnpm install --ignore-workspace && cd ..`);
-  console.log(`       cd client && pnpm install --ignore-workspace && cd ..`);
-  console.log(`  2. Boot it:`);
+  console.log(`       pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true`);
+  console.log(`       cd server && pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true && cd ..`);
+  console.log(`       cd client && pnpm install --ignore-workspace --config.dangerouslyAllowAllBuilds=true && cd ..`);
+  console.log(
+    `     (the flag auto-approves esbuild's no-op prebuilt-binary build so the install exits 0; without`,
+  );
+  console.log(
+    `      it the install still works but ends with a harmless "ERR_PNPM_IGNORED_BUILDS … esbuild" prompt.)`,
+  );
+  console.log(`  2. Boot it (POSIX shell shown; on Windows use PowerShell — see the game's README):`);
   console.log(
     `       (cd server && PORT=2567 ALLOW_GUEST_LOGIN=true node ../node_modules/tsx/dist/cli.mjs src/index.ts)`,
   );

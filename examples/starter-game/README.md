@@ -45,6 +45,15 @@ cd client && pnpm install --ignore-workspace && cd ..
 # open the printed URL, click "Play as Guest", move with WASD / click
 ```
 
+> Each `pnpm install --ignore-workspace` ends with `ERR_PNPM_IGNORED_BUILDS: … esbuild…` and a
+> non-zero exit — **expected, not a failure** (pnpm skips one native post-install script; the
+> prebuilt binaries / JS fallback mean the game still boots). Ignore it.
+>
+> **Windows (PowerShell):** the boot lines use POSIX inline-env syntax. In PowerShell set the vars
+> first, e.g. `$env:PORT='2567'; $env:ALLOW_GUEST_LOGIN='true'; node ../node_modules/tsx/dist/cli.mjs src/index.ts`
+> (and `$env:VITE_COLYSEUS_URL='ws://127.0.0.1:2567'` for the client). Or just run the commands from
+> Git Bash as written.
+
 ## Exercise the toolkit against it
 
 From this folder (so `cwd` is the game root), pointing at the sibling toolkit:

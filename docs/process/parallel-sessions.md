@@ -2,6 +2,12 @@
 
 One session = one branch = one git worktree. Sessions never share a working tree.
 
+> The `lane:*`, `intake*`, and `sessions:*` commands below are real `pnpm` scripts. The
+> `integrator:start` / `integrator:park` reusable-worktree helpers referenced here have a tool under
+> `tools/src/` but **no `pnpm` binding yet** — run them via `tsx tools/src/integrator-start.ts` /
+> `integrator-park.ts` (or add the scripts to `package.json`). See the inventory in
+> [adopting-the-harness.md](../adopting-the-harness.md).
+
 **Lane-saturation doctrine:** keep **3–4+ lanes running in parallel** at all times — never idle
 waiting on 1–2 sessions while file-disjoint work sits queued. The orchestrator proactively hands
 the owner paste-ready cards whenever live lanes drop below ~4 (docs-only research cards are always

@@ -42,7 +42,11 @@ The game-aware areas depend on the **contract**, not on a game's source. See
 
 An optional but battle-tested methodology for building the game with parallel AI coding sessions
 ("lanes"): fan out work, verify against the code, merge cleanly, keep docs from drifting. It is
-game-agnostic — adopt it on any project. Read in this order:
+game-agnostic — adopt it on any project.
+
+**New to the harness? Start with [adopting-the-harness.md](adopting-the-harness.md)** — the Day-1
+on-ramp: the minimum steps in order, the real-script mapping, how to wire the model-role charter,
+and an honest turnkey-vs-adapt inventory. Then read the reference docs in this order:
 
 1. **[AGENTS.md](AGENTS.md)** — entry point. Boot order, mandatory checks, working modes,
    source-of-truth precedence, git/worktree rules. Every AI session reads this first.
@@ -63,9 +67,11 @@ game-agnostic — adopt it on any project. Read in this order:
 
 ## Adopting the AI harness on your game
 
-The harness references a few project docs by role (a cold-start brief, an active-session snapshot, a
-resume/handoff cursor, a durable project-memory, and a decisions doc). Create those for your game,
-point AGENTS.md and the templates at them, and record your model-role mapping (which real models
-play senior-decision / executor / generation / evidence) in your decisions doc. Everything else in
-Track 2 is project-agnostic by design. Track 1 needs no adoption beyond wiring the contract and
-setting `GAME_ROOT` / `ASSETS_ROOT`.
+Full walkthrough: [adopting-the-harness.md](adopting-the-harness.md). In short: the harness's memory
+is five state docs (cold-start brief, active-session snapshot, resume/handoff cursor, durable
+project-memory, decisions) — **`pnpm create:game` seeds these as stubs**, so a scaffolded game
+already has them; a hand-wired game creates them and points AGENTS.md + the templates at their paths.
+The one thing you must do either way is record your **model-role mapping** (which real models play
+senior-decision / executor / generation / evidence, plus your engine split) in your decisions doc.
+Everything else in Track 2 is project-agnostic by design. Track 1 needs no adoption beyond wiring the
+contract and setting `GAME_ROOT` / `ASSETS_ROOT`.

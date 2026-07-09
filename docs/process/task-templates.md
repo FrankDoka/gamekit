@@ -1,7 +1,9 @@
 # AI Task Templates
 
 Use these templates to keep AI sessions scoped and easy to review. The "Read first" lists name
-state docs by role — point them at your project's concrete paths.
+state docs by role — point them at your project's concrete paths. The **context-routing map** line
+is optional: it is not scaffolded by `create:game`; drop it from the list on projects that don't
+keep one (see [adopting-the-harness.md](../adopting-the-harness.md) Step 2).
 
 ## Lightweight Task Card
 

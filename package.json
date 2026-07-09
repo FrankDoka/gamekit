@@ -46,6 +46,11 @@
     "lanes:board": "tsx tools/src/lanes-board.ts",
     "lanes:watch": "tsx tools/src/lanes-watch.ts",
     "coverage:check": "tsx tools/src/coverage-ratchet.ts",
+    "integrator:start": "tsx tools/src/integrator-start.ts",
+    "integrator:park": "tsx tools/src/integrator-park.ts",
+    "lane:security-scan": "tsx tools/src/lane-security-scan.ts",
+    "imagegen:extract": "tsx tools/src/imagegen-extract.ts",
+    "capture:zone": "tsx tools/src/capture-zone.ts",
     "lint": "eslint . --max-warnings 300"
   },
   "devDependencies": {

@@ -108,13 +108,15 @@ async function main(): Promise<void> {
     await harness.page.locator("#pull10").click();
 
     // Wait for the summon to resolve: 10 results land in __GACHA.lastResults and
-    // the currency drops by the x10 cost.
+    // the currency drops by (at least) the x10 cost. Compare against the currency we
+    // actually observed pre-pull (currencyBefore) rather than a hardcoded starting
+    // balance, so this stays correct if the server's STARTING_CURRENCY ever changes.
     await harness.page.waitForFunction(
-      (expectedCost) => {
+      ({ expectedCost, before }) => {
         const g = (globalThis as { __GACHA?: GachaGlobal }).__GACHA;
-        return (g?.lastResults?.length ?? 0) >= 10 && typeof g?.state?.currency === "number" && g.state.currency <= 3000 - expectedCost;
+        return (g?.lastResults?.length ?? 0) >= 10 && typeof g?.state?.currency === "number" && g.state.currency <= before - expectedCost;
       },
-      home.state.pullCostX10,
+      { expectedCost: home.state.pullCostX10, before: currencyBefore },
       { timeout: 20_000 },
     );
     // Let the result-reveal DOM paint before the screenshot.

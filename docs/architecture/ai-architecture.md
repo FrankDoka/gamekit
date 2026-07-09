@@ -14,6 +14,12 @@ Source of truth / precedence: AGENTS.md §Source Of Truth.
 > decision model, a primary executor, a generation engine, and a cheap evidence model. Map them to
 > whatever models your team uses, and record that mapping (and any re-tuning) in your decisions
 > doc. The example mapping in the Charter below is illustrative.
+>
+> **First-time adopters:** wire the roles and the state docs before running any lane — the concrete
+> steps and an honest turnkey-vs-adapt inventory of the scripts referenced below (some are real
+> `pnpm` scripts; a few — `integrator:start/park`, `lane:security-scan`, `imagegen:extract`,
+> `capture:zone` — have a tool under `tools/src/` but no `pnpm` binding yet) are in
+> [adopting-the-harness.md](../adopting-the-harness.md).
 
 ## Grounded Fan-Out Protocol (anti-hallucination by construction)
 

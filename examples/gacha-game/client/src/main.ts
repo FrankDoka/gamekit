@@ -48,6 +48,20 @@ function stars(rarity: Rarity): string {
   return "★".repeat(rarity);
 }
 
+// Escape server-provided strings before interpolating them into innerHTML. The
+// reference banner/unit names are safe constants, but this is fork-point code:
+// the moment a fork sources names from user input, a CMS, or an untrusted server,
+// unescaped interpolation is a stored/reflected XSS (and attribute-context XSS in
+// alt="..."). Escaping here makes the pattern forks copy safe by default.
+function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // --- API calls ---------------------------------------------------------------
 async function apiGuest(): Promise<void> {
   const res = await fetch(`${API_BASE}/api/guest`, { method: "POST" });
@@ -92,8 +106,8 @@ function unitCardHtml(
   return `
     <div class="unit ${r}">
       ${pity}${count}
-      <img src="${unitArt(opts.unitId)}" alt="${opts.name}" />
-      <div class="name">${opts.name}</div>
+      <img src="${esc(unitArt(opts.unitId))}" alt="${esc(opts.name)}" />
+      <div class="name">${esc(opts.name)}</div>
       <div class="stars ${r}">${stars(opts.rarity)}</div>
     </div>`;
 }
@@ -104,7 +118,7 @@ function renderHome(): void {
     <div class="card">
       <h2>Home</h2>
       <p class="muted">Welcome, guest. Spend currency to summon units for the
-        <strong>${session.banner?.name}</strong> banner.</p>
+        <strong>${esc(session.banner?.name ?? "")}</strong> banner.</p>
       <p>Currency: <strong style="color:var(--accent-2)">✦ ${st.currency}</strong></p>
       <p class="pity-bar muted">Pity: ${st.pityCounter} / ${st.hardPity5}
         pulls toward a guaranteed 5★.</p>
@@ -127,8 +141,8 @@ function renderSummon(): void {
     : `<p class="muted">Pull to reveal units.</p>`;
   screenEl().innerHTML = `
     <div class="card">
-      <h2>Summon — ${b.name}</h2>
-      <img class="banner-art" src="/assets/banner/${b.bannerId}.png" alt="${b.name}" />
+      <h2>Summon — ${esc(b.name)}</h2>
+      <img class="banner-art" src="${esc(`/assets/banner/${b.bannerId}.png`)}" alt="${esc(b.name)}" />
       <p class="pity-bar muted">Pity: ${st.pityCounter} / ${st.hardPity5}. Rates:
         5★ ${(b.rates[5] * 100).toFixed(0)}% · 4★ ${(b.rates[4] * 100).toFixed(0)}% ·
         3★ ${(b.rates[3] * 100).toFixed(0)}%.</p>

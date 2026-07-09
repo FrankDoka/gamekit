@@ -97,7 +97,11 @@ class GameScene extends Phaser.Scene {
       this.sendMoveTo(pointer.worldX, pointer.worldY);
     });
 
-    void this.connect();
+    // Fire-and-forget connect, but surface a failed join instead of letting it
+    // become a silent unhandled rejection (server down / bad COLYSEUS_URL).
+    this.connect().catch((err) => {
+      console.error("[game] failed to join room:", err);
+    });
   }
 
   update(): void {

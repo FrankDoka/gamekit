@@ -10,6 +10,34 @@ as a multi-genre baseline, not an action engine. Fork the one closest to your ga
 [docs/genres.md](docs/genres.md)). The fastest path for a real-time game is `pnpm create:game <name>`
 (see below), then replace the placeholder art. The docs deep-dive is in [docs/README.md](docs/README.md).
 
+## Quick start
+
+**Prereqs:** Node >= 20 and pnpm 11 (`corepack enable` provides the pinned `pnpm@11.7.0`). Commands
+below are POSIX shell (bash / Git Bash / macOS / Linux); see the Windows note under the boot blocks
+in the generated game's README.
+
+```sh
+# 1. Set up the toolkit itself (from this repo root)
+pnpm install                 # installs the toolkit workspace (tools + packages/*)
+pnpm -r typecheck            # green
+pnpm test                    # vitest — ~148 pass
+pnpm selftest                # Python asset-fixture gates (needs Python 3.11 + Pillow + numpy)
+
+# 2. Scaffold your own real-time game (copies examples/starter-game as a sibling ../my-first-game/)
+pnpm create:game my-first-game --dry-run   # preview; drop --dry-run to actually create it
+```
+
+Then follow the printed **Next steps** (or the generated game's `README.md`) to install and boot the
+new game — its server + client each install in isolation and boot manually. Prefer a different genre?
+Read [docs/genres.md](docs/genres.md) and fork `tactics-game` or `gacha-game` instead. New to the
+whole kit? Start at [docs/README.md](docs/README.md).
+
+> **Expected on isolated installs:** each `pnpm install --ignore-workspace` (for the scaffolded game
+> and the alt-genre examples) ends with `ERR_PNPM_IGNORED_BUILDS: Ignored build scripts: esbuild…`
+> **and a non-zero exit code**. This is **not** a failure — pnpm just skips a native post-install
+> script. `tsx`/`vite` (esbuild) ship prebuilt platform binaries and `msgpackr-extract` has a
+> pure-JS fallback, so the game boots and every tool runs regardless. You can ignore the message.
+
 ## Genres / reference games
 
 Three self-contained, forkable reference games prove the same conventions carry three genres. Full
