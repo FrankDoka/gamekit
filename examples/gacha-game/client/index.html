@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gacha Game</title>
     <style>
       :root {
@@ -28,6 +28,16 @@
         background: radial-gradient(1200px 700px at 50% -10%, #241f3d, var(--bg));
         color: var(--text);
         font-family: system-ui, sans-serif;
+        /* Avoid iOS text auto-inflation and tidy the tap flash on touch. */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgba(181, 124, 255, 0.2);
+      }
+      /* Interactive controls: comfortable touch behaviour, no accidental
+         double-tap zoom, no long-press text selection on buttons. */
+      button {
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
       }
       #app {
         max-width: 900px;
@@ -49,6 +59,7 @@
       }
       #auth-guest {
         font: 600 20px system-ui, sans-serif;
+        min-height: 44px;
         padding: 14px 30px;
         border: 0;
         border-radius: 10px;
@@ -62,6 +73,7 @@
         display: none;
         align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
         gap: 12px;
         padding: 10px 14px;
         background: var(--panel);
@@ -82,6 +94,7 @@
       }
       .nav button {
         font: 600 14px system-ui, sans-serif;
+        min-height: 44px;
         padding: 8px 14px;
         border: 0;
         border-radius: 8px;
@@ -111,6 +124,7 @@
       }
       .btn {
         font: 600 16px system-ui, sans-serif;
+        min-height: 44px;
         padding: 12px 22px;
         border: 0;
         border-radius: 10px;
@@ -207,6 +221,45 @@
       .pity-bar {
         margin-top: 8px;
         font-size: 13px;
+      }
+      /* --- Mobile / portrait (mobile-first scale-down at <=480px) --- */
+      @media (max-width: 480px) {
+        #app {
+          padding: 12px;
+        }
+        /* Topbar stays a row for title + currency; nav wraps to a full-width
+           row beneath them so the three tabs get comfortable tap width. */
+        #topbar {
+          padding: 10px 12px;
+          margin-bottom: 12px;
+        }
+        .nav {
+          flex-basis: 100%;
+          gap: 8px;
+        }
+        .nav button {
+          flex: 1;
+        }
+        .card {
+          padding: 16px;
+        }
+        /* Summon results + roster reflow to exactly 2 columns on narrow screens. */
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        /* Let unit art scale to the (narrower) card instead of a fixed 88px. */
+        .unit img {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 1 / 1;
+        }
+        /* Full-width primary actions so pull/nav buttons are easy tap targets. */
+        .row .btn {
+          flex: 1;
+        }
+        .banner-art {
+          margin-bottom: 12px;
+        }
       }
     </style>
   </head>

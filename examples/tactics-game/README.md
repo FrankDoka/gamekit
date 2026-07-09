@@ -112,18 +112,32 @@ but the **runtime shape is turn-based, not real-time**: no per-tick simulation, 
 only in response to validated intents, and the room holds abstract board units per *team*
 rather than one entity per connection.
 
-### Toolkit friction (expected, not a bug)
+### Toolkit tooling — the turn-based capture sibling
 
-The toolkit's smoke/capture state reader
+The toolkit's action capture reader
 ([`tools/src/smoke/state.ts`](../../tools/src/smoke/state.ts)) is **action-oriented**: it
 reads `scene.room.state.players` keyed by `sessionId`, `scene.playerObjects`, and real-time
 fields (`hp/mp/xp/inventory/quests`, `monsters[]`). A tactics game has none of those — its
-entities are `units[]` keyed by `unitId` and owned by a team, not a connection. So the
-action capture tool won't fully drive this game (it would find zero `players`/`playerObjects`).
+entities are `units[]` keyed by `unitId` and owned by a team, not a connection — so the action
+capture tool can't drive it (it would find zero `players`/`playerObjects`).
 
-To stay inspectable anyway, the scene keyed `"game"` still exposes `room`, `localSessionId`,
-and the live `board` + `units` snapshot on `globalThis.__GAME` — a genre-appropriate smoke
-reader (units-by-team instead of players-by-session) would slot in cleanly. Verified here with
-a small standalone Playwright drive instead (see `_shots/`). This is the intended finding: the
-genre fits the *conventions*, and the one action-specific tool needs a turn-based sibling — we
-did **not** modify `tools/` to force it.
+The genre-appropriate sibling now ships as
+[`tools/src/capture-tactics.ts`](../../tools/src/capture-tactics.ts) (script `pnpm
+capture:tactics`). It reuses the action harness's boot mechanics **verbatim** — the same
+port-reservation guard and the same `smokeRunId` ownership handshake, factored into the
+genre-neutral [`tools/src/smoke/genre-harness.ts`](../../tools/src/smoke/genre-harness.ts) —
+and adds a small **units-by-team reader** off the `"game"` scene's `room`/`board`/`units`/
+`activeTeam` (it does **not** modify the action `state.ts`). It drives one legal move via a
+`move` intent, asserts the unit moved in `room.state`, and screenshots the board before + after
+(see `_shots/tactics-board-{before,after}.png`).
+
+This script is **game-aware** — it needs this wired game. Run it from the toolkit root with
+`GAME_ROOT` pointing here (or from this folder), optionally passing an out-dir:
+
+```sh
+GAME_ROOT=examples/tactics-game pnpm capture:tactics            # -> _shots/tactics-board-*.png
+GAME_ROOT=examples/tactics-game pnpm capture:tactics <outDir>
+```
+
+The finding held: the genre fits the *conventions*, and the one action-specific reader just
+needed a turn-based sibling — which reuses (not forks) the shared boot.

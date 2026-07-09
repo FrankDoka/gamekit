@@ -1,0 +1,17 @@
+# Normalize line endings to LF in the repo (checked out as-is). Prevents CRLF/LF churn on
+# Windows (core.autocrlf) that showed large files as "modified" with no content change and,
+# in one case, interacted badly with `git stash` — keep text as LF everywhere.
+* text=auto eol=lf
+
+# Binary assets — never touch line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.mp4 binary
+*.webm binary
+*.ico binary

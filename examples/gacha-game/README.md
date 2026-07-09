@@ -119,19 +119,35 @@ into `packages/*` — but the **runtime shape is request/response, not a statefu
 server is Express (no Colyseus room, no WebSocket, no per-tick simulation), and state mutates only
 in response to an authoritative HTTP request.
 
-### Toolkit friction (expected, not a bug — we did NOT modify `tools/`)
+### Toolkit tooling — the request/response capture sibling
 
-- **The smoke/capture reader is action-oriented.** The toolkit's state reader
+This genre breaks the action pipeline's two core assumptions, and the capture sibling handles both:
+
+- **The reader is action-oriented.** The toolkit's state reader
   ([`tools/src/smoke/state.ts`](../../tools/src/smoke/state.ts)) reads a Colyseus `scene.room.state`
   and real-time fields (players by `sessionId`, `monsters[]`, `hp/mp/xp`). A gacha game has none of
-  those — its inspectable state is `globalThis.__GACHA` (currency / roster / banner), not a room —
-  so the action capture tool won't drive this game. A genre-appropriate smoke reader (read the HTTP
-  `state` / `__GACHA`) would slot in cleanly. Verified here with a small standalone Playwright drive
-  instead (see `_shots/`).
-- **The guest handshake is a POST, not a room join.** The other references treat `#auth-guest` as
-  "join the room"; here it is `POST /api/guest`. The convention (a guest entry gated by
-  `ALLOW_GUEST_LOGIN`) still holds, but any tool that assumes the guest step opens a socket would
-  need a request/response variant.
+  those — its inspectable state is `globalThis.__GACHA` (currency / roster / banner), not a room. The
+  sibling reads `__GACHA` instead.
+- **The guest handshake is a POST, not a room join.** `#auth-guest` here fires `POST /api/guest`, not
+  a socket join. The sibling still clicks `#auth-guest` (the shared convention holds) and waits on the
+  HTTP session landing in `__GACHA`.
 
-This is the intended finding: the genre fits the **conventions**, and the action-specific tools
-need a request/response sibling — we did **not** modify `tools/` to force it.
+The genre-appropriate sibling now ships as
+[`tools/src/capture-gacha.ts`](../../tools/src/capture-gacha.ts) (script `pnpm capture:gacha`). It
+reuses the action harness's boot mechanics **verbatim** via the genre-neutral
+[`tools/src/smoke/genre-harness.ts`](../../tools/src/smoke/genre-harness.ts) — including the SAME
+`smokeRunId` ownership handshake (this HTTP server echoes the same `{"msg":"listening",…,"smokeRunId":…}`
+boot log, so the gate works unchanged) — then drives the DOM UI: `#auth-guest` → Summon → **Pull x10**
+→ Roster. It reads `__GACHA`, asserts **currency decreased + roster grew** (3000 → 2000, 0 → 10 copies),
+and screenshots Home + Summon-results + Roster (`_shots/gacha-{home,summon-results,roster}.png`).
+
+This script is **game-aware** — it needs this wired game. Run it from the toolkit root with
+`GAME_ROOT` pointing here (or from this folder), optionally passing an out-dir:
+
+```sh
+GAME_ROOT=examples/gacha-game pnpm capture:gacha            # -> _shots/gacha-*.png
+GAME_ROOT=examples/gacha-game pnpm capture:gacha <outDir>
+```
+
+The finding held: the genre fits the **conventions**, and the action-specific tools just needed a
+request/response sibling — which reuses (not forks) the shared boot.

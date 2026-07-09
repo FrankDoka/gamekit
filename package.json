@@ -32,6 +32,8 @@
     "animation-index": "tsx tools/src/animation-index.ts",
     "animation-promote": "tsx tools/src/animation-promote.ts",
     "frame-picker": "tsx tools/src/frame-picker.ts",
+    "capture:tactics": "tsx tools/src/capture-tactics.ts",
+    "capture:gacha": "tsx tools/src/capture-gacha.ts",
     "zone:lint:selftest": "tsx tools/src/zone-lint-selftest.ts",
     "docs:budget": "tsx tools/src/docs-budget.ts",
     "sessions:sync": "tsx tools/src/sessions-sync.ts",
