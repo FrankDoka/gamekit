@@ -9,7 +9,8 @@ Start at the repo [README](../README.md) for setup and the "wire a new game" ste
 which is `pnpm create:game <name>`, which scaffolds a fresh game from
 [examples/starter-game](../examples/starter-game) (copies it, rewires names/title/README, writes
 `.env.example`, and seeds `docs/state/*` harness stubs). This folder is the deeper reference, split
-into two tracks.
+into two tracks. **Where the kit is going:** [roadmap.md](roadmap.md) — the ten-phase plan from
+today's baseline to a versioned, scalable 1.0 ecosystem (both tracks evolve in lock-step there).
 
 ---
 
