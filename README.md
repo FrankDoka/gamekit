@@ -184,7 +184,7 @@ prior-game-specific gates (visual-proof, zoom-lock, zone-DoD, lane-branch push b
   genericized** — all prior-game-specific gates removed, generic guards (empty-commit, merge-marker,
   secret detection, conventional commit-msg) kept. Safe to enable via `core.hooksPath` (see the
   "CI / Database / Git hooks" section above).
-- The game-aware wrapper scripts (`capture:zone`, `build:client`, `boot:server`, `smoke:client`,
-  `qa`, `dev:client`) and a few doc-referenced orchestration scripts (`integrator:start/park`,
-  `lane:security-scan`, `imagegen:extract`) are named in the docs but not in root `package.json` —
-  they belong to a wired game or a later slice.
+- The orchestration + capture scripts (`integrator:start/park`, `lane:security-scan`,
+  `imagegen:extract`, `capture:zone`) are now wired in root `package.json`. The remaining wrappers
+  (`build:client`, `boot:server`, `dev:client`, `smoke:client`, `qa`) are genuinely game-side — a
+  wired game adds them to its own `package.json`.
