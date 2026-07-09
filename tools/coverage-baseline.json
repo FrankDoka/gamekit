@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-07-03T16:17:29.566Z",
+  "ceilings": {
+    "shared": 90,
+    "server": 80,
+    "client": 60
+  },
+  "workspaces": {
+    "shared": {
+      "lines": 90
+    },
+    "server": {
+      "lines": 31.62
+    },
+    "client": {
+      "lines": 0,
+      "note": "no tests yet"
+    }
+  }
+}

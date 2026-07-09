@@ -1,0 +1,21 @@
+{
+  "name": "@gamekit/game-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The interface a game implements so the game-aware toolkit (capture/zone/smoke/devkit) works against it. Types + generic reference algorithms; no game logic.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

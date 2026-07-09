@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starter Game</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #10141c;
+        overflow: hidden;
+      }
+      #auth {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+      }
+      #auth-guest {
+        font: 600 20px system-ui, sans-serif;
+        padding: 14px 28px;
+        border: 0;
+        border-radius: 8px;
+        background: #4c8bf5;
+        color: #fff;
+        cursor: pointer;
+      }
+      #game {
+        position: absolute;
+        inset: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="auth">
+      <button id="auth-guest" type="button">Play as Guest</button>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

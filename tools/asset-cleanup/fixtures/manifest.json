@@ -1,0 +1,234 @@
+{
+  "comment": "Animation-validator regression fixtures (card-anim-validators, 2026-07-07). Negatives are the REAL reverted garbage sheets extracted byte-identical from git history (blobs already existed in those commits, so re-adding them reuses the objects). Thresholds were calibrated on these full sheets; test_anim_validators.py drives this manifest and is wired into pnpm validate. knownLimitation entries are OWNED by the acceptance panel + eyes-on layer (integrator ruling 2026-07-07): their defects are geometric (plank-rotation death, anatomy garble), measured inseparable from live positives by motion/palette metrics; they stay here so a future motion-geometry recipe has calibration targets waiting.",
+  "fixtures": [
+    {
+      "id": "b4_block_brace",
+      "file": "b4-negative/player_baldbase_block_brace.clean.png",
+      "source": "git show 2ca585e6:assets/sources/accepted/player_baldbase/block_brace/imagegen-b4-20260707/runtime/player_baldbase_block_brace.clean.png",
+      "cell": 384,
+      "loop": true,
+      "expect": { "motionArc": "FAIL:duplicate_tiling", "identityPalette": "PASS" },
+      "notes": "Second half of the sheet is duplicate-tiled: adjacent deltas 1.4-2.0 across f03-f07."
+    },
+    {
+      "id": "b4_gather",
+      "file": "b4-negative/player_baldbase_gather.clean.png",
+      "source": "git show 2ca585e6:assets/sources/accepted/player_baldbase/gather/imagegen-b4-20260707/runtime/player_baldbase_gather.clean.png",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "FAIL:flat_loop", "identityPalette": "PASS" },
+      "notes": "Uniformly-high garble deltas, no arc: max/min 1.31 < 1.38 loop floor."
+    },
+    {
+      "id": "b4_sit",
+      "file": "b4-negative/player_baldbase_sit.clean.png",
+      "source": "git show 2ca585e6:assets/sources/accepted/player_baldbase/sit/imagegen-b4-20260707/runtime/player_baldbase_sit.clean.png",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "FAIL:flat_loop", "identityPalette": "PASS" },
+      "notes": "Flattest profile of the set: max/min 1.19."
+    },
+    {
+      "id": "b4_death",
+      "file": "b4-negative/player_baldbase_death.clean.png",
+      "source": "git show 2ca585e6:assets/sources/accepted/player_baldbase/death/imagegen-b4-20260707/runtime/player_baldbase_death.clean.png",
+      "cell": 256,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "knownLimitation": "geometric - panel layer owns this",
+      "notes": "Rotated-plank death: rigid whole-body rotation, palette-stable (L1 0.13), healthy motion magnitude (min delta 29.8, ratio 2.40). Calibration target for a future motion-geometry recipe."
+    },
+    {
+      "id": "b4_hurt",
+      "file": "b4-negative/player_baldbase_hurt.clean.png",
+      "source": "git show 2ca585e6:assets/sources/accepted/player_baldbase/hurt/imagegen-b4-20260707/runtime/player_baldbase_hurt.clean.png",
+      "cell": 256,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "knownLimitation": "geometric - panel layer owns this",
+      "notes": "Anatomy/pose garble (cape side flips frame to frame), palette-stable (L1 0.07), healthy motion magnitude (min delta 24.3, ratio 2.44). Calibration target for a future motion-geometry recipe."
+    },
+    {
+      "id": "b2_swing_1h",
+      "file": "b2-negative/player_baldbase_swing_1h.clean.png",
+      "source": "git show d373916f:assets/sources/accepted/player_baldbase/swing_1h/imagegen-b2-20260707/runtime/player_baldbase_swing_1h.clean.png",
+      "cell": 384,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "FAIL:costume_drift" },
+      "canon": "tools/asset-cleanup/fixtures/positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "canonCell": 256,
+      "expectCanon": "FAIL:canon_drift",
+      "notes": "Coherent anatomy, per-frame outfit morph: internal L1 0.83, vs B1 canon 1.08."
+    },
+    {
+      "id": "b2_stab",
+      "file": "b2-negative/player_baldbase_stab.clean.png",
+      "source": "git show d373916f:assets/sources/accepted/player_baldbase/stab/imagegen-b2-20260707/runtime/player_baldbase_stab.clean.png",
+      "cell": 384,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "FAIL:costume_drift" },
+      "canon": "tools/asset-cleanup/fixtures/positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "canonCell": 256,
+      "expectCanon": "FAIL:canon_drift",
+      "notes": "Internal L1 0.91, vs B1 canon 1.19."
+    },
+    {
+      "id": "b2_heavy_2h",
+      "file": "b2-negative/player_baldbase_heavy_2h.clean.png",
+      "source": "git show d373916f:assets/sources/accepted/player_baldbase/heavy_2h/imagegen-b2-20260707/runtime/player_baldbase_heavy_2h.clean.png",
+      "cell": 384,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "FAIL:costume_drift" },
+      "canon": "tools/asset-cleanup/fixtures/positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "canonCell": 256,
+      "expectCanon": "FAIL:canon_drift",
+      "notes": "Internal L1 0.83, vs B1 canon 1.23."
+    },
+    {
+      "id": "pos_cel_idle",
+      "file": "../../../client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" }
+    },
+    {
+      "id": "pos_cel_walk",
+      "file": "../../../client/public/assets/sprites/player_blackhair_cel_walk_east_256.webp",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "canon": "client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp",
+      "canonCell": 256,
+      "expectCanon": "PASS"
+    },
+    {
+      "id": "pos_cel_gather",
+      "file": "../../../client/public/assets/sprites/player_blackhair_cel_gather_east_256.png",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "canon": "client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp",
+      "canonCell": 256,
+      "expectCanon": "PASS",
+      "notes": "Loop ratio 1.44 sits in the 1.38-1.55 WARN band by design - passes with a loud warning."
+    },
+    {
+      "id": "pos_cel_attack",
+      "file": "../../../client/public/assets/sprites/player_blackhair_cel_attack_east_384x320.webp",
+      "cell": 384,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "canon": "client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp",
+      "canonCell": 256,
+      "expectCanon": "PASS",
+      "notes": "The widest legitimate player palette swing (sword sweep): internal L1 0.43, canon L1 0.77."
+    },
+    {
+      "id": "pos_slime_attack",
+      "file": "../../../client/public/assets/sprites/monster_meadow_slime_attack_side_imagegen_pilot.png",
+      "cell": 384,
+      "loop": false,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "notes": "Widest legitimate palette swing overall (whole-body squash/stretch): internal L1 0.64. No canon pair - cross-entity canon comparisons are invalid (measure 1.9+)."
+    },
+    {
+      "id": "pos_b1_idle",
+      "file": "positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "notes": "Loop ratio ~1.55 at the WARN band boundary; either WARN-pass or clean pass is acceptable."
+    },
+    {
+      "id": "pos_b1_walk",
+      "file": "positives-baldbase/player_baldbase_walk_east_256.clean.png",
+      "cell": 256,
+      "loop": true,
+      "expect": { "motionArc": "PASS", "identityPalette": "PASS" },
+      "canon": "tools/asset-cleanup/fixtures/positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "canonCell": 256,
+      "expectCanon": "PASS"
+    }
+  ],
+  "opaqueRingComment": "Foreign-hue opaque-ring gate fixtures (card-anim-opaque-ring-wiring, 2026-07-07). Drives fringe.py opaque_magenta_ring: the defective video-keyed swing must fire RED (dark-magenta despill ring with ZERO interior support, 826-962 px/frame), while B1 idle (dark-plum cel outline, foreign count <=19) and monster_blossom_slime (a legitimately-PINK subject whose body+outline hue is its own palette, count 0) must pass GREEN. The blossom slime is the calibration trap: a naive magenta-lean count would false-fail it. A still uses cell=null (whole image); a sheet passes its measured cell. If the defective ever stops FAILING or a positive starts FAILING here, the calibration regressed - do not silence it.",
+  "opaqueRingFixtures": [
+    {
+      "id": "ring_defective_swing",
+      "file": "opaque-magenta-ring/player_baldbase_swing_1h.defective-ring.clean.png",
+      "cell": 384,
+      "expectOpaqueRing": "FAIL"
+    },
+    {
+      "id": "ring_b1_idle",
+      "file": "positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "cell": 256,
+      "expectOpaqueRing": "PASS"
+    },
+    {
+      "id": "ring_blossom_slime",
+      "file": "../../../client/public/assets/sprites/monster_blossom_slime.png",
+      "cell": null,
+      "expectOpaqueRing": "PASS"
+    }
+  ],
+  "greenTealSpeckleComment": "Lower-body green/teal video-key residue gate fixtures (card-p3-video-cast, 2026-07-08). Drives fringe.py green_teal_speckle: the rejected cast sheet must fire RED in the foot-band metric (dirty cast 431-507 px/frame in this checker), while accepted swing (0-6 px/frame) and B1 idle (0 px/frame) must pass GREEN at threshold 6. Full-silhouette counts are diagnostic only because accepted sheets carry legitimate teal costume/scarf pixels.",
+  "greenTealSpeckleFixtures": [
+    {
+      "id": "green_teal_dirty_cast",
+      "file": "green-teal-speckle/player_baldbase_cast.dirty-green-foot.png",
+      "cell": 384,
+      "expectGreenTealSpeckle": "FAIL"
+    },
+    {
+      "id": "green_teal_swing",
+      "file": "positives-baldbase/player_baldbase_swing_1h.clean.png",
+      "cell": 384,
+      "expectGreenTealSpeckle": "PASS"
+    },
+    {
+      "id": "green_teal_b1_idle",
+      "file": "positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "cell": 256,
+      "expectGreenTealSpeckle": "PASS"
+    }
+  ],
+  "colorParityComment": "Silhouette colour-parity gate fixtures (card-p3-cast-funnel-rebuild, 2026-07-08). Drives fringe.py color_parity: the palette-quantized+dithered cast sheet must fire RED on the value floor (whole-silhouette HSV value collapsed to 0.395 < 0.42; saturation is INFLATED to 0.626 by speckle so value carries the gate), while accepted B1 idle (0.661/0.537) and swing (0.673/0.531) pass GREEN. Floors are static, not a live canon compare, so a legitimately dimmer generation faithfully processed is not false-failed. If the destroyed sheet ever stops FAILING or a positive starts FAILING, the calibration regressed - do not silence it.",
+  "colorParityFixtures": [
+    {
+      "id": "color_parity_destroyed_cast",
+      "file": "color-parity-dither/player_baldbase_cast.destroyed.clean.png",
+      "expectColorParity": "FAIL"
+    },
+    {
+      "id": "color_parity_b1_idle",
+      "file": "positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "expectColorParity": "PASS"
+    },
+    {
+      "id": "color_parity_swing",
+      "file": "positives-baldbase/player_baldbase_swing_1h.clean.png",
+      "expectColorParity": "PASS"
+    }
+  ],
+  "ditherNoiseComment": "Dither-noise gate fixtures (card-p3-cast-funnel-rebuild, 2026-07-08). Drives fringe.py dither_noise: the dithered cast sheet must fire RED (sheet-median 2D luminance-oscillation density 4.489 > 3.5 floor), while accepted swing (1.85; one sword-sweep frame spikes to 4.796 but the median stays clean, proving the median aggregation) and B1 idle (2.482) pass GREEN. Sheets pass their measured --cell. If the destroyed sheet stops FAILING or a positive starts FAILING, the calibration regressed - do not silence it.",
+  "ditherNoiseFixtures": [
+    {
+      "id": "dither_destroyed_cast",
+      "file": "color-parity-dither/player_baldbase_cast.destroyed.clean.png",
+      "cell": 384,
+      "expectDitherNoise": "FAIL"
+    },
+    {
+      "id": "dither_swing",
+      "file": "positives-baldbase/player_baldbase_swing_1h.clean.png",
+      "cell": 384,
+      "expectDitherNoise": "PASS"
+    },
+    {
+      "id": "dither_b1_idle",
+      "file": "positives-baldbase/player_baldbase_idle_east_256.clean.png",
+      "cell": 256,
+      "expectDitherNoise": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "promoted": {
+    "ground_grass": {
+      "targetName": "ground_grass",
+      "targetPath": "tiles/ground_grass.png",
+      "basis": "1440p",
+      "type": "tiles"
+    }
+  }
+}

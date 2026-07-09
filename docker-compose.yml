@@ -1,0 +1,45 @@
+# Local Postgres for the DevKit (tools/src/devkit-hub.ts).
+#
+# The DevKit assumes a Postgres reachable on 127.0.0.1:5432 and drives it via
+# `docker compose exec -T db pg_dump/psql -U gamekit gamekit`, plus a DB-identity
+# guard that expects the compose project `db` service to surface as container
+# `gamekit-db-1`. This file ships exactly that.
+#
+#   docker compose up -d      -> starts gamekit-db-1 on :5432
+#   docker compose down       -> stops it (data persists in the gamekit_pgdata volume)
+#   docker compose down -v     -> also drops the volume (wipes the DB)
+#
+# Param reconciliation vs devkit-hub.ts:
+#   DATABASE_URL  postgres://gamekit:gamekit_dev@localhost:5432/gamekit   (:440, :463)
+#   user/db       gamekit / gamekit           (pg_dump/psql -U gamekit gamekit, :943, :991)
+#   service       db                          (exec -T db ..., :943/:991; identity :175)
+#   container     gamekit-db-1                (project `gamekit` + service `db` -> <project>-db-1)
+#   volume        gamekit_pgdata              (project `gamekit` + volume key `pgdata`)
+#   port          5432                        (tcpProbe 127.0.0.1:5432, :420/:428/:582)
+
+# Top-level project name -> container `gamekit-db-1` and volume `gamekit_pgdata`,
+# which the DevKit identity check (evaluateDbIdentity) and its test fixtures require.
+name: gamekit
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gamekit
+      POSTGRES_PASSWORD: gamekit_dev
+      POSTGRES_DB: gamekit
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Files in this dir run once, only when the volume is first created (empty DB).
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gamekit -d gamekit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

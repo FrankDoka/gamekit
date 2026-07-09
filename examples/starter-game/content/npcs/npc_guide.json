@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "npc_guide",
+  "nameKey": "npc.guide.name",
+  "mapId": "map_starter_field",
+  "x": 640,
+  "y": 520,
+  "radius": 48,
+  "dialogue": {
+    "introKey": "npc.guide.dialogue.intro",
+    "activeKey": "npc.guide.dialogue.active",
+    "completeKey": "npc.guide.dialogue.complete"
+  }
+}

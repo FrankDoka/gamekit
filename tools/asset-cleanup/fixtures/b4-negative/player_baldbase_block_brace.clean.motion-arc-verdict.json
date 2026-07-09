@@ -1,0 +1,36 @@
+{
+  "tool": "recipes.py",
+  "mode": "motion-arc",
+  "target": "tools/asset-cleanup/fixtures/b4-negative/player_baldbase_block_brace.clean.png",
+  "options": {
+    "--cell": "384"
+  },
+  "result": "FAIL",
+  "checks": [
+    {
+      "name": "cell_explicit",
+      "status": "PASS",
+      "detail": "cell=384 frames=8 (3072x320)"
+    },
+    {
+      "name": "constant_deltas",
+      "status": "PASS",
+      "detail": "max-min=35.38 (floor 0.5); constant deltas = whole-sheet duplicate tiling"
+    },
+    {
+      "name": "duplicate_tiling",
+      "status": "FAIL",
+      "detail": "adjacent deltas < 3.0: f03->f04=1.4, f04->f05=1.5, f05->f06=2.0, f06->f07=1.4"
+    },
+    {
+      "name": "flat_profile",
+      "status": "PASS",
+      "detail": "max/min=26.44 (non-loop floor 1.6; live attack=4.96 slime=2.64)"
+    },
+    {
+      "name": "motion_arc_metrics",
+      "status": "WARN",
+      "detail": "{\"cell\":384,\"frames\":8,\"loop\":false,\"adjacentDeltas\":[33.7,36.4,36.8,1.4,1.5,2.0,1.4],\"min\":1.4,\"max\":36.8,\"maxMinRatio\":26.44}"
+    }
+  ]
+}

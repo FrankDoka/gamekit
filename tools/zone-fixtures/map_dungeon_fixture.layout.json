@@ -1,0 +1,4993 @@
+{
+  "schemaVersion": 1,
+  "mapId": "map_dungeon_fixture",
+  "bounds": {
+    "width": 3040,
+    "height": 2752
+  },
+  "ground": [],
+  "decals": [],
+  "props": [],
+  "npcs": [],
+  "monsterSpawns": [
+    {
+      "instanceId": "monster_spawn_t2_44_32_1",
+      "monsterId": "monster_dew_slime",
+      "x": 1408,
+      "y": 1024,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_45_30_2",
+      "monsterId": "monster_dew_slime",
+      "x": 1440,
+      "y": 960,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_38_3",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 1216,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_50_31_4",
+      "monsterId": "monster_dew_slime",
+      "x": 1600,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_31_5",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_48_33_6",
+      "monsterId": "monster_dew_slime",
+      "x": 1536,
+      "y": 1056,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_42_32_7",
+      "monsterId": "monster_dew_slime",
+      "x": 1344,
+      "y": 1024,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_50_67_8",
+      "monsterId": "monster_blossom_slime",
+      "x": 1600,
+      "y": 2144,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_52_71_9",
+      "monsterId": "monster_blossom_slime",
+      "x": 1664,
+      "y": 2272,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_59_75_10",
+      "monsterId": "monster_blossom_slime",
+      "x": 1888,
+      "y": 2400,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_20_54_11",
+      "monsterId": "monster_dew_slime",
+      "x": 640,
+      "y": 1728,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_28_57_12",
+      "monsterId": "monster_dew_slime",
+      "x": 896,
+      "y": 1824,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_15_47_13",
+      "monsterId": "monster_dew_slime",
+      "x": 480,
+      "y": 1504,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_17_56_14",
+      "monsterId": "monster_dew_slime",
+      "x": 544,
+      "y": 1792,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_26_54_15",
+      "monsterId": "monster_dew_slime",
+      "x": 832,
+      "y": 1728,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_15_52_16",
+      "monsterId": "monster_dew_slime",
+      "x": 480,
+      "y": 1664,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_28_56_17",
+      "monsterId": "monster_dew_slime",
+      "x": 896,
+      "y": 1792,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_20_45_18",
+      "monsterId": "monster_dew_slime",
+      "x": 640,
+      "y": 1440,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_25_56_19",
+      "monsterId": "monster_dew_slime",
+      "x": 800,
+      "y": 1792,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_25_51_20",
+      "monsterId": "monster_dew_slime",
+      "x": 800,
+      "y": 1632,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_18_45_21",
+      "monsterId": "monster_dew_slime",
+      "x": 576,
+      "y": 1440,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_71_12_22",
+      "monsterId": "monster_blossom_slime",
+      "x": 2272,
+      "y": 384,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_72_11_23",
+      "monsterId": "monster_blossom_slime",
+      "x": 2304,
+      "y": 352,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_69_13_24",
+      "monsterId": "monster_blossom_slime",
+      "x": 2208,
+      "y": 416,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_67_9_25",
+      "monsterId": "monster_blossom_slime",
+      "x": 2144,
+      "y": 288,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_56_31_26",
+      "monsterId": "monster_dew_slime",
+      "x": 1792,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_53_32_27",
+      "monsterId": "monster_dew_slime",
+      "x": 1696,
+      "y": 1024,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_29_18_28",
+      "monsterId": "monster_dew_slime",
+      "x": 928,
+      "y": 576,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_14_29",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 448,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_29_9_30",
+      "monsterId": "monster_dew_slime",
+      "x": 928,
+      "y": 288,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_41_13_31",
+      "monsterId": "monster_dew_slime",
+      "x": 1312,
+      "y": 416,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_28_17_32",
+      "monsterId": "monster_dew_slime",
+      "x": 896,
+      "y": 544,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_41_18_33",
+      "monsterId": "monster_dew_slime",
+      "x": 1312,
+      "y": 576,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_33_21_34",
+      "monsterId": "monster_dew_slime",
+      "x": 1056,
+      "y": 672,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_33_9_35",
+      "monsterId": "monster_dew_slime",
+      "x": 1056,
+      "y": 288,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_20_36",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_29_12_37",
+      "monsterId": "monster_dew_slime",
+      "x": 928,
+      "y": 384,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_22_38",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 704,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_33_8_39",
+      "monsterId": "monster_dew_slime",
+      "x": 1056,
+      "y": 256,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_43_21_40",
+      "monsterId": "monster_dew_slime",
+      "x": 1376,
+      "y": 672,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_38_20_41",
+      "monsterId": "monster_dew_slime",
+      "x": 1216,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_38_22_42",
+      "monsterId": "monster_dew_slime",
+      "x": 1216,
+      "y": 704,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_42_11_43",
+      "monsterId": "monster_dew_slime",
+      "x": 1344,
+      "y": 352,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_27_21_44",
+      "monsterId": "monster_dew_slime",
+      "x": 864,
+      "y": 672,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_71_29_45",
+      "monsterId": "monster_blossom_slime",
+      "x": 2272,
+      "y": 928,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_64_27_46",
+      "monsterId": "monster_blossom_slime",
+      "x": 2048,
+      "y": 864,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_69_34_47",
+      "monsterId": "monster_blossom_slime",
+      "x": 2208,
+      "y": 1088,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_70_27_48",
+      "monsterId": "monster_blossom_slime",
+      "x": 2240,
+      "y": 864,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_66_27_49",
+      "monsterId": "monster_blossom_slime",
+      "x": 2112,
+      "y": 864,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_60_17_50",
+      "monsterId": "monster_blossom_slime",
+      "x": 1920,
+      "y": 544,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_62_21_51",
+      "monsterId": "monster_blossom_slime",
+      "x": 1984,
+      "y": 672,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_63_19_52",
+      "monsterId": "monster_blossom_slime",
+      "x": 2016,
+      "y": 608,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_84_29_53",
+      "monsterId": "monster_blossom_slime",
+      "x": 2688,
+      "y": 928,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_84_34_54",
+      "monsterId": "monster_blossom_slime",
+      "x": 2688,
+      "y": 1088,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_85_34_55",
+      "monsterId": "monster_blossom_slime",
+      "x": 2720,
+      "y": 1088,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_84_31_56",
+      "monsterId": "monster_blossom_slime",
+      "x": 2688,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_85_25_57",
+      "monsterId": "monster_blossom_slime",
+      "x": 2720,
+      "y": 800,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_83_33_58",
+      "monsterId": "monster_blossom_slime",
+      "x": 2656,
+      "y": 1056,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_82_25_59",
+      "monsterId": "monster_blossom_slime",
+      "x": 2624,
+      "y": 800,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_82_31_60",
+      "monsterId": "monster_blossom_slime",
+      "x": 2624,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_83_24_61",
+      "monsterId": "monster_blossom_slime",
+      "x": 2656,
+      "y": 768,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_37_46_62",
+      "monsterId": "monster_dew_slime",
+      "x": 1184,
+      "y": 1472,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_39_47_63",
+      "monsterId": "monster_dew_slime",
+      "x": 1248,
+      "y": 1504,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_35_43_64",
+      "monsterId": "monster_dew_slime",
+      "x": 1120,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_39_45_65",
+      "monsterId": "monster_dew_slime",
+      "x": 1248,
+      "y": 1440,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_34_46_66",
+      "monsterId": "monster_dew_slime",
+      "x": 1088,
+      "y": 1472,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_33_48_67",
+      "monsterId": "monster_dew_slime",
+      "x": 1056,
+      "y": 1536,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_74_41_68",
+      "monsterId": "monster_blossom_slime",
+      "x": 2368,
+      "y": 1312,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_76_43_69",
+      "monsterId": "monster_blossom_slime",
+      "x": 2432,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_76_38_70",
+      "monsterId": "monster_blossom_slime",
+      "x": 2432,
+      "y": 1216,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_72_41_71",
+      "monsterId": "monster_blossom_slime",
+      "x": 2304,
+      "y": 1312,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_76_45_72",
+      "monsterId": "monster_blossom_slime",
+      "x": 2432,
+      "y": 1440,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_71_41_73",
+      "monsterId": "monster_blossom_slime",
+      "x": 2272,
+      "y": 1312,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_70_46_74",
+      "monsterId": "monster_blossom_slime",
+      "x": 2240,
+      "y": 1472,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_75_50_75",
+      "monsterId": "monster_blossom_slime",
+      "x": 2400,
+      "y": 1600,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_71_49_76",
+      "monsterId": "monster_blossom_slime",
+      "x": 2272,
+      "y": 1568,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_70_42_77",
+      "monsterId": "monster_blossom_slime",
+      "x": 2240,
+      "y": 1344,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_73_50_78",
+      "monsterId": "monster_blossom_slime",
+      "x": 2336,
+      "y": 1600,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_79_43_79",
+      "monsterId": "monster_blossom_slime",
+      "x": 2528,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_67_46_80",
+      "monsterId": "monster_blossom_slime",
+      "x": 2144,
+      "y": 1472,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_73_44_81",
+      "monsterId": "monster_blossom_slime",
+      "x": 2336,
+      "y": 1408,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_74_39_82",
+      "monsterId": "monster_blossom_slime",
+      "x": 2368,
+      "y": 1248,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_77_49_83",
+      "monsterId": "monster_blossom_slime",
+      "x": 2464,
+      "y": 1568,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_71_48_84",
+      "monsterId": "monster_blossom_slime",
+      "x": 2272,
+      "y": 1536,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_68_55_85",
+      "monsterId": "monster_blossom_slime",
+      "x": 2176,
+      "y": 1760,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_68_56_86",
+      "monsterId": "monster_blossom_slime",
+      "x": 2176,
+      "y": 1792,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_35_35_87",
+      "monsterId": "monster_dew_slime",
+      "x": 1120,
+      "y": 1120,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_26_38_88",
+      "monsterId": "monster_dew_slime",
+      "x": 832,
+      "y": 1216,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_26_31_89",
+      "monsterId": "monster_dew_slime",
+      "x": 832,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_34_29_90",
+      "monsterId": "monster_dew_slime",
+      "x": 1088,
+      "y": 928,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_31_33_91",
+      "monsterId": "monster_dew_slime",
+      "x": 992,
+      "y": 1056,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_36_34_92",
+      "monsterId": "monster_dew_slime",
+      "x": 1152,
+      "y": 1088,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_37_29_93",
+      "monsterId": "monster_dew_slime",
+      "x": 1184,
+      "y": 928,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_30_34_94",
+      "monsterId": "monster_dew_slime",
+      "x": 960,
+      "y": 1088,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_27_37_95",
+      "monsterId": "monster_dew_slime",
+      "x": 864,
+      "y": 1184,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_49_43_96",
+      "monsterId": "monster_dew_slime",
+      "x": 1568,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_49_47_97",
+      "monsterId": "monster_dew_slime",
+      "x": 1568,
+      "y": 1504,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_49_44_98",
+      "monsterId": "monster_dew_slime",
+      "x": 1568,
+      "y": 1408,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t1_20_39_99",
+      "monsterId": "monster_meadow_slime",
+      "x": 640,
+      "y": 1248,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_68_20_100",
+      "monsterId": "monster_blossom_slime",
+      "x": 2176,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_68_22_101",
+      "monsterId": "monster_blossom_slime",
+      "x": 2176,
+      "y": 704,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_69_20_102",
+      "monsterId": "monster_blossom_slime",
+      "x": 2208,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_70_20_103",
+      "monsterId": "monster_blossom_slime",
+      "x": 2240,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_76_30_104",
+      "monsterId": "monster_blossom_slime",
+      "x": 2432,
+      "y": 960,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_77_31_105",
+      "monsterId": "monster_blossom_slime",
+      "x": 2464,
+      "y": 992,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_49_23_106",
+      "monsterId": "monster_blossom_slime",
+      "x": 1568,
+      "y": 736,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_48_18_107",
+      "monsterId": "monster_blossom_slime",
+      "x": 1536,
+      "y": 576,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_49_20_108",
+      "monsterId": "monster_blossom_slime",
+      "x": 1568,
+      "y": 640,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_51_17_109",
+      "monsterId": "monster_blossom_slime",
+      "x": 1632,
+      "y": 544,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_47_19_110",
+      "monsterId": "monster_blossom_slime",
+      "x": 1504,
+      "y": 608,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_55_22_111",
+      "monsterId": "monster_blossom_slime",
+      "x": 1760,
+      "y": 704,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_57_52_112",
+      "monsterId": "monster_blossom_slime",
+      "x": 1824,
+      "y": 1664,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_56_60_113",
+      "monsterId": "monster_blossom_slime",
+      "x": 1792,
+      "y": 1920,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_58_51_114",
+      "monsterId": "monster_blossom_slime",
+      "x": 1856,
+      "y": 1632,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_60_55_115",
+      "monsterId": "monster_blossom_slime",
+      "x": 1920,
+      "y": 1760,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t3_62_51_116",
+      "monsterId": "monster_blossom_slime",
+      "x": 1984,
+      "y": 1632,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_61_45_117",
+      "monsterId": "monster_dew_slime",
+      "x": 1952,
+      "y": 1440,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_58_42_118",
+      "monsterId": "monster_dew_slime",
+      "x": 1856,
+      "y": 1344,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_62_40_119",
+      "monsterId": "monster_dew_slime",
+      "x": 1984,
+      "y": 1280,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_62_44_120",
+      "monsterId": "monster_dew_slime",
+      "x": 1984,
+      "y": 1408,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_57_41_121",
+      "monsterId": "monster_dew_slime",
+      "x": 1824,
+      "y": 1312,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_57_43_122",
+      "monsterId": "monster_dew_slime",
+      "x": 1824,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    },
+    {
+      "instanceId": "monster_spawn_t2_60_43_123",
+      "monsterId": "monster_dew_slime",
+      "x": 1920,
+      "y": 1376,
+      "width": 32,
+      "height": 32,
+      "maxAlive": 1,
+      "respawnMs": 5000
+    }
+  ],
+  "portals": [
+    {
+      "instanceId": "portal_zone_portal_dungeon_exit_1",
+      "portalId": "portal_dungeon_exit",
+      "shape": {
+        "type": "circle",
+        "x": 1776,
+        "y": 2288,
+        "radius": 128
+      }
+    }
+  ],
+  "spawnPoints": [
+    {
+      "instanceId": "spawn_point_map_dungeon_fixture_spawn_dungeon_entrance",
+      "id": "spawn_dungeon_entrance",
+      "x": 368,
+      "y": 1200
+    }
+  ],
+  "collision": {
+    "tileSize": 32,
+    "blocked": [
+      [
+        50,
+        5
+      ],
+      [
+        51,
+        5
+      ],
+      [
+        52,
+        5
+      ],
+      [
+        53,
+        5
+      ],
+      [
+        54,
+        5
+      ],
+      [
+        55,
+        5
+      ],
+      [
+        56,
+        5
+      ],
+      [
+        57,
+        5
+      ],
+      [
+        58,
+        5
+      ],
+      [
+        59,
+        5
+      ],
+      [
+        60,
+        5
+      ],
+      [
+        61,
+        5
+      ],
+      [
+        62,
+        5
+      ],
+      [
+        63,
+        5
+      ],
+      [
+        64,
+        5
+      ],
+      [
+        50,
+        6
+      ],
+      [
+        64,
+        6
+      ],
+      [
+        25,
+        7
+      ],
+      [
+        26,
+        7
+      ],
+      [
+        27,
+        7
+      ],
+      [
+        28,
+        7
+      ],
+      [
+        29,
+        7
+      ],
+      [
+        30,
+        7
+      ],
+      [
+        31,
+        7
+      ],
+      [
+        32,
+        7
+      ],
+      [
+        33,
+        7
+      ],
+      [
+        34,
+        7
+      ],
+      [
+        35,
+        7
+      ],
+      [
+        36,
+        7
+      ],
+      [
+        37,
+        7
+      ],
+      [
+        38,
+        7
+      ],
+      [
+        39,
+        7
+      ],
+      [
+        40,
+        7
+      ],
+      [
+        41,
+        7
+      ],
+      [
+        42,
+        7
+      ],
+      [
+        43,
+        7
+      ],
+      [
+        44,
+        7
+      ],
+      [
+        45,
+        7
+      ],
+      [
+        50,
+        7
+      ],
+      [
+        64,
+        7
+      ],
+      [
+        25,
+        8
+      ],
+      [
+        45,
+        8
+      ],
+      [
+        50,
+        8
+      ],
+      [
+        64,
+        8
+      ],
+      [
+        66,
+        8
+      ],
+      [
+        67,
+        8
+      ],
+      [
+        68,
+        8
+      ],
+      [
+        69,
+        8
+      ],
+      [
+        70,
+        8
+      ],
+      [
+        71,
+        8
+      ],
+      [
+        72,
+        8
+      ],
+      [
+        73,
+        8
+      ],
+      [
+        74,
+        8
+      ],
+      [
+        25,
+        9
+      ],
+      [
+        45,
+        9
+      ],
+      [
+        50,
+        9
+      ],
+      [
+        64,
+        9
+      ],
+      [
+        66,
+        9
+      ],
+      [
+        74,
+        9
+      ],
+      [
+        25,
+        10
+      ],
+      [
+        45,
+        10
+      ],
+      [
+        50,
+        10
+      ],
+      [
+        64,
+        10
+      ],
+      [
+        66,
+        10
+      ],
+      [
+        74,
+        10
+      ],
+      [
+        25,
+        11
+      ],
+      [
+        45,
+        11
+      ],
+      [
+        50,
+        11
+      ],
+      [
+        64,
+        11
+      ],
+      [
+        66,
+        11
+      ],
+      [
+        74,
+        11
+      ],
+      [
+        25,
+        12
+      ],
+      [
+        45,
+        12
+      ],
+      [
+        50,
+        12
+      ],
+      [
+        64,
+        12
+      ],
+      [
+        66,
+        12
+      ],
+      [
+        74,
+        12
+      ],
+      [
+        25,
+        13
+      ],
+      [
+        45,
+        13
+      ],
+      [
+        50,
+        13
+      ],
+      [
+        64,
+        13
+      ],
+      [
+        66,
+        13
+      ],
+      [
+        74,
+        13
+      ],
+      [
+        25,
+        14
+      ],
+      [
+        45,
+        14
+      ],
+      [
+        46,
+        14
+      ],
+      [
+        47,
+        14
+      ],
+      [
+        48,
+        14
+      ],
+      [
+        50,
+        14
+      ],
+      [
+        64,
+        14
+      ],
+      [
+        66,
+        14
+      ],
+      [
+        74,
+        14
+      ],
+      [
+        25,
+        15
+      ],
+      [
+        48,
+        15
+      ],
+      [
+        49,
+        15
+      ],
+      [
+        50,
+        15
+      ],
+      [
+        51,
+        15
+      ],
+      [
+        52,
+        15
+      ],
+      [
+        53,
+        15
+      ],
+      [
+        54,
+        15
+      ],
+      [
+        55,
+        15
+      ],
+      [
+        56,
+        15
+      ],
+      [
+        57,
+        15
+      ],
+      [
+        58,
+        15
+      ],
+      [
+        59,
+        15
+      ],
+      [
+        62,
+        15
+      ],
+      [
+        63,
+        15
+      ],
+      [
+        64,
+        15
+      ],
+      [
+        66,
+        15
+      ],
+      [
+        74,
+        15
+      ],
+      [
+        25,
+        16
+      ],
+      [
+        48,
+        16
+      ],
+      [
+        54,
+        16
+      ],
+      [
+        55,
+        16
+      ],
+      [
+        58,
+        16
+      ],
+      [
+        59,
+        16
+      ],
+      [
+        62,
+        16
+      ],
+      [
+        63,
+        16
+      ],
+      [
+        64,
+        16
+      ],
+      [
+        66,
+        16
+      ],
+      [
+        67,
+        16
+      ],
+      [
+        68,
+        16
+      ],
+      [
+        69,
+        16
+      ],
+      [
+        72,
+        16
+      ],
+      [
+        73,
+        16
+      ],
+      [
+        74,
+        16
+      ],
+      [
+        25,
+        17
+      ],
+      [
+        45,
+        17
+      ],
+      [
+        55,
+        17
+      ],
+      [
+        56,
+        17
+      ],
+      [
+        57,
+        17
+      ],
+      [
+        58,
+        17
+      ],
+      [
+        64,
+        17
+      ],
+      [
+        65,
+        17
+      ],
+      [
+        66,
+        17
+      ],
+      [
+        67,
+        17
+      ],
+      [
+        68,
+        17
+      ],
+      [
+        69,
+        17
+      ],
+      [
+        72,
+        17
+      ],
+      [
+        73,
+        17
+      ],
+      [
+        74,
+        17
+      ],
+      [
+        25,
+        18
+      ],
+      [
+        45,
+        18
+      ],
+      [
+        56,
+        18
+      ],
+      [
+        57,
+        18
+      ],
+      [
+        65,
+        18
+      ],
+      [
+        66,
+        18
+      ],
+      [
+        74,
+        18
+      ],
+      [
+        25,
+        19
+      ],
+      [
+        56,
+        19
+      ],
+      [
+        57,
+        19
+      ],
+      [
+        65,
+        19
+      ],
+      [
+        66,
+        19
+      ],
+      [
+        74,
+        19
+      ],
+      [
+        25,
+        20
+      ],
+      [
+        65,
+        20
+      ],
+      [
+        66,
+        20
+      ],
+      [
+        74,
+        20
+      ],
+      [
+        25,
+        21
+      ],
+      [
+        45,
+        21
+      ],
+      [
+        74,
+        21
+      ],
+      [
+        25,
+        22
+      ],
+      [
+        45,
+        22
+      ],
+      [
+        56,
+        22
+      ],
+      [
+        57,
+        22
+      ],
+      [
+        74,
+        22
+      ],
+      [
+        80,
+        22
+      ],
+      [
+        81,
+        22
+      ],
+      [
+        82,
+        22
+      ],
+      [
+        83,
+        22
+      ],
+      [
+        84,
+        22
+      ],
+      [
+        85,
+        22
+      ],
+      [
+        86,
+        22
+      ],
+      [
+        87,
+        22
+      ],
+      [
+        88,
+        22
+      ],
+      [
+        89,
+        22
+      ],
+      [
+        90,
+        22
+      ],
+      [
+        25,
+        23
+      ],
+      [
+        26,
+        23
+      ],
+      [
+        27,
+        23
+      ],
+      [
+        28,
+        23
+      ],
+      [
+        29,
+        23
+      ],
+      [
+        30,
+        23
+      ],
+      [
+        31,
+        23
+      ],
+      [
+        32,
+        23
+      ],
+      [
+        33,
+        23
+      ],
+      [
+        34,
+        23
+      ],
+      [
+        35,
+        23
+      ],
+      [
+        36,
+        23
+      ],
+      [
+        37,
+        23
+      ],
+      [
+        38,
+        23
+      ],
+      [
+        39,
+        23
+      ],
+      [
+        40,
+        23
+      ],
+      [
+        41,
+        23
+      ],
+      [
+        42,
+        23
+      ],
+      [
+        43,
+        23
+      ],
+      [
+        44,
+        23
+      ],
+      [
+        45,
+        23
+      ],
+      [
+        56,
+        23
+      ],
+      [
+        57,
+        23
+      ],
+      [
+        58,
+        23
+      ],
+      [
+        64,
+        23
+      ],
+      [
+        65,
+        23
+      ],
+      [
+        66,
+        23
+      ],
+      [
+        74,
+        23
+      ],
+      [
+        80,
+        23
+      ],
+      [
+        90,
+        23
+      ],
+      [
+        25,
+        24
+      ],
+      [
+        26,
+        24
+      ],
+      [
+        27,
+        24
+      ],
+      [
+        28,
+        24
+      ],
+      [
+        29,
+        24
+      ],
+      [
+        30,
+        24
+      ],
+      [
+        31,
+        24
+      ],
+      [
+        32,
+        24
+      ],
+      [
+        33,
+        24
+      ],
+      [
+        34,
+        24
+      ],
+      [
+        35,
+        24
+      ],
+      [
+        36,
+        24
+      ],
+      [
+        37,
+        24
+      ],
+      [
+        38,
+        24
+      ],
+      [
+        39,
+        24
+      ],
+      [
+        45,
+        24
+      ],
+      [
+        56,
+        24
+      ],
+      [
+        58,
+        24
+      ],
+      [
+        59,
+        24
+      ],
+      [
+        60,
+        24
+      ],
+      [
+        61,
+        24
+      ],
+      [
+        62,
+        24
+      ],
+      [
+        63,
+        24
+      ],
+      [
+        64,
+        24
+      ],
+      [
+        66,
+        24
+      ],
+      [
+        74,
+        24
+      ],
+      [
+        80,
+        24
+      ],
+      [
+        90,
+        24
+      ],
+      [
+        25,
+        25
+      ],
+      [
+        39,
+        25
+      ],
+      [
+        45,
+        25
+      ],
+      [
+        55,
+        25
+      ],
+      [
+        56,
+        25
+      ],
+      [
+        64,
+        25
+      ],
+      [
+        65,
+        25
+      ],
+      [
+        66,
+        25
+      ],
+      [
+        67,
+        25
+      ],
+      [
+        68,
+        25
+      ],
+      [
+        72,
+        25
+      ],
+      [
+        73,
+        25
+      ],
+      [
+        74,
+        25
+      ],
+      [
+        80,
+        25
+      ],
+      [
+        90,
+        25
+      ],
+      [
+        25,
+        26
+      ],
+      [
+        39,
+        26
+      ],
+      [
+        45,
+        26
+      ],
+      [
+        48,
+        26
+      ],
+      [
+        54,
+        26
+      ],
+      [
+        55,
+        26
+      ],
+      [
+        63,
+        26
+      ],
+      [
+        64,
+        26
+      ],
+      [
+        72,
+        26
+      ],
+      [
+        80,
+        26
+      ],
+      [
+        90,
+        26
+      ],
+      [
+        25,
+        27
+      ],
+      [
+        39,
+        27
+      ],
+      [
+        45,
+        27
+      ],
+      [
+        48,
+        27
+      ],
+      [
+        49,
+        27
+      ],
+      [
+        50,
+        27
+      ],
+      [
+        51,
+        27
+      ],
+      [
+        52,
+        27
+      ],
+      [
+        53,
+        27
+      ],
+      [
+        54,
+        27
+      ],
+      [
+        55,
+        27
+      ],
+      [
+        56,
+        27
+      ],
+      [
+        57,
+        27
+      ],
+      [
+        62,
+        27
+      ],
+      [
+        63,
+        27
+      ],
+      [
+        72,
+        27
+      ],
+      [
+        80,
+        27
+      ],
+      [
+        90,
+        27
+      ],
+      [
+        25,
+        28
+      ],
+      [
+        39,
+        28
+      ],
+      [
+        40,
+        28
+      ],
+      [
+        41,
+        28
+      ],
+      [
+        42,
+        28
+      ],
+      [
+        43,
+        28
+      ],
+      [
+        44,
+        28
+      ],
+      [
+        45,
+        28
+      ],
+      [
+        48,
+        28
+      ],
+      [
+        49,
+        28
+      ],
+      [
+        50,
+        28
+      ],
+      [
+        51,
+        28
+      ],
+      [
+        52,
+        28
+      ],
+      [
+        53,
+        28
+      ],
+      [
+        54,
+        28
+      ],
+      [
+        55,
+        28
+      ],
+      [
+        57,
+        28
+      ],
+      [
+        58,
+        28
+      ],
+      [
+        59,
+        28
+      ],
+      [
+        62,
+        28
+      ],
+      [
+        72,
+        28
+      ],
+      [
+        73,
+        28
+      ],
+      [
+        74,
+        28
+      ],
+      [
+        75,
+        28
+      ],
+      [
+        76,
+        28
+      ],
+      [
+        77,
+        28
+      ],
+      [
+        78,
+        28
+      ],
+      [
+        79,
+        28
+      ],
+      [
+        80,
+        28
+      ],
+      [
+        90,
+        28
+      ],
+      [
+        25,
+        29
+      ],
+      [
+        39,
+        29
+      ],
+      [
+        40,
+        29
+      ],
+      [
+        52,
+        29
+      ],
+      [
+        53,
+        29
+      ],
+      [
+        59,
+        29
+      ],
+      [
+        60,
+        29
+      ],
+      [
+        61,
+        29
+      ],
+      [
+        62,
+        29
+      ],
+      [
+        90,
+        29
+      ],
+      [
+        25,
+        30
+      ],
+      [
+        39,
+        30
+      ],
+      [
+        40,
+        30
+      ],
+      [
+        52,
+        30
+      ],
+      [
+        60,
+        30
+      ],
+      [
+        61,
+        30
+      ],
+      [
+        90,
+        30
+      ],
+      [
+        5,
+        31
+      ],
+      [
+        6,
+        31
+      ],
+      [
+        7,
+        31
+      ],
+      [
+        8,
+        31
+      ],
+      [
+        9,
+        31
+      ],
+      [
+        10,
+        31
+      ],
+      [
+        11,
+        31
+      ],
+      [
+        12,
+        31
+      ],
+      [
+        13,
+        31
+      ],
+      [
+        14,
+        31
+      ],
+      [
+        15,
+        31
+      ],
+      [
+        16,
+        31
+      ],
+      [
+        17,
+        31
+      ],
+      [
+        25,
+        31
+      ],
+      [
+        39,
+        31
+      ],
+      [
+        40,
+        31
+      ],
+      [
+        52,
+        31
+      ],
+      [
+        72,
+        31
+      ],
+      [
+        73,
+        31
+      ],
+      [
+        79,
+        31
+      ],
+      [
+        80,
+        31
+      ],
+      [
+        90,
+        31
+      ],
+      [
+        5,
+        32
+      ],
+      [
+        17,
+        32
+      ],
+      [
+        25,
+        32
+      ],
+      [
+        39,
+        32
+      ],
+      [
+        40,
+        32
+      ],
+      [
+        90,
+        32
+      ],
+      [
+        5,
+        33
+      ],
+      [
+        17,
+        33
+      ],
+      [
+        18,
+        33
+      ],
+      [
+        19,
+        33
+      ],
+      [
+        20,
+        33
+      ],
+      [
+        21,
+        33
+      ],
+      [
+        22,
+        33
+      ],
+      [
+        23,
+        33
+      ],
+      [
+        24,
+        33
+      ],
+      [
+        25,
+        33
+      ],
+      [
+        39,
+        33
+      ],
+      [
+        40,
+        33
+      ],
+      [
+        59,
+        33
+      ],
+      [
+        60,
+        33
+      ],
+      [
+        61,
+        33
+      ],
+      [
+        62,
+        33
+      ],
+      [
+        63,
+        33
+      ],
+      [
+        90,
+        33
+      ],
+      [
+        5,
+        34
+      ],
+      [
+        17,
+        34
+      ],
+      [
+        18,
+        34
+      ],
+      [
+        24,
+        34
+      ],
+      [
+        25,
+        34
+      ],
+      [
+        62,
+        34
+      ],
+      [
+        63,
+        34
+      ],
+      [
+        64,
+        34
+      ],
+      [
+        70,
+        34
+      ],
+      [
+        71,
+        34
+      ],
+      [
+        72,
+        34
+      ],
+      [
+        73,
+        34
+      ],
+      [
+        74,
+        34
+      ],
+      [
+        78,
+        34
+      ],
+      [
+        79,
+        34
+      ],
+      [
+        80,
+        34
+      ],
+      [
+        90,
+        34
+      ],
+      [
+        5,
+        35
+      ],
+      [
+        17,
+        35
+      ],
+      [
+        18,
+        35
+      ],
+      [
+        24,
+        35
+      ],
+      [
+        25,
+        35
+      ],
+      [
+        62,
+        35
+      ],
+      [
+        64,
+        35
+      ],
+      [
+        65,
+        35
+      ],
+      [
+        66,
+        35
+      ],
+      [
+        69,
+        35
+      ],
+      [
+        70,
+        35
+      ],
+      [
+        74,
+        35
+      ],
+      [
+        75,
+        35
+      ],
+      [
+        78,
+        35
+      ],
+      [
+        80,
+        35
+      ],
+      [
+        90,
+        35
+      ],
+      [
+        5,
+        36
+      ],
+      [
+        24,
+        36
+      ],
+      [
+        25,
+        36
+      ],
+      [
+        39,
+        36
+      ],
+      [
+        40,
+        36
+      ],
+      [
+        52,
+        36
+      ],
+      [
+        53,
+        36
+      ],
+      [
+        54,
+        36
+      ],
+      [
+        55,
+        36
+      ],
+      [
+        56,
+        36
+      ],
+      [
+        59,
+        36
+      ],
+      [
+        62,
+        36
+      ],
+      [
+        63,
+        36
+      ],
+      [
+        64,
+        36
+      ],
+      [
+        65,
+        36
+      ],
+      [
+        66,
+        36
+      ],
+      [
+        69,
+        36
+      ],
+      [
+        70,
+        36
+      ],
+      [
+        71,
+        36
+      ],
+      [
+        72,
+        36
+      ],
+      [
+        73,
+        36
+      ],
+      [
+        74,
+        36
+      ],
+      [
+        75,
+        36
+      ],
+      [
+        78,
+        36
+      ],
+      [
+        79,
+        36
+      ],
+      [
+        80,
+        36
+      ],
+      [
+        81,
+        36
+      ],
+      [
+        82,
+        36
+      ],
+      [
+        83,
+        36
+      ],
+      [
+        84,
+        36
+      ],
+      [
+        85,
+        36
+      ],
+      [
+        86,
+        36
+      ],
+      [
+        87,
+        36
+      ],
+      [
+        88,
+        36
+      ],
+      [
+        89,
+        36
+      ],
+      [
+        90,
+        36
+      ],
+      [
+        5,
+        37
+      ],
+      [
+        39,
+        37
+      ],
+      [
+        40,
+        37
+      ],
+      [
+        52,
+        37
+      ],
+      [
+        54,
+        37
+      ],
+      [
+        66,
+        37
+      ],
+      [
+        82,
+        37
+      ],
+      [
+        5,
+        38
+      ],
+      [
+        39,
+        38
+      ],
+      [
+        40,
+        38
+      ],
+      [
+        52,
+        38
+      ],
+      [
+        54,
+        38
+      ],
+      [
+        66,
+        38
+      ],
+      [
+        82,
+        38
+      ],
+      [
+        5,
+        39
+      ],
+      [
+        17,
+        39
+      ],
+      [
+        18,
+        39
+      ],
+      [
+        24,
+        39
+      ],
+      [
+        25,
+        39
+      ],
+      [
+        39,
+        39
+      ],
+      [
+        40,
+        39
+      ],
+      [
+        52,
+        39
+      ],
+      [
+        54,
+        39
+      ],
+      [
+        66,
+        39
+      ],
+      [
+        82,
+        39
+      ],
+      [
+        83,
+        39
+      ],
+      [
+        84,
+        39
+      ],
+      [
+        85,
+        39
+      ],
+      [
+        86,
+        39
+      ],
+      [
+        87,
+        39
+      ],
+      [
+        88,
+        39
+      ],
+      [
+        89,
+        39
+      ],
+      [
+        5,
+        40
+      ],
+      [
+        17,
+        40
+      ],
+      [
+        18,
+        40
+      ],
+      [
+        24,
+        40
+      ],
+      [
+        25,
+        40
+      ],
+      [
+        26,
+        40
+      ],
+      [
+        27,
+        40
+      ],
+      [
+        28,
+        40
+      ],
+      [
+        29,
+        40
+      ],
+      [
+        30,
+        40
+      ],
+      [
+        31,
+        40
+      ],
+      [
+        32,
+        40
+      ],
+      [
+        33,
+        40
+      ],
+      [
+        34,
+        40
+      ],
+      [
+        37,
+        40
+      ],
+      [
+        38,
+        40
+      ],
+      [
+        39,
+        40
+      ],
+      [
+        40,
+        40
+      ],
+      [
+        41,
+        40
+      ],
+      [
+        42,
+        40
+      ],
+      [
+        43,
+        40
+      ],
+      [
+        44,
+        40
+      ],
+      [
+        45,
+        40
+      ],
+      [
+        46,
+        40
+      ],
+      [
+        47,
+        40
+      ],
+      [
+        50,
+        40
+      ],
+      [
+        51,
+        40
+      ],
+      [
+        52,
+        40
+      ],
+      [
+        54,
+        40
+      ],
+      [
+        66,
+        40
+      ],
+      [
+        82,
+        40
+      ],
+      [
+        83,
+        40
+      ],
+      [
+        89,
+        40
+      ],
+      [
+        5,
+        41
+      ],
+      [
+        17,
+        41
+      ],
+      [
+        18,
+        41
+      ],
+      [
+        19,
+        41
+      ],
+      [
+        23,
+        41
+      ],
+      [
+        24,
+        41
+      ],
+      [
+        30,
+        41
+      ],
+      [
+        31,
+        41
+      ],
+      [
+        32,
+        41
+      ],
+      [
+        33,
+        41
+      ],
+      [
+        34,
+        41
+      ],
+      [
+        37,
+        41
+      ],
+      [
+        38,
+        41
+      ],
+      [
+        39,
+        41
+      ],
+      [
+        40,
+        41
+      ],
+      [
+        41,
+        41
+      ],
+      [
+        42,
+        41
+      ],
+      [
+        43,
+        41
+      ],
+      [
+        44,
+        41
+      ],
+      [
+        45,
+        41
+      ],
+      [
+        46,
+        41
+      ],
+      [
+        47,
+        41
+      ],
+      [
+        50,
+        41
+      ],
+      [
+        51,
+        41
+      ],
+      [
+        52,
+        41
+      ],
+      [
+        54,
+        41
+      ],
+      [
+        66,
+        41
+      ],
+      [
+        82,
+        41
+      ],
+      [
+        83,
+        41
+      ],
+      [
+        89,
+        41
+      ],
+      [
+        5,
+        42
+      ],
+      [
+        17,
+        42
+      ],
+      [
+        19,
+        42
+      ],
+      [
+        23,
+        42
+      ],
+      [
+        30,
+        42
+      ],
+      [
+        44,
+        42
+      ],
+      [
+        52,
+        42
+      ],
+      [
+        54,
+        42
+      ],
+      [
+        82,
+        42
+      ],
+      [
+        83,
+        42
+      ],
+      [
+        89,
+        42
+      ],
+      [
+        5,
+        43
+      ],
+      [
+        6,
+        43
+      ],
+      [
+        7,
+        43
+      ],
+      [
+        8,
+        43
+      ],
+      [
+        9,
+        43
+      ],
+      [
+        10,
+        43
+      ],
+      [
+        11,
+        43
+      ],
+      [
+        12,
+        43
+      ],
+      [
+        13,
+        43
+      ],
+      [
+        14,
+        43
+      ],
+      [
+        15,
+        43
+      ],
+      [
+        16,
+        43
+      ],
+      [
+        17,
+        43
+      ],
+      [
+        19,
+        43
+      ],
+      [
+        23,
+        43
+      ],
+      [
+        30,
+        43
+      ],
+      [
+        44,
+        43
+      ],
+      [
+        52,
+        43
+      ],
+      [
+        53,
+        43
+      ],
+      [
+        54,
+        43
+      ],
+      [
+        89,
+        43
+      ],
+      [
+        12,
+        44
+      ],
+      [
+        13,
+        44
+      ],
+      [
+        14,
+        44
+      ],
+      [
+        15,
+        44
+      ],
+      [
+        16,
+        44
+      ],
+      [
+        17,
+        44
+      ],
+      [
+        18,
+        44
+      ],
+      [
+        19,
+        44
+      ],
+      [
+        23,
+        44
+      ],
+      [
+        24,
+        44
+      ],
+      [
+        25,
+        44
+      ],
+      [
+        26,
+        44
+      ],
+      [
+        27,
+        44
+      ],
+      [
+        28,
+        44
+      ],
+      [
+        29,
+        44
+      ],
+      [
+        30,
+        44
+      ],
+      [
+        66,
+        44
+      ],
+      [
+        89,
+        44
+      ],
+      [
+        12,
+        45
+      ],
+      [
+        30,
+        45
+      ],
+      [
+        66,
+        45
+      ],
+      [
+        82,
+        45
+      ],
+      [
+        83,
+        45
+      ],
+      [
+        89,
+        45
+      ],
+      [
+        12,
+        46
+      ],
+      [
+        66,
+        46
+      ],
+      [
+        82,
+        46
+      ],
+      [
+        83,
+        46
+      ],
+      [
+        89,
+        46
+      ],
+      [
+        12,
+        47
+      ],
+      [
+        52,
+        47
+      ],
+      [
+        53,
+        47
+      ],
+      [
+        54,
+        47
+      ],
+      [
+        66,
+        47
+      ],
+      [
+        82,
+        47
+      ],
+      [
+        83,
+        47
+      ],
+      [
+        84,
+        47
+      ],
+      [
+        85,
+        47
+      ],
+      [
+        86,
+        47
+      ],
+      [
+        87,
+        47
+      ],
+      [
+        88,
+        47
+      ],
+      [
+        89,
+        47
+      ],
+      [
+        12,
+        48
+      ],
+      [
+        52,
+        48
+      ],
+      [
+        54,
+        48
+      ],
+      [
+        55,
+        48
+      ],
+      [
+        56,
+        48
+      ],
+      [
+        61,
+        48
+      ],
+      [
+        62,
+        48
+      ],
+      [
+        63,
+        48
+      ],
+      [
+        64,
+        48
+      ],
+      [
+        65,
+        48
+      ],
+      [
+        66,
+        48
+      ],
+      [
+        82,
+        48
+      ],
+      [
+        12,
+        49
+      ],
+      [
+        30,
+        49
+      ],
+      [
+        45,
+        49
+      ],
+      [
+        46,
+        49
+      ],
+      [
+        47,
+        49
+      ],
+      [
+        48,
+        49
+      ],
+      [
+        49,
+        49
+      ],
+      [
+        50,
+        49
+      ],
+      [
+        51,
+        49
+      ],
+      [
+        52,
+        49
+      ],
+      [
+        54,
+        49
+      ],
+      [
+        55,
+        49
+      ],
+      [
+        61,
+        49
+      ],
+      [
+        62,
+        49
+      ],
+      [
+        66,
+        49
+      ],
+      [
+        82,
+        49
+      ],
+      [
+        12,
+        50
+      ],
+      [
+        30,
+        50
+      ],
+      [
+        45,
+        50
+      ],
+      [
+        53,
+        50
+      ],
+      [
+        54,
+        50
+      ],
+      [
+        62,
+        50
+      ],
+      [
+        63,
+        50
+      ],
+      [
+        66,
+        50
+      ],
+      [
+        82,
+        50
+      ],
+      [
+        12,
+        51
+      ],
+      [
+        30,
+        51
+      ],
+      [
+        31,
+        51
+      ],
+      [
+        32,
+        51
+      ],
+      [
+        33,
+        51
+      ],
+      [
+        34,
+        51
+      ],
+      [
+        37,
+        51
+      ],
+      [
+        38,
+        51
+      ],
+      [
+        39,
+        51
+      ],
+      [
+        40,
+        51
+      ],
+      [
+        41,
+        51
+      ],
+      [
+        42,
+        51
+      ],
+      [
+        45,
+        51
+      ],
+      [
+        46,
+        51
+      ],
+      [
+        52,
+        51
+      ],
+      [
+        53,
+        51
+      ],
+      [
+        63,
+        51
+      ],
+      [
+        64,
+        51
+      ],
+      [
+        66,
+        51
+      ],
+      [
+        82,
+        51
+      ],
+      [
+        12,
+        52
+      ],
+      [
+        30,
+        52
+      ],
+      [
+        32,
+        52
+      ],
+      [
+        33,
+        52
+      ],
+      [
+        37,
+        52
+      ],
+      [
+        38,
+        52
+      ],
+      [
+        40,
+        52
+      ],
+      [
+        46,
+        52
+      ],
+      [
+        52,
+        52
+      ],
+      [
+        64,
+        52
+      ],
+      [
+        66,
+        52
+      ],
+      [
+        67,
+        52
+      ],
+      [
+        68,
+        52
+      ],
+      [
+        71,
+        52
+      ],
+      [
+        72,
+        52
+      ],
+      [
+        73,
+        52
+      ],
+      [
+        74,
+        52
+      ],
+      [
+        75,
+        52
+      ],
+      [
+        76,
+        52
+      ],
+      [
+        77,
+        52
+      ],
+      [
+        78,
+        52
+      ],
+      [
+        79,
+        52
+      ],
+      [
+        80,
+        52
+      ],
+      [
+        81,
+        52
+      ],
+      [
+        82,
+        52
+      ],
+      [
+        83,
+        52
+      ],
+      [
+        84,
+        52
+      ],
+      [
+        85,
+        52
+      ],
+      [
+        86,
+        52
+      ],
+      [
+        12,
+        53
+      ],
+      [
+        30,
+        53
+      ],
+      [
+        31,
+        53
+      ],
+      [
+        32,
+        53
+      ],
+      [
+        38,
+        53
+      ],
+      [
+        39,
+        53
+      ],
+      [
+        40,
+        53
+      ],
+      [
+        46,
+        53
+      ],
+      [
+        52,
+        53
+      ],
+      [
+        64,
+        53
+      ],
+      [
+        65,
+        53
+      ],
+      [
+        66,
+        53
+      ],
+      [
+        71,
+        53
+      ],
+      [
+        72,
+        53
+      ],
+      [
+        86,
+        53
+      ],
+      [
+        12,
+        54
+      ],
+      [
+        30,
+        54
+      ],
+      [
+        31,
+        54
+      ],
+      [
+        39,
+        54
+      ],
+      [
+        40,
+        54
+      ],
+      [
+        46,
+        54
+      ],
+      [
+        52,
+        54
+      ],
+      [
+        64,
+        54
+      ],
+      [
+        65,
+        54
+      ],
+      [
+        71,
+        54
+      ],
+      [
+        72,
+        54
+      ],
+      [
+        86,
+        54
+      ],
+      [
+        12,
+        55
+      ],
+      [
+        46,
+        55
+      ],
+      [
+        52,
+        55
+      ],
+      [
+        64,
+        55
+      ],
+      [
+        65,
+        55
+      ],
+      [
+        71,
+        55
+      ],
+      [
+        72,
+        55
+      ],
+      [
+        86,
+        55
+      ],
+      [
+        12,
+        56
+      ],
+      [
+        46,
+        56
+      ],
+      [
+        52,
+        56
+      ],
+      [
+        86,
+        56
+      ],
+      [
+        12,
+        57
+      ],
+      [
+        30,
+        57
+      ],
+      [
+        31,
+        57
+      ],
+      [
+        32,
+        57
+      ],
+      [
+        38,
+        57
+      ],
+      [
+        39,
+        57
+      ],
+      [
+        40,
+        57
+      ],
+      [
+        46,
+        57
+      ],
+      [
+        52,
+        57
+      ],
+      [
+        71,
+        57
+      ],
+      [
+        72,
+        57
+      ],
+      [
+        86,
+        57
+      ],
+      [
+        12,
+        58
+      ],
+      [
+        13,
+        58
+      ],
+      [
+        14,
+        58
+      ],
+      [
+        15,
+        58
+      ],
+      [
+        16,
+        58
+      ],
+      [
+        17,
+        58
+      ],
+      [
+        18,
+        58
+      ],
+      [
+        19,
+        58
+      ],
+      [
+        20,
+        58
+      ],
+      [
+        21,
+        58
+      ],
+      [
+        22,
+        58
+      ],
+      [
+        23,
+        58
+      ],
+      [
+        24,
+        58
+      ],
+      [
+        25,
+        58
+      ],
+      [
+        26,
+        58
+      ],
+      [
+        27,
+        58
+      ],
+      [
+        28,
+        58
+      ],
+      [
+        29,
+        58
+      ],
+      [
+        30,
+        58
+      ],
+      [
+        32,
+        58
+      ],
+      [
+        33,
+        58
+      ],
+      [
+        37,
+        58
+      ],
+      [
+        38,
+        58
+      ],
+      [
+        40,
+        58
+      ],
+      [
+        46,
+        58
+      ],
+      [
+        52,
+        58
+      ],
+      [
+        64,
+        58
+      ],
+      [
+        65,
+        58
+      ],
+      [
+        71,
+        58
+      ],
+      [
+        72,
+        58
+      ],
+      [
+        86,
+        58
+      ],
+      [
+        33,
+        59
+      ],
+      [
+        34,
+        59
+      ],
+      [
+        35,
+        59
+      ],
+      [
+        36,
+        59
+      ],
+      [
+        37,
+        59
+      ],
+      [
+        40,
+        59
+      ],
+      [
+        41,
+        59
+      ],
+      [
+        42,
+        59
+      ],
+      [
+        43,
+        59
+      ],
+      [
+        44,
+        59
+      ],
+      [
+        45,
+        59
+      ],
+      [
+        46,
+        59
+      ],
+      [
+        52,
+        59
+      ],
+      [
+        53,
+        59
+      ],
+      [
+        63,
+        59
+      ],
+      [
+        64,
+        59
+      ],
+      [
+        65,
+        59
+      ],
+      [
+        66,
+        59
+      ],
+      [
+        70,
+        59
+      ],
+      [
+        71,
+        59
+      ],
+      [
+        72,
+        59
+      ],
+      [
+        86,
+        59
+      ],
+      [
+        53,
+        60
+      ],
+      [
+        54,
+        60
+      ],
+      [
+        62,
+        60
+      ],
+      [
+        63,
+        60
+      ],
+      [
+        66,
+        60
+      ],
+      [
+        67,
+        60
+      ],
+      [
+        70,
+        60
+      ],
+      [
+        72,
+        60
+      ],
+      [
+        86,
+        60
+      ],
+      [
+        54,
+        61
+      ],
+      [
+        55,
+        61
+      ],
+      [
+        61,
+        61
+      ],
+      [
+        62,
+        61
+      ],
+      [
+        67,
+        61
+      ],
+      [
+        70,
+        61
+      ],
+      [
+        72,
+        61
+      ],
+      [
+        86,
+        61
+      ],
+      [
+        46,
+        62
+      ],
+      [
+        47,
+        62
+      ],
+      [
+        48,
+        62
+      ],
+      [
+        49,
+        62
+      ],
+      [
+        50,
+        62
+      ],
+      [
+        51,
+        62
+      ],
+      [
+        52,
+        62
+      ],
+      [
+        53,
+        62
+      ],
+      [
+        54,
+        62
+      ],
+      [
+        55,
+        62
+      ],
+      [
+        56,
+        62
+      ],
+      [
+        60,
+        62
+      ],
+      [
+        61,
+        62
+      ],
+      [
+        62,
+        62
+      ],
+      [
+        63,
+        62
+      ],
+      [
+        64,
+        62
+      ],
+      [
+        67,
+        62
+      ],
+      [
+        70,
+        62
+      ],
+      [
+        72,
+        62
+      ],
+      [
+        86,
+        62
+      ],
+      [
+        46,
+        63
+      ],
+      [
+        64,
+        63
+      ],
+      [
+        67,
+        63
+      ],
+      [
+        70,
+        63
+      ],
+      [
+        72,
+        63
+      ],
+      [
+        86,
+        63
+      ],
+      [
+        46,
+        64
+      ],
+      [
+        64,
+        64
+      ],
+      [
+        67,
+        64
+      ],
+      [
+        70,
+        64
+      ],
+      [
+        72,
+        64
+      ],
+      [
+        73,
+        64
+      ],
+      [
+        74,
+        64
+      ],
+      [
+        75,
+        64
+      ],
+      [
+        76,
+        64
+      ],
+      [
+        77,
+        64
+      ],
+      [
+        78,
+        64
+      ],
+      [
+        79,
+        64
+      ],
+      [
+        80,
+        64
+      ],
+      [
+        81,
+        64
+      ],
+      [
+        82,
+        64
+      ],
+      [
+        83,
+        64
+      ],
+      [
+        84,
+        64
+      ],
+      [
+        85,
+        64
+      ],
+      [
+        86,
+        64
+      ],
+      [
+        46,
+        65
+      ],
+      [
+        64,
+        65
+      ],
+      [
+        67,
+        65
+      ],
+      [
+        70,
+        65
+      ],
+      [
+        46,
+        66
+      ],
+      [
+        64,
+        66
+      ],
+      [
+        67,
+        66
+      ],
+      [
+        70,
+        66
+      ],
+      [
+        46,
+        67
+      ],
+      [
+        64,
+        67
+      ],
+      [
+        67,
+        67
+      ],
+      [
+        70,
+        67
+      ],
+      [
+        46,
+        68
+      ],
+      [
+        64,
+        68
+      ],
+      [
+        67,
+        68
+      ],
+      [
+        70,
+        68
+      ],
+      [
+        46,
+        69
+      ],
+      [
+        64,
+        69
+      ],
+      [
+        67,
+        69
+      ],
+      [
+        70,
+        69
+      ],
+      [
+        46,
+        70
+      ],
+      [
+        64,
+        70
+      ],
+      [
+        65,
+        70
+      ],
+      [
+        66,
+        70
+      ],
+      [
+        67,
+        70
+      ],
+      [
+        70,
+        70
+      ],
+      [
+        46,
+        71
+      ],
+      [
+        70,
+        71
+      ],
+      [
+        46,
+        72
+      ],
+      [
+        69,
+        72
+      ],
+      [
+        70,
+        72
+      ],
+      [
+        46,
+        73
+      ],
+      [
+        64,
+        73
+      ],
+      [
+        65,
+        73
+      ],
+      [
+        66,
+        73
+      ],
+      [
+        67,
+        73
+      ],
+      [
+        68,
+        73
+      ],
+      [
+        69,
+        73
+      ],
+      [
+        46,
+        74
+      ],
+      [
+        64,
+        74
+      ],
+      [
+        46,
+        75
+      ],
+      [
+        64,
+        75
+      ],
+      [
+        46,
+        76
+      ],
+      [
+        64,
+        76
+      ],
+      [
+        46,
+        77
+      ],
+      [
+        64,
+        77
+      ],
+      [
+        46,
+        78
+      ],
+      [
+        64,
+        78
+      ],
+      [
+        46,
+        79
+      ],
+      [
+        64,
+        79
+      ],
+      [
+        46,
+        80
+      ],
+      [
+        47,
+        80
+      ],
+      [
+        48,
+        80
+      ],
+      [
+        49,
+        80
+      ],
+      [
+        50,
+        80
+      ],
+      [
+        51,
+        80
+      ],
+      [
+        52,
+        80
+      ],
+      [
+        53,
+        80
+      ],
+      [
+        54,
+        80
+      ],
+      [
+        55,
+        80
+      ],
+      [
+        56,
+        80
+      ],
+      [
+        57,
+        80
+      ],
+      [
+        58,
+        80
+      ],
+      [
+        59,
+        80
+      ],
+      [
+        60,
+        80
+      ],
+      [
+        61,
+        80
+      ],
+      [
+        62,
+        80
+      ],
+      [
+        63,
+        80
+      ],
+      [
+        64,
+        80
+      ]
+    ]
+  }
+}

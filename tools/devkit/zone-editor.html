@@ -1,0 +1,2544 @@
+<!doctype html>
+<html>
+<head>
+<script src="/devkit-auth-shim.js"></script>
+<meta charset="utf-8">
+<title>GameKit Zone Editor</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+/* Page layout only: component chrome comes from /tokens.css lm-* classes. */
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--lm-bg);color:var(--lm-text);font:var(--lm-fw-regular) var(--lm-fs-300)/var(--lm-lh-normal) var(--lm-font-ui);overflow:hidden;height:100vh;display:flex;flex-direction:column}
+header{padding:5px 10px;border-bottom:1px solid var(--lm-border-cool);background:var(--lm-surface-solid);display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
+header h1{font:var(--lm-fw-bold) var(--lm-fs-400)/var(--lm-lh-snug) var(--lm-font-display);margin-right:4px;color:var(--lm-text-gold)}
+header button,header select{min-height:24px;padding:3px 7px;font-size:var(--lm-fs-200)}
+header .sep-v{border-left:1px solid var(--lm-border-cool);height:14px;margin:0 1px}
+header .header-toggle{font-size:var(--lm-fs-100);color:var(--lm-text-muted);display:flex;align-items:center;gap:3px}
+header .toolbar-field{font-size:var(--lm-fs-100);color:var(--lm-text-muted);display:flex;align-items:center;gap:3px}
+header .header-link{color:var(--lm-teal-300);font-size:var(--lm-fs-100);text-decoration:none}
+button:disabled{opacity:.4;cursor:default}
+select{padding:2px 5px}input{padding:2px 5px}
+input[type=number]{width:60px}input[type=text]{width:120px}
+.main{display:flex;flex:1;overflow:hidden}
+.toolbar{width:48px;background:var(--lm-surface-sunken);border-right:1px solid var(--lm-border-cool);padding:3px 2px;display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.toolbar button{width:44px;height:30px;font-size:9px;text-align:center;padding:1px;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+.toolbar button span{font-size:14px;line-height:1}
+.toolbar .sep{border-top:1px solid var(--lm-border-cool);margin:2px 0}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--lm-bg)}
+canvas{position:absolute;top:0;left:0}
+.props{width:256px;background:var(--lm-surface-solid);border-left:1px solid var(--lm-border-cool);overflow-y:auto;padding:6px;flex-shrink:0}
+.props h3{margin:8px 0 3px;display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.props h3:first-child{margin-top:0}
+.props h3 .arrow{font-size:8px;transition:transform var(--lm-dur-2) var(--lm-ease-standard)}
+.props h3 .arrow.collapsed{transform:rotate(-90deg)}
+.prop-row{display:flex;align-items:center;gap:3px;margin-bottom:3px}
+.prop-row label{width:58px;font-size:var(--lm-fs-100);color:var(--lm-text-muted);flex-shrink:0}
+.prop-row input,.prop-row select{flex:1;min-width:0}
+.status{position:fixed;bottom:8px;left:58px;display:none;z-index:var(--lm-z-toast);max-width:520px;white-space:pre-wrap}
+.bottom-bar{position:absolute;bottom:0;left:0;right:0;height:22px;background:color-mix(in srgb,var(--lm-surface-solid) 92%,transparent);border-top:1px solid var(--lm-border-cool);display:flex;align-items:center;padding:0 8px;font-size:var(--lm-fs-100);color:var(--lm-text-muted);gap:10px;z-index:5}
+.elements-list{max-height:200px;overflow-y:auto;margin-top:3px}
+.layer-group{margin-bottom:2px}
+.layer-group-header{display:flex;align-items:center;gap:3px;padding:2px 0;cursor:pointer;font-size:var(--lm-fs-100);color:var(--lm-text-muted);text-transform:uppercase;letter-spacing:var(--lm-tracking-label);user-select:none}
+.layer-group-header .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.layer-group-header .count{margin-left:auto;font-size:9px;opacity:.6}
+.el-row{display:flex;align-items:center;gap:1px;margin-bottom:1px;margin-left:12px}
+.el-row .el-name{flex:1;text-align:left;font-size:var(--lm-fs-100);padding:2px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:0;justify-content:flex-start}
+.el-icon{width:16px;height:16px;font-size:10px;padding:0;text-align:center;line-height:16px;border:none;background:none;color:var(--lm-text-muted);cursor:pointer;flex-shrink:0}
+.el-icon:hover{color:var(--lm-text)}
+.el-icon.off{opacity:.25}
+.zorder-row{display:flex;gap:2px;margin-top:4px}
+.zorder-row button{flex:1;font-size:9px;padding:2px;min-height:0}
+.align-row{display:flex;gap:2px;margin-top:3px}
+.align-row button{flex:1;font-size:10px;padding:2px;min-width:0;min-height:0}
+.sep-h{border-top:1px solid var(--lm-border-cool);margin:6px 0}
+.layer-toggle{display:flex;align-items:center;gap:4px;margin-bottom:2px;font-size:11px;cursor:pointer}
+.layer-toggle input{width:auto;cursor:pointer}
+.actions-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.ctx-menu{position:fixed;background:var(--lm-surface-solid);border:1px solid var(--lm-border-cool);border-radius:var(--lm-radius-sm);padding:4px 0;z-index:var(--lm-z-overlay);min-width:160px;display:none;box-shadow:var(--lm-shadow-2)}
+.ctx-menu button{display:flex;width:100%;justify-content:flex-start;border:none;border-radius:0;padding:4px 12px;font-size:var(--lm-fs-200);min-height:0}
+.ctx-menu .ctx-sep{border-top:1px solid var(--lm-border-cool);margin:3px 0}
+.minimap{position:absolute;bottom:26px;right:6px;border:1px solid var(--lm-border-cool);border-radius:var(--lm-radius-xs);background:color-mix(in srgb,var(--lm-bg) 90%,transparent);z-index:4;cursor:pointer}
+.help-overlay{display:none}
+.help-box{padding:16px 24px;max-width:520px;max-height:80vh;overflow-y:auto}
+.help-box h2{font:var(--lm-fw-bold) var(--lm-fs-400)/var(--lm-lh-snug) var(--lm-font-ui);margin-bottom:8px;color:var(--lm-text-gold)}
+.help-box table{font-size:var(--lm-fs-100)}
+.help-box table td:first-child{color:var(--lm-teal-300);white-space:nowrap;width:100px}
+.drag-info{position:absolute;pointer-events:none;background:color-mix(in srgb,var(--lm-surface-raised) 90%,transparent);border:1px solid var(--lm-border-strong);border-radius:var(--lm-radius-xs);padding:2px 6px;font-size:10px;color:var(--lm-text-gold);z-index:6;display:none}
+.search-row{margin-bottom:3px}.search-row input{width:100%;font-size:11px;padding:3px 5px}
+.bulk-row{display:flex;align-items:center;gap:3px;margin-bottom:3px}
+.bulk-row label{width:58px;font-size:var(--lm-fs-100);color:var(--lm-text-muted);flex-shrink:0}
+.bulk-row input,.bulk-row select{flex:1;min-width:0}
+.preview-wrap{display:none;position:relative;overflow:hidden;background:var(--lm-bg);border-left:2px solid var(--lm-accent)}
+.preview-wrap canvas{position:absolute;top:0;left:0}
+.preview-wrap .preview-label{position:absolute;top:6px;left:8px;font-size:var(--lm-fs-100);color:var(--lm-text-gold);text-transform:uppercase;letter-spacing:var(--lm-tracking-label);opacity:.7;z-index:2;pointer-events:none}
+.preview-wrap .preview-cam-btn{position:absolute;top:4px;right:6px;z-index:2;font-size:10px;padding:2px 6px}
+.asset-picker-overlay{display:none;justify-content:center;align-items:center}
+.asset-picker{width:720px;max-width:min(92vw,720px);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;padding:0}
+.asset-picker-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--lm-border-cool)}
+.asset-picker-header h2{font:var(--lm-fw-bold) var(--lm-fs-500)/var(--lm-lh-snug) var(--lm-font-ui);color:var(--lm-text-gold);margin:0}
+.asset-picker-close{font-size:20px;padding:0 4px}
+.asset-picker-tabs{padding:8px 16px 0;flex-wrap:wrap}
+.asset-picker-tabs button{text-transform:capitalize}
+.asset-picker-search{margin:8px 16px;padding:6px 10px;font-size:var(--lm-fs-200);border-radius:var(--lm-radius-sm)}
+.asset-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;padding:8px 16px 16px;overflow-y:auto;flex:1}
+.asset-picker-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:1px solid transparent;border-radius:var(--lm-radius-sm);cursor:pointer;transition:border-color var(--lm-dur-2) var(--lm-ease-standard),background var(--lm-dur-2) var(--lm-ease-standard);position:relative}
+.asset-picker-item:hover{border-color:var(--lm-border-strong);background:color-mix(in srgb,var(--lm-accent) 8%,transparent)}
+.asset-picker-item img{width:80px;height:80px;object-fit:contain;image-rendering:pixelated}
+.asset-picker-item span{font-size:9px;color:var(--lm-text-muted);text-align:center;word-break:break-word;line-height:1.2;max-height:2.4em;overflow:hidden}
+.asset-picker-item .promoted-badge{position:absolute;top:2px;left:2px;pointer-events:none}
+.asset-picker-item .zone-badge{position:absolute;bottom:2px;left:2px;pointer-events:none}
+.asset-picker-item .unpromote-btn{position:absolute;top:2px;right:2px;width:16px;height:16px;line-height:14px;text-align:center;font-size:11px;padding:0;display:none}
+.asset-picker-item:hover .unpromote-btn{display:block}
+.context-card{font-size:10px;color:var(--lm-text-muted);line-height:1.35}
+.context-title{color:var(--lm-text);font-size:var(--lm-fs-100);margin-bottom:3px}
+.context-row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--lm-border-cool);padding:2px 0}
+.context-note{border:1px solid var(--lm-border-cool);border-radius:var(--lm-radius-sm);padding:6px;margin:6px 0;background:var(--lm-surface-sunken)}
+.context-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.defaults-actions{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}
+.defaults-actions button{flex:1;min-width:95px;font-size:10px;padding:4px}
+.resolved-card{padding:5px;margin:5px 0;font-size:10px;color:var(--lm-text-muted)}
+.resolved-card code{color:var(--lm-text);font-size:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Zone Editor</h1>
+  <select class="lm-select" id="layoutSelect"><option value="">New layout...</option></select>
+  <button class="lm-btn lm-btn--primary" id="btnSave" title="Ctrl+S">Save</button>
+  <button class="lm-btn" id="btnValidate">Validate</button>
+  <button class="lm-btn" id="btnExport">Export</button>
+  <button id="btnExportBuild" class="lm-btn lm-btn--primary" title="Export + Rebuild client">Export & Build</button>
+  <span class="sep-v"></span>
+  <button class="lm-btn" id="btnUndo" disabled title="Ctrl+Z">Undo</button>
+  <button class="lm-btn" id="btnRedo" disabled title="Ctrl+Shift+Z">Redo</button>
+  <span class="sep-v"></span>
+  <label class="header-toggle"><input type="checkbox" id="snapToggle" checked style="width:auto"> Snap</label>
+  <label class="toolbar-field" title="Grid snap size">Grid
+    <select class="lm-select" id="gridSelect" style="width:56px" aria-label="Grid snap size">
+      <option value="16">16px</option><option value="32" selected>32px</option><option value="64">64px</option>
+    </select>
+  </label>
+  <label class="toolbar-field" title="Editor zoom preset">Zoom
+    <select class="lm-select" id="zoomSelect" style="width:56px" aria-label="Zoom preset">
+      <option value="0.25">25%</option><option value="0.5">50%</option><option value="1">100%</option><option value="2">200%</option><option value="fit">Fit</option>
+    </select>
+  </label>
+  <button class="lm-btn" id="btnFit" title="Zoom to Fit">Fit</button>
+  <button class="lm-btn" id="btnPng" title="Export PNG snapshot">PNG</button>
+  <button class="lm-btn lm-btn--toggle" aria-pressed="false" id="btnPreview" title="Toggle live game preview (Tab)">Preview</button>
+  <button class="lm-btn" id="btnHelp" title="Keyboard Shortcuts (?)">?</button>
+  <span style="margin-left:auto;color:var(--lm-text-muted);font-size:11px" id="headerInfo"></span>
+  <a class="header-link" href="/index.html">DevKit</a>
+</header>
+<div class="main">
+  <div class="toolbar" id="toolBar">
+    <button class="lm-btn lm-btn--toggle" aria-pressed="true" data-tool="select" title="Select / Move (V)"><span>&#9758;</span>Select</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="ground" title="Ground Region (G)"><span>&#9632;</span>Ground</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="decal" title="Decal (D)"><span>&#9683;</span>Decal</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="prop" title="Prop (P)"><span>&#9652;</span>Prop</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="npc" title="NPC (N)"><span>&#9786;</span>NPC</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="monster" title="Monster Zone (M)"><span>&#9760;</span>Monster</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="portal" title="Portal (O)"><span>&#9673;</span>Portal</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="spawn" title="Spawn Point (S)"><span>&#9733;</span>Spawn</button>
+    <div class="sep"></div>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="collision" title="Collision Paint (C)"><span>&#9619;</span>Collide</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="erase-collision" title="Erase Collision (E)"><span>&#9617;</span>Erase</button>
+    <div style="flex:1"></div>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tool="pan" title="Pan (Space+drag)"><span>&#9995;</span>Pan</button>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="editor"></canvas>
+    <canvas class="minimap" id="minimap" width="160" height="120"></canvas>
+    <div class="drag-info" id="dragInfo"></div>
+    <div class="bottom-bar">
+      <span id="coordInfo">0, 0</span>
+      <span id="zoomInfo">100%</span>
+      <span id="snapInfo">Snap: 32</span>
+      <span id="statsInfo"></span>
+      <span style="margin-left:auto" id="selInfo"></span>
+    </div>
+  </div>
+  <div class="preview-wrap" id="previewWrap">
+    <canvas id="previewCanvas"></canvas>
+    <span class="preview-label">Game Preview</span>
+    <button class="preview-cam-btn" id="previewCamBtn" title="Toggle camera sync">Cam: Sync</button>
+  </div>
+  <div class="props" id="propsPanel">
+    <h3 class="lm-eyebrow">Layout</h3>
+    <div class="prop-row"><label>Map ID</label><input class="lm-input" type="text" id="propMapId" placeholder="map_harbor_outskirts"></div>
+    <div class="prop-row"><label>Width</label><input class="lm-input" type="number" id="propBoundsW" min="100" step="32" value="1600"></div>
+    <div class="prop-row"><label>Height</label><input class="lm-input" type="number" id="propBoundsH" min="100" step="32" value="1200"></div>
+    <div class="prop-row"><label>Music</label><input class="lm-input" type="text" id="propMusic" placeholder="optional"></div>
+    <div class="sep-h"></div>
+    <h3 class="lm-eyebrow" onclick="toggleSection('layers')"><span class="arrow" id="arrowLayers">&#9660;</span> Layers</h3>
+    <div id="layerToggles"></div>
+    <div class="sep-h"></div>
+    <h3 class="lm-eyebrow" onclick="toggleSection('bankContext')"><span class="arrow" id="arrowBankContext">&#9660;</span> Bank Context</h3>
+    <div id="bankContextPanel" class="context-card"></div>
+    <div class="sep-h"></div>
+    <h3 class="lm-eyebrow" onclick="toggleSection('elements')"><span class="arrow" id="arrowElements">&#9660;</span> Elements</h3>
+    <div class="search-row"><input class="lm-input" type="text" id="elSearch" placeholder="Filter elements..." oninput="updateElementsList()"></div>
+    <div id="elementsList" class="elements-list"></div>
+    <div class="actions-row">
+      <button class="lm-btn" id="btnDuplicate" disabled title="Ctrl+D">Dup</button>
+      <button class="lm-btn lm-btn--danger" id="btnDelete" disabled title="Del">Del</button>
+      <button class="lm-btn" id="btnSelectAll" title="Ctrl+A">All</button>
+      <button class="lm-btn" id="btnCollisionFill" title="Auto-fill collision from ground">Col Fill</button>
+      <button class="lm-btn lm-btn--danger" id="btnCollisionClear" title="Clear all collision">Col Clear</button>
+    </div>
+    <div class="sep-h"></div>
+    <h3 class="lm-eyebrow" id="selTitle" onclick="toggleSection('selection')"><span class="arrow" id="arrowSelection">&#9660;</span> Selection</h3>
+    <div id="selProps"></div>
+  </div>
+</div>
+<div class="lm-toast status" id="statusBar"></div>
+<div class="ctx-menu" id="ctxMenu"></div>
+<div class="lm-modal-scrim asset-picker-overlay" id="assetPickerOverlay" onclick="if(event.target===this)closeAssetPicker()">
+  <div class="lm-modal asset-picker">
+    <div class="asset-picker-header">
+      <h2>Select Asset</h2>
+      <button class="lm-btn lm-btn--ghost asset-picker-close" onclick="closeAssetPicker()">&times;</button>
+    </div>
+    <div class="asset-picker-tabs" id="assetPickerTabs"></div>
+    <input type="text" class="lm-input asset-picker-search" id="assetPickerSearch" placeholder="Filter assets..." oninput="filterAssetPicker()">
+    <div class="asset-picker-grid" id="assetPickerGrid"></div>
+  </div>
+</div>
+<div class="lm-modal-scrim help-overlay" id="helpOverlay" onclick="this.style.display='none'">
+  <div class="lm-modal help-box" onclick="event.stopPropagation()">
+    <h2>Keyboard Shortcuts</h2>
+    <table class="lm-table">
+      <tr><td>V</td><td>Select tool</td></tr>
+      <tr><td>G</td><td>Ground region tool</td></tr>
+      <tr><td>D</td><td>Decal tool</td></tr>
+      <tr><td>P</td><td>Prop tool</td></tr>
+      <tr><td>N</td><td>NPC tool</td></tr>
+      <tr><td>M</td><td>Monster zone tool</td></tr>
+      <tr><td>O</td><td>Portal tool</td></tr>
+      <tr><td>X</td><td>Spawn point tool</td></tr>
+      <tr><td>C</td><td>Collision paint</td></tr>
+      <tr><td>E</td><td>Erase collision</td></tr>
+      <tr><td>Space+drag</td><td>Pan canvas</td></tr>
+      <tr><td>Scroll</td><td>Zoom in/out</td></tr>
+      <tr><td>Ctrl+S</td><td>Save layout</td></tr>
+      <tr><td>Ctrl+Z</td><td>Undo</td></tr>
+      <tr><td>Ctrl+Shift+Z</td><td>Redo</td></tr>
+      <tr><td>Ctrl+D</td><td>Duplicate selected</td></tr>
+      <tr><td>Ctrl+C / Ctrl+V</td><td>Copy / Paste</td></tr>
+      <tr><td>Ctrl+A</td><td>Select all</td></tr>
+      <tr><td>Delete / Backspace</td><td>Delete selected</td></tr>
+      <tr><td>Arrow keys</td><td>Nudge (1px)</td></tr>
+      <tr><td>Shift+Arrow</td><td>Nudge (grid step)</td></tr>
+      <tr><td>Shift+Click</td><td>Multi-select toggle</td></tr>
+      <tr><td>Escape</td><td>Deselect all</td></tr>
+      <tr><td>Ctrl+E</td><td>Export PNG snapshot</td></tr>
+      <tr><td>F</td><td>Filter elements (focus search)</td></tr>
+      <tr><td>Tab</td><td>Toggle live game preview</td></tr>
+      <tr><td>?</td><td>Toggle this help</td></tr>
+    </table>
+    <h2 style="margin-top:12px">Mouse</h2>
+    <table class="lm-table">
+      <tr><td>Left drag</td><td>Move / draw / paint</td></tr>
+      <tr><td>Right drag</td><td>Pan canvas</td></tr>
+      <tr><td>Ctrl+Right click</td><td>Context menu</td></tr>
+      <tr><td>Middle drag</td><td>Pan canvas</td></tr>
+      <tr><td>Marquee drag</td><td>Box-select (on empty area)</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+const LAYERS = ['ground','decals','props','npcs','monsterSpawns','portals','spawnPoints'];
+const LAYER_LABELS = {ground:'Ground',decals:'Decal',props:'Prop',npcs:'NPC',monsterSpawns:'Monster',portals:'Portal',spawnPoints:'Spawn'};
+const LAYER_COLORS = {ground:'#345a49',decals:'#a078ff',props:'#64c8ff',npcs:'#7ccf91',monsterSpawns:'#dc7777',portals:'#9be26f',spawnPoints:'#ffe2a0'};
+const LAYER_VISIBILITY_KEY = 'gamekit.zoneEditor.layerVisible.v1';
+const LABEL_ZOOM_MIN = 0.35;
+
+let layout = newLayout();
+let tool = 'select';
+let selected = null;
+let multiSelected = [];
+let cam = { x: 0, y: 0, zoom: 1 };
+let contentIds = { npcs: [], monsters: [], portals: [], maps: [] };
+let assetKeys = [];
+let bankContext = null;
+let assetPlacementDefaults = { metadata: { schemaVersion: 1, assets: {} }, hash: null, modifiedMs: null };
+let currentLayoutMeta = { hash: null, modifiedMs: null };
+let inspectorContract = null;
+let inspectorByLayoutKey = {};
+let dirty = false;
+let idCounter = 1;
+let snapEnabled = true;
+let gridSize = 32;
+let layerVisible = {};
+LAYERS.forEach(l => layerVisible[l] = true);
+layerVisible.collision = false;
+
+let dragging = false;
+let dragStart = { x: 0, y: 0 };
+let dragObjStarts = [];
+let panning = false;
+let panStart = { x: 0, y: 0, camX: 0, camY: 0 };
+let drawStart = null;
+let collisionPainting = false;
+let collisionPaintMode = 'add';
+let resizing = null;
+let spaceHeld = false;
+let lastMouseWorld = { x: 0, y: 0 };
+let lockedElements = new Set();
+let hiddenElements = new Set();
+let marquee = null; // {sx, sy, wx, wy, wx2, wy2}
+let clipboard = []; // [{layer, data}]
+let snapGuides = []; // [{axis:'x'|'y', value:number}]
+let collapsedSections = {};
+let collapsedLayers = {};
+
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO = 80;
+
+const $ = id => document.getElementById(id);
+const canvas = $('editor');
+const ctx = canvas.getContext('2d');
+const wrap = $('canvasWrap');
+const minimapCanvas = $('minimap');
+const mctx = minimapCanvas.getContext('2d');
+
+async function loadInspectorContract() {
+  try {
+    inspectorContract = await api('/api/editor-inspector-schema');
+    inspectorByLayoutKey = {};
+    for (const layer of inspectorContract.layers || []) inspectorByLayoutKey[layer.layoutKey] = layer;
+  } catch (e) {
+    inspectorContract = null;
+    inspectorByLayoutKey = {};
+    showStatus('Inspector schema unavailable; using built-in fields', true);
+  }
+}
+
+function inspectorFields(layer) {
+  return inspectorByLayoutKey[layer]?.fields || [];
+}
+
+function inspectorField(layer, key) {
+  return inspectorFields(layer).find(f => f.key === key);
+}
+
+function getPathValue(source, path) {
+  return path.split('.').reduce((value, part) => value == null ? undefined : value[part], source);
+}
+
+function setPathValue(target, path, value) {
+  const parts = path.split('.');
+  let cursor = target;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i];
+    if (!cursor[part] || typeof cursor[part] !== 'object') cursor[part] = {};
+    cursor = cursor[part];
+  }
+  if (value === undefined || value === '') delete cursor[parts[parts.length - 1]];
+  else cursor[parts[parts.length - 1]] = value;
+}
+
+function displayFieldValue(field, value) {
+  const raw = value ?? field?.defaultValue ?? '';
+  if (field?.display === 'degrees' && field.storage === 'radians' && raw !== '') return Math.round(Number(raw) * 180 / Math.PI * 100) / 100;
+  return raw;
+}
+
+function displayInspectorValue(layer, el, field, key) {
+  let value = getPathValue(el, key);
+  if (value === undefined && supportsPlacementDefaults(layer)) {
+    const defaults = placementDefaultsFor(el.assetKey);
+    value = getPathValue(defaults, defaultPathForField(key));
+  }
+  return displayFieldValue(field, value);
+}
+
+function storageFieldValue(field, inp) {
+  if (field?.kind === 'boolean') return inp.checked;
+  let val = inp.type === 'number' || inp.type === 'range' ? (inp.value === '' ? undefined : Number(inp.value)) : inp.value;
+  if (field?.display === 'degrees' && field.storage === 'radians' && val !== undefined && val !== '') val = Number(val) * Math.PI / 180;
+  return val;
+}
+
+function defaultPathForField(key) {
+  return key === 'scale' ? 'defaultScale' : key;
+}
+
+function placementKindForLayer(layer) {
+  if (layer === 'props') return 'prop';
+  if (layer === 'decals') return 'decal';
+  return undefined;
+}
+
+function supportsPlacementDefaults(layer) {
+  return layer === 'props' || layer === 'decals';
+}
+
+function placementDefaultsFor(assetKey) {
+  return assetPlacementDefaults?.metadata?.assets?.[assetKey];
+}
+
+function fieldSourceState(layer, el, key) {
+  if (!supportsPlacementDefaults(layer)) return null;
+  if (!['scale','origin.x','origin.y','zIndex','collision.mode','collision.xPct','collision.yPct','collision.wPct','collision.hPct','collision.blocksMovement','collision.blocksPlayers','collision.blocksMonsters','shadow.mode','shadow.offsetX','shadow.offsetY','shadow.wPct','shadow.hPct','shadow.alpha','shadow.blur','shadow.rotation'].includes(key)) return null;
+  if (getPathValue(el, key) !== undefined) return 'overridden';
+  const defaults = placementDefaultsFor(el.assetKey);
+  if (defaults && getPathValue(defaults, defaultPathForField(key)) !== undefined) return 'inherited';
+  return 'fallback';
+}
+
+function stateBadge(layer, el, key) {
+  const state = fieldSourceState(layer, el, key);
+  const variant = state === 'overridden' ? 'lm-badge--accent' : state === 'inherited' ? 'lm-badge--ok' : 'lm-badge--info';
+  return state ? `<span class="lm-badge ${variant}" title="${state}">${state}</span>` : '';
+}
+
+function resolvedPlacementFor(layer, el) {
+  const defaults = placementDefaultsFor(el.assetKey) || {};
+  const fallbackOrigin = layer === 'decals' ? { x: 0.5, y: 0.5 } : { x: 0.5, y: 1 };
+  return {
+    assetKey: el.assetKey,
+    placementKind: defaults.placementKind,
+    scale: el.scale ?? defaults.defaultScale ?? 1,
+    origin: el.origin ?? defaults.origin ?? fallbackOrigin,
+    zIndex: el.zIndex ?? defaults.zIndex,
+    collision: el.collision ?? defaults.collision,
+    shadow: el.shadow ? { ...(defaults.shadow || {}), ...el.shadow } : defaults.shadow
+  };
+}
+
+function resolvedScaleFor(layer, el, fallback) {
+  if (!supportsPlacementDefaults(layer)) return el.scale ?? fallback;
+  return resolvedPlacementFor(layer, el).scale ?? fallback;
+}
+
+function compactJson(value) {
+  if (value === undefined) return 'none';
+  return JSON.stringify(value);
+}
+
+function renderResolvedCard(layer, el) {
+  if (!supportsPlacementDefaults(layer)) return '';
+  const resolved = resolvedPlacementFor(layer, el);
+  return `<div class="resolved-card">Resolved: scale <code>${resolved.scale}</code>, origin <code>${compactJson(resolved.origin)}</code>, z <code>${resolved.zIndex ?? 'none'}</code><br>collision <code>${compactJson(resolved.collision)}</code><br>shadow <code>${compactJson(resolved.shadow)}</code></div>`;
+}
+
+function buildDefaultsFromInstance(layer, el) {
+  const defaults = {
+    ...(placementDefaultsFor(el.assetKey) || {}),
+    assetKey: el.assetKey,
+    placementKind: placementKindForLayer(layer)
+  };
+  if (el.scale !== undefined) defaults.defaultScale = el.scale;
+  if (el.origin !== undefined) defaults.origin = JSON.parse(JSON.stringify(el.origin));
+  if (el.zIndex !== undefined) defaults.zIndex = el.zIndex;
+  if (layer === 'props') {
+    if (el.collision !== undefined) defaults.collision = JSON.parse(JSON.stringify(el.collision));
+    if (el.shadow !== undefined) defaults.shadow = JSON.parse(JSON.stringify(el.shadow));
+  } else {
+    delete defaults.collision;
+    delete defaults.shadow;
+  }
+  return defaults;
+}
+
+function newLayout() {
+  return {
+    schemaVersion: 1, mapId: '', bounds: { width: 1600, height: 1200 },
+    ground: [], decals: [], props: [], npcs: [], monsterSpawns: [], portals: [],
+    spawnPoints: [{ id: 'spawn_default', x: 200, y: 600 }],
+    collision: { tileSize: 32, blocked: [] }
+  };
+}
+
+// ── Undo/Redo ──
+function pushUndo() {
+  undoStack.push(JSON.stringify(layout));
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack.length = 0;
+  updateUndoButtons();
+}
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify(layout));
+  layout = JSON.parse(undoStack.pop());
+  selected = null; multiSelected = [];
+  dirty = true; syncProps(); updateElementsList(); showSelectionProps(); render(); updateUndoButtons();
+}
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify(layout));
+  layout = JSON.parse(redoStack.pop());
+  selected = null; multiSelected = [];
+  dirty = true; syncProps(); updateElementsList(); showSelectionProps(); render(); updateUndoButtons();
+}
+function updateUndoButtons() {
+  $('btnUndo').disabled = !undoStack.length;
+  $('btnRedo').disabled = !redoStack.length;
+}
+$('btnUndo').onclick = undo;
+$('btnRedo').onclick = redo;
+
+// ── Snap & Grid ──
+function snap(v) { return snapEnabled ? Math.round(v / gridSize) * gridSize : Math.round(v); }
+$('snapToggle').onchange = function() { snapEnabled = this.checked; updateSnapInfo(); };
+$('gridSelect').onchange = function() { gridSize = Number(this.value); updateSnapInfo(); render(); };
+function updateSnapInfo() { $('snapInfo').textContent = snapEnabled ? `Snap: ${gridSize}` : 'Snap: off'; }
+
+// ── Zoom presets ──
+$('zoomSelect').onchange = function() {
+  if (this.value === 'fit') { centerCamera(); }
+  else { cam.zoom = Number(this.value); }
+  render(); this.value = '';
+};
+
+// ── Help ──
+$('btnHelp').onclick = () => { $('helpOverlay').style.display = $('helpOverlay').style.display === 'flex' ? 'none' : 'flex'; };
+
+// ── Section toggle ──
+window.toggleSection = function(name) {
+  const arrow = $('arrow' + name.charAt(0).toUpperCase() + name.slice(1));
+  collapsedSections[name] = !collapsedSections[name];
+  if (arrow) arrow.classList.toggle('collapsed', collapsedSections[name]);
+  const targets = { layers: 'layerToggles', bankContext: 'bankContextPanel', elements: 'elementsList', selection: 'selProps' };
+  const el = $(targets[name]);
+  if (el) el.style.display = collapsedSections[name] ? 'none' : '';
+};
+
+function loadLayerVisibility() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAYER_VISIBILITY_KEY) || '{}');
+    for (const l of LAYERS) if (typeof saved[l] === 'boolean') layerVisible[l] = saved[l];
+    if (typeof saved.collision === 'boolean') layerVisible.collision = saved.collision;
+  } catch {
+    layerVisible.collision = false;
+  }
+}
+
+function saveLayerVisibility() {
+  try { localStorage.setItem(LAYER_VISIBILITY_KEY, JSON.stringify(layerVisible)); } catch {}
+}
+
+// ── API ──
+async function api(path, opts) { return (await fetch(path, opts)).json(); }
+
+async function loadAssetPlacementDefaults() {
+  try {
+    const data = await api('/api/asset-placement-defaults');
+    if (data?.metadata) assetPlacementDefaults = data;
+  } catch (e) {
+    assetPlacementDefaults = { metadata: { schemaVersion: 1, assets: {} }, hash: null, modifiedMs: null };
+    showStatus('Placement defaults unavailable', true);
+  }
+}
+
+// ── Init ──
+async function init() {
+  const [layoutsRes, idsRes] = await Promise.all([api('/api/zone-layouts'), api('/api/content-ids'), loadInspectorContract(), loadAssetPlacementDefaults()]);
+  contentIds = idsRes;
+  try { const ak = await api('/api/available-asset-keys'); assetKeys = ak.keys || []; } catch(e) { assetKeys = []; }
+  loadAssetCatalog();
+  const sel = $('layoutSelect');
+  sel.innerHTML = '<option value="__new__">+ New layout...</option>';
+  for (const l of layoutsRes.layouts) sel.innerHTML += `<option value="${l.mapId}">${l.mapId}</option>`;
+  if (layoutsRes.layouts.length > 0) {
+    sel.value = layoutsRes.layouts[0].mapId;
+    loadLayout(layoutsRes.layouts[0]);
+  }
+  buildLayerToggles();
+  resize();
+}
+
+function loadLayout(source) {
+  const data = source?.data || source;
+  currentLayoutMeta = { hash: source?.hash || null, modifiedMs: source?.modifiedMs ?? null };
+  layout = JSON.parse(JSON.stringify(data));
+  if (!layout.collision) layout.collision = { tileSize: 32, blocked: [] };
+  LAYERS.forEach(l => { if (!layout[l]) layout[l] = []; });
+  selected = null; multiSelected = [];
+  dirty = false;
+  undoStack.length = 0; redoStack.length = 0; updateUndoButtons();
+  lockedElements.clear(); hiddenElements.clear();
+  syncProps(); updateElementsList(); showSelectionProps(); updateSnapInfo(); render();
+  loadBankContextForCurrentMap();
+}
+
+function syncProps() {
+  $('propMapId').value = layout.mapId || '';
+  $('propBoundsW').value = layout.bounds.width;
+  $('propBoundsH').value = layout.bounds.height;
+  $('propMusic').value = layout.musicId || '';
+  updateStats();
+  renderBankContext();
+}
+
+function updateStats() {
+  let total = 0;
+  LAYERS.forEach(l => total += layout[l].length);
+  $('statsInfo').textContent = `${total} elements | ${layout.collision.blocked.length} collision tiles`;
+}
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadBankContextForCurrentMap() {
+  const mapId = (layout.mapId || '').trim();
+  if (!mapId) {
+    bankContext = null;
+    renderBankContext();
+    renderAssetPicker();
+    return;
+  }
+  try {
+    bankContext = await api('/api/bank-context?mapId=' + encodeURIComponent(mapId));
+  } catch(e) {
+    bankContext = { ok:false, error:e && e.message ? e.message : String(e), mapId };
+  }
+  renderBankContext();
+  renderAssetPicker();
+}
+
+function profileLabel(profile) {
+  return profile.label || profile.gameId || profile.id || 'entity';
+}
+
+function filledSlotCount(profile) {
+  const slots = profile.slots || {};
+  return Object.values(slots).filter(Boolean).length;
+}
+
+function contextualEntityIds(kind) {
+  const profiles = (bankContext && bankContext.entityProfiles && bankContext.entityProfiles[kind]) || [];
+  const ids = profiles.map(p => p.gameId || p.id).filter(Boolean);
+  const fallback = kind === 'npcs' ? contentIds.npcs : contentIds.monsters;
+  return [...new Set([...ids, ...fallback])];
+}
+
+function renderProfilePills(kind) {
+  const profiles = ((bankContext && bankContext.entityProfiles && bankContext.entityProfiles[kind]) || []).slice(0, 8);
+  if (!profiles.length) return '<div class="context-note">No matching entity profiles found. Use the ID dropdown and broader bank search.</div>';
+  return '<div class="context-list">' + profiles.map(p =>
+    '<span class="lm-badge lm-badge--info" title="' + esc((p.gameId || p.id || '') + ' - ' + filledSlotCount(p) + ' bound slot(s)') + '">' +
+    esc(profileLabel(p)) + '</span>'
+  ).join('') + '</div>';
+}
+
+function renderBankContext() {
+  const panel = $('bankContextPanel');
+  if (!panel) return;
+  if (!layout.mapId) {
+    panel.innerHTML = '<div class="context-note">Set a map ID to load zone-pack context.</div>';
+    return;
+  }
+  if (!bankContext) {
+    panel.innerHTML = '<div class="context-note">Loading bank context...</div>';
+    return;
+  }
+  if (bankContext.error) {
+    panel.innerHTML = '<div class="context-note">Bank context unavailable: ' + esc(bankContext.error) + '</div>';
+    return;
+  }
+  const zone = bankContext.zone;
+  if (!zone) {
+    panel.innerHTML = '<div class="context-note">No zone pack is mapped to ' + esc(layout.mapId) + '. The asset picker will use broad bank search.</div>';
+    return;
+  }
+  const counts = zone.layerCounts || {};
+  const row = (label, value) => '<div class="context-row"><span>' + esc(label) + '</span><strong>' + esc(value) + '</strong></div>';
+  let html = '<div class="context-title">' + esc(zone.label || zone.id) + '</div>';
+  html += row('Zone ID', zone.id || '');
+  html += row('Ground', counts.ground_tiles || 0);
+  html += row('Decals', counts.decals || 0);
+  html += row('Props', counts.props || 0);
+  html += row('Transitions', counts.transitions || 0);
+  html += row('NPC pack rows', counts.npcs || 0);
+  html += row('Monster pack rows', counts.monsters || 0);
+  if (bankContext.emptyState && bankContext.emptyState.npcs) html += '<div class="context-note">NPC rows empty; using profile matches and broad bank search.</div>';
+  if (bankContext.emptyState && bankContext.emptyState.monsters) html += '<div class="context-note">Monster rows empty; using profile matches and broad bank search.</div>';
+  panel.innerHTML = html;
+}
+
+$('propMapId').oninput = function() { pushUndo(); layout.mapId = this.value; dirty = true; loadBankContextForCurrentMap(); };
+$('propBoundsW').oninput = function() { pushUndo(); layout.bounds.width = Number(this.value) || 1600; dirty = true; render(); };
+$('propBoundsH').oninput = function() { pushUndo(); layout.bounds.height = Number(this.value) || 1200; dirty = true; render(); };
+$('propMusic').oninput = function() { pushUndo(); layout.musicId = this.value || undefined; dirty = true; };
+
+$('layoutSelect').onchange = async function() {
+  if (dirty && !confirm('Discard unsaved changes?')) { this.value = layout.mapId || '__new__'; return; }
+  if (this.value === '__new__') { layout = newLayout(); currentLayoutMeta = { hash: null, modifiedMs: null }; selected = null; multiSelected = []; dirty = false; undoStack.length = 0; redoStack.length = 0; updateUndoButtons(); syncProps(); updateElementsList(); showSelectionProps(); render(); loadBankContextForCurrentMap(); return; }
+  const res = await api('/api/zone-layouts');
+  const found = res.layouts.find(l => l.mapId === this.value);
+  if (found) loadLayout(found);
+};
+
+// ── Layer toggles ──
+function buildLayerToggles() {
+  const el = $('layerToggles');
+  let html = '';
+  for (const l of LAYERS) html += `<label class="layer-toggle"><input type="checkbox" data-layer="${l}" ${layerVisible[l] ? 'checked' : ''}><span style="color:${LAYER_COLORS[l]}">${LAYER_LABELS[l]}</span></label>`;
+  html += `<label class="layer-toggle"><input type="checkbox" data-layer="collision" ${layerVisible.collision ? 'checked' : ''}><span style="color:var(--lm-danger)">Collision</span></label>`;
+  el.innerHTML = html;
+  el.querySelectorAll('input').forEach(inp => {
+    inp.onchange = function() { layerVisible[this.dataset.layer] = this.checked; saveLayerVisibility(); render(); };
+  });
+}
+
+// ── Tools ──
+document.querySelectorAll('[data-tool]').forEach(btn => { btn.onclick = () => setTool(btn.dataset.tool); });
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === tool)));
+  updateCursor();
+}
+function updateCursor() {
+  canvas.style.cursor = tool === 'select' ? 'default' : tool === 'pan' ? 'grab' : tool === 'collision' || tool === 'erase-collision' ? 'cell' : 'crosshair';
+}
+
+// ── Canvas resize ──
+function resize() { canvas.width = wrap.clientWidth; canvas.height = Math.max(100, wrap.clientHeight - 22); resizePreview(); render(); }
+window.addEventListener('resize', resize);
+
+// ── Coords ──
+function screenToWorld(sx, sy) {
+  return { x: (sx - canvas.width / 2) / cam.zoom + cam.x, y: (sy - canvas.height / 2) / cam.zoom + cam.y };
+}
+function worldToScreen(wx, wy) {
+  return { x: (wx - cam.x) * cam.zoom + canvas.width / 2, y: (wy - cam.y) * cam.zoom + canvas.height / 2 };
+}
+
+// ── Element helpers ──
+function elKey(layer, index) { return `${layer}_${index}`; }
+function isLocked(layer, index) { return lockedElements.has(elKey(layer, index)); }
+function isHidden(layer, index) { return hiddenElements.has(elKey(layer, index)); }
+function isSelected(layer, index) {
+  if (selected?.layer === layer && selected?.index === index) return true;
+  return multiSelected.some(s => s.layer === layer && s.index === index);
+}
+function getAllSelected() {
+  const all = [...multiSelected];
+  if (selected && !all.some(s => s.layer === selected.layer && s.index === selected.index)) all.push(selected);
+  return all;
+}
+function getElementPos(layer, index) {
+  const el = layout[layer][index];
+  if (layer === 'portals') return { x: el.shape?.x ?? 0, y: el.shape?.y ?? 0 };
+  return { x: el.x, y: el.y };
+}
+function setElementPos(layer, index, x, y) {
+  const el = layout[layer][index];
+  if (layer === 'portals') { el.shape.x = x; el.shape.y = y; }
+  else { el.x = x; el.y = y; }
+}
+function getElementBounds(layer, index) {
+  const el = layout[layer][index];
+  if (layer === 'ground' || layer === 'monsterSpawns') return { x: el.x, y: el.y, w: el.width, h: el.height };
+  if (layer === 'portals' && el.shape?.type === 'rect') return { x: el.shape.x, y: el.shape.y, w: el.shape.width || 60, h: el.shape.height || 60 };
+  if (layer === 'portals' && el.shape?.type === 'circle') { const r = el.shape.radius || 30; return { x: el.shape.x - r, y: el.shape.y - r, w: r*2, h: r*2 }; }
+  if (layer === 'npcs') { const r = el.radius || 40; return { x: el.x - r, y: el.y - r, w: r*2, h: r*2 }; }
+  if (layer === 'decals') { const r = Math.max(16 * resolvedScaleFor(layer, el, 1), 11 / cam.zoom); return { x: el.x - r, y: el.y - r, w: r*2, h: r*2 }; }
+  if (layer === 'props') { const r = Math.max(14 * resolvedScaleFor(layer, el, 1), 11 / cam.zoom); return { x: el.x - r, y: el.y - r, w: r*2, h: r*2 }; }
+  if (layer === 'spawnPoints') return { x: el.x - 6, y: el.y - 6, w: 12, h: 12 };
+  return { x: el.x, y: el.y, w: 32, h: 32 };
+}
+
+// ── Render ──
+function render() {
+  const w = canvas.width, h = canvas.height;
+  if (w < 1 || h < 1) return;
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(w / 2, h / 2);
+  ctx.scale(cam.zoom, cam.zoom);
+  ctx.translate(-cam.x, -cam.y);
+  const lw = Math.abs(1 / cam.zoom);
+  const bw = layout.bounds.width, bh = layout.bounds.height;
+  const showLabels = cam.zoom >= LABEL_ZOOM_MIN;
+
+  ctx.fillStyle = '#1a2030'; ctx.fillRect(0, 0, bw, bh);
+
+  // Grid
+  if (cam.zoom > 0.2) {
+    ctx.strokeStyle = 'rgba(60,75,95,0.2)'; ctx.lineWidth = 0.5 * lw;
+    ctx.beginPath();
+    for (let x = 0; x <= bw; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, bh); }
+    for (let y = 0; y <= bh; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(bw, y); }
+    ctx.stroke();
+  }
+
+  // Ground
+  if (layerVisible.ground) for (let i = 0; i < layout.ground.length; i++) {
+    if (isHidden('ground', i)) continue;
+    const g = layout.ground[i]; const sel = isSelected('ground', i); const locked = isLocked('ground', i);
+    ctx.globalAlpha = locked ? 0.5 : (g.opacity ?? 1);
+    ctx.fillStyle = '#345a49'; ctx.fillRect(g.x, g.y, g.width, g.height);
+    ctx.strokeStyle = sel ? '#ffe2a0' : locked ? '#666' : '#4a7a5f'; ctx.lineWidth = (sel ? 2.5 : 1) * lw;
+    ctx.strokeRect(g.x, g.y, g.width, g.height);
+    ctx.globalAlpha = 1;
+    if (showLabels) {
+      ctx.fillStyle = '#8bc49a'; ctx.font = `${Math.max(10, 11 * lw)}px system-ui`;
+      ctx.fillText(g.assetKey || '(no asset)', g.x + 3, g.y + 13 * lw);
+    }
+    if (sel) drawResizeHandles(g.x, g.y, g.width, g.height);
+  }
+
+  // Decals
+  if (layerVisible.decals) for (let i = 0; i < layout.decals.length; i++) {
+    if (isHidden('decals', i)) continue;
+    const d = layout.decals[i]; const sel = isSelected('decals', i); const r = Math.max(Math.abs(16 * resolvedScaleFor('decals', d, 1)), 9 / cam.zoom);
+    ctx.globalAlpha = isLocked('decals', i) ? 0.5 : (d.opacity ?? 1);
+    ctx.fillStyle = 'rgba(160,120,255,0.3)'; ctx.strokeStyle = sel ? '#ffe2a0' : '#a078ff'; ctx.lineWidth = (sel ? 2.5 : 1.5) * lw;
+    ctx.beginPath(); ctx.arc(d.x, d.y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (showLabels) {
+      ctx.fillStyle = '#c4a8ff'; ctx.font = `${Math.max(8, 10 * lw)}px system-ui`;
+      ctx.fillText(d.assetKey || '?', d.x + r + 3, d.y + 3);
+    }
+  }
+
+  // Props
+  if (layerVisible.props) for (let i = 0; i < layout.props.length; i++) {
+    if (isHidden('props', i)) continue;
+    const p = layout.props[i]; const sel = isSelected('props', i); const pr = Math.max(14 * resolvedScaleFor('props', p, 1), 9 / cam.zoom);
+    ctx.globalAlpha = isLocked('props', i) ? 0.5 : (p.opacity ?? 1);
+    ctx.fillStyle = 'rgba(100,200,255,0.3)'; ctx.strokeStyle = sel ? '#ffe2a0' : '#64c8ff'; ctx.lineWidth = (sel ? 2.5 : 1.5) * lw;
+    ctx.beginPath(); ctx.arc(p.x, p.y, pr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (showLabels) {
+      ctx.fillStyle = '#9ad8ff'; ctx.font = `${Math.max(8, 10 * lw)}px system-ui`;
+      ctx.fillText(p.assetKey || '?', p.x + pr + 3, p.y + 3);
+    }
+  }
+
+  // Monster zones
+  if (layerVisible.monsterSpawns) {
+    ctx.setLineDash([5 * lw, 3 * lw]);
+    for (let i = 0; i < layout.monsterSpawns.length; i++) {
+      if (isHidden('monsterSpawns', i)) continue;
+      const m = layout.monsterSpawns[i]; const sel = isSelected('monsterSpawns', i);
+      ctx.globalAlpha = isLocked('monsterSpawns', i) ? 0.5 : 1;
+      ctx.fillStyle = 'rgba(220,119,119,0.22)'; ctx.fillRect(m.x, m.y, m.width, m.height);
+      ctx.strokeStyle = sel ? '#ffe2a0' : '#dc7777'; ctx.lineWidth = (sel ? 2.5 : 1.5) * lw;
+      ctx.strokeRect(m.x, m.y, m.width, m.height);
+      ctx.globalAlpha = 1;
+      if (showLabels) {
+        ctx.fillStyle = '#f0a0a0'; ctx.font = `${Math.max(10, 11 * lw)}px system-ui`;
+        ctx.fillText(`${m.monsterId || '?'} (x${m.maxAlive || 1})`, m.x + 3, m.y + 13 * lw);
+      }
+      if (sel) drawResizeHandles(m.x, m.y, m.width, m.height);
+    }
+    ctx.setLineDash([]);
+  }
+
+  // NPCs
+  if (layerVisible.npcs) for (let i = 0; i < layout.npcs.length; i++) {
+    if (isHidden('npcs', i)) continue;
+    const n = layout.npcs[i]; const sel = isSelected('npcs', i); const nr = Math.abs(n.radius || 40);
+    ctx.globalAlpha = isLocked('npcs', i) ? 0.5 : 1;
+    ctx.fillStyle = 'rgba(124,207,145,0.3)'; ctx.strokeStyle = sel ? '#ffe2a0' : '#7ccf91'; ctx.lineWidth = (sel ? 2.5 : 1.5) * lw;
+    ctx.beginPath(); ctx.arc(n.x, n.y, nr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (showLabels) {
+      ctx.fillStyle = '#dbffe4'; ctx.font = `bold ${Math.max(10, 11 * lw)}px system-ui`;
+      ctx.textAlign = 'center'; ctx.fillText(n.npcId || '?', n.x, n.y - nr - 3 * lw); ctx.textAlign = 'left';
+    }
+  }
+
+  // Portals
+  if (layerVisible.portals) for (let i = 0; i < layout.portals.length; i++) {
+    if (isHidden('portals', i)) continue;
+    const p = layout.portals[i]; const sel = isSelected('portals', i);
+    ctx.globalAlpha = isLocked('portals', i) ? 0.5 : 1;
+    ctx.fillStyle = 'rgba(155,226,111,0.3)'; ctx.strokeStyle = sel ? '#ffe2a0' : '#9be26f'; ctx.lineWidth = (sel ? 2.5 : 1.5) * lw;
+    if (p.shape?.type === 'circle') {
+      ctx.beginPath(); ctx.arc(p.shape.x, p.shape.y, Math.abs(p.shape.radius || 30), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (showLabels) {
+        ctx.fillStyle = '#d0ffc0'; ctx.font = `${Math.max(9, 10 * lw)}px system-ui`;
+        ctx.textAlign = 'center'; ctx.fillText(p.portalId || '?', p.shape.x, p.shape.y + 4); ctx.textAlign = 'left';
+      }
+    } else if (p.shape?.type === 'rect') {
+      ctx.fillRect(p.shape.x, p.shape.y, p.shape.width || 60, p.shape.height || 60);
+      ctx.strokeRect(p.shape.x, p.shape.y, p.shape.width || 60, p.shape.height || 60);
+      if (showLabels) {
+        ctx.fillStyle = '#d0ffc0'; ctx.font = `${Math.max(9, 10 * lw)}px system-ui`;
+        ctx.fillText(p.portalId || '?', p.shape.x + 3, p.shape.y + 13 * lw);
+      }
+      if (sel) drawResizeHandles(p.shape.x, p.shape.y, p.shape.width || 60, p.shape.height || 60);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Spawn points
+  if (layerVisible.spawnPoints) for (let i = 0; i < layout.spawnPoints.length; i++) {
+    if (isHidden('spawnPoints', i)) continue;
+    const s = layout.spawnPoints[i]; const sel = isSelected('spawnPoints', i);
+    const sz = Math.max(3, 6 * lw);
+    ctx.fillStyle = sel ? '#fff' : '#ffe2a0';
+    ctx.beginPath(); ctx.arc(s.x, s.y, sz, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#b89040'; ctx.lineWidth = 1.5 * lw; ctx.stroke();
+    if (showLabels) {
+      ctx.font = `bold ${Math.max(10, 11 * lw)}px system-ui`;
+      ctx.textAlign = 'center'; ctx.fillText(s.id || '?', s.x, s.y - sz - 2 * lw); ctx.textAlign = 'left';
+    }
+  }
+
+  // Collision (drawn on top of all elements so it's visible over ground)
+  if (layerVisible.collision && layout.collision.blocked.length) {
+    const gs = layout.collision.tileSize || gridSize;
+    ctx.fillStyle = 'rgba(255,70,70,0.45)';
+    for (const [tx, ty] of layout.collision.blocked) ctx.fillRect(tx * gs, ty * gs, gs, gs);
+    ctx.strokeStyle = 'rgba(255,100,100,0.6)'; ctx.lineWidth = 0.5 * lw;
+    for (const [tx, ty] of layout.collision.blocked) ctx.strokeRect(tx * gs, ty * gs, gs, gs);
+  }
+
+  // Smart snap guides
+  if (snapGuides.length) {
+    ctx.strokeStyle = 'rgba(131,173,255,0.5)'; ctx.lineWidth = lw; ctx.setLineDash([3 * lw, 3 * lw]);
+    for (const g of snapGuides) {
+      ctx.beginPath();
+      if (g.axis === 'x') { ctx.moveTo(g.value, 0); ctx.lineTo(g.value, bh); }
+      else { ctx.moveTo(0, g.value); ctx.lineTo(bw, g.value); }
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // Crosshair guidelines
+  if (selected) {
+    const pos = getElementPos(selected.layer, selected.index);
+    ctx.strokeStyle = 'rgba(255,226,160,0.2)'; ctx.lineWidth = lw;
+    ctx.setLineDash([4 * lw, 4 * lw]);
+    ctx.beginPath(); ctx.moveTo(pos.x, 0); ctx.lineTo(pos.x, bh); ctx.moveTo(0, pos.y); ctx.lineTo(bw, pos.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Marquee
+  if (marquee) {
+    ctx.strokeStyle = '#83adff'; ctx.lineWidth = 1.5 * lw; ctx.setLineDash([4 * lw, 3 * lw]);
+    ctx.fillStyle = 'rgba(131,173,255,0.08)';
+    const mx = Math.min(marquee.wx, marquee.wx2), my = Math.min(marquee.wy, marquee.wy2);
+    const mw = Math.abs(marquee.wx2 - marquee.wx), mh = Math.abs(marquee.wy2 - marquee.wy);
+    ctx.fillRect(mx, my, mw, mh); ctx.strokeRect(mx, my, mw, mh);
+    ctx.setLineDash([]);
+  }
+
+  // Draw preview
+  if (drawStart) {
+    ctx.strokeStyle = '#ffe2a0'; ctx.lineWidth = 1.5 * lw; ctx.setLineDash([4 * lw, 4 * lw]);
+    const dw = drawStart.wx2 - drawStart.wx, dh = drawStart.wy2 - drawStart.wy;
+    ctx.strokeRect(drawStart.wx, drawStart.wy, dw, dh);
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffe2a0'; ctx.font = `${Math.max(9, 10 * lw)}px system-ui`;
+    ctx.fillText(`${Math.abs(Math.round(dw))} x ${Math.abs(Math.round(dh))}`, Math.min(drawStart.wx, drawStart.wx2) + 3, Math.min(drawStart.wy, drawStart.wy2) - 3 * lw);
+  }
+
+  // Bounds outline
+  ctx.strokeStyle = '#4a5870'; ctx.lineWidth = 2 * lw; ctx.strokeRect(0, 0, bw, bh);
+  ctx.restore();
+
+  // Rulers
+  drawRulers(w, h);
+
+  $('zoomInfo').textContent = `${Math.round(cam.zoom * 100)}%`;
+  $('headerInfo').textContent = dirty ? '● Unsaved' : 'Saved';
+  $('headerInfo').style.color = dirty ? 'var(--lm-amber-400)' : 'var(--lm-text-muted)';
+  updateStats();
+
+  // Minimap
+  drawMinimap();
+
+  // Live preview
+  renderPreview();
+}
+
+function drawResizeHandles(x, y, w, h) {
+  const sz = Math.max(2, 4 / cam.zoom);
+  ctx.fillStyle = '#ffe2a0';
+  for (const [cx,cy] of [[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x+w/2,y],[x+w,y+h/2],[x+w/2,y+h],[x,y+h/2]])
+    ctx.fillRect(cx-sz,cy-sz,sz*2,sz*2);
+}
+
+function drawRulers(cw, ch) {
+  const R = 18;
+  ctx.fillStyle = 'rgba(20,25,35,0.92)';
+  ctx.fillRect(0, 0, cw, R); ctx.fillRect(0, R, R, ch - R);
+  ctx.strokeStyle = '#323c4c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,R); ctx.lineTo(cw,R); ctx.moveTo(R,0); ctx.lineTo(R,ch); ctx.stroke();
+  ctx.fillStyle = '#7a8494'; ctx.font = '9px system-ui';
+  const step = rulerStep();
+  const sw = screenToWorld(R, 0), ew = screenToWorld(cw, 0);
+  for (let wx = Math.ceil(sw.x / step) * step; wx <= ew.x; wx += step) {
+    const sx = (wx - cam.x) * cam.zoom + cw / 2;
+    if (sx < R) continue;
+    ctx.beginPath(); ctx.moveTo(sx, R-4); ctx.lineTo(sx, R); ctx.stroke();
+    ctx.fillText(String(Math.round(wx)), sx + 2, R - 3);
+  }
+  const sy2 = screenToWorld(0, R), ey2 = screenToWorld(0, ch);
+  for (let wy = Math.ceil(sy2.y / step) * step; wy <= ey2.y; wy += step) {
+    const sy = (wy - cam.y) * cam.zoom + ch / 2;
+    if (sy < R) continue;
+    ctx.beginPath(); ctx.moveTo(R-4, sy); ctx.lineTo(R, sy); ctx.stroke();
+    ctx.save(); ctx.translate(R-3, sy+2); ctx.rotate(-Math.PI/2); ctx.fillText(String(Math.round(wy)),0,0); ctx.restore();
+  }
+  ctx.fillStyle = 'rgba(20,25,35,0.92)'; ctx.fillRect(0,0,R,R);
+}
+
+function rulerStep() {
+  const p = cam.zoom;
+  if (p * 32 > 40) return 32;
+  if (p * 64 > 40) return 64;
+  if (p * 128 > 40) return 128;
+  if (p * 256 > 40) return 256;
+  return 512;
+}
+
+// ── Minimap ──
+function drawMinimap() {
+  const mw = 160, mh = 120;
+  mctx.clearRect(0, 0, mw, mh);
+  mctx.fillStyle = '#0e1118'; mctx.fillRect(0, 0, mw, mh);
+  const bw = layout.bounds.width, bh = layout.bounds.height;
+  const scale = Math.min(mw / bw, mh / bh) * 0.9;
+  const ox = (mw - bw * scale) / 2, oy = (mh - bh * scale) / 2;
+  mctx.fillStyle = '#1a2030'; mctx.fillRect(ox, oy, bw * scale, bh * scale);
+  mctx.strokeStyle = '#3c4657'; mctx.lineWidth = 1; mctx.strokeRect(ox, oy, bw * scale, bh * scale);
+  // Elements
+  for (const layer of LAYERS) {
+    mctx.fillStyle = LAYER_COLORS[layer] + '80';
+    for (let i = 0; i < layout[layer].length; i++) {
+      const b = getElementBounds(layer, i);
+      mctx.fillRect(ox + b.x * scale, oy + b.y * scale, Math.max(2, b.w * scale), Math.max(2, b.h * scale));
+    }
+  }
+  // Viewport rect
+  const tl = screenToWorld(0, 0), br = screenToWorld(canvas.width, canvas.height);
+  const vx = ox + Math.max(0, tl.x) * scale, vy = oy + Math.max(0, tl.y) * scale;
+  const vw = (Math.min(bw, br.x) - Math.max(0, tl.x)) * scale, vh = (Math.min(bh, br.y) - Math.max(0, tl.y)) * scale;
+  mctx.strokeStyle = '#ffe2a0'; mctx.lineWidth = 1.5;
+  mctx.strokeRect(vx, vy, Math.max(4, vw), Math.max(4, vh));
+}
+
+minimapCanvas.addEventListener('mousedown', (e) => {
+  const rect = minimapCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const mw = 160, mh = 120;
+  const bw = layout.bounds.width, bh = layout.bounds.height;
+  const scale = Math.min(mw / bw, mh / bh) * 0.9;
+  const ox = (mw - bw * scale) / 2, oy = (mh - bh * scale) / 2;
+  cam.x = (mx - ox) / scale; cam.y = (my - oy) / scale;
+  render();
+});
+
+// ── Hit testing ──
+function hitTest(wx, wy) {
+  for (const layer of [...LAYERS].reverse()) {
+    if (!layerVisible[layer]) continue;
+    for (let i = layout[layer].length - 1; i >= 0; i--) {
+      if (isHidden(layer, i) || isLocked(layer, i)) continue;
+      if (hitElement(layer, i, wx, wy)) return { layer, index: i };
+    }
+  }
+  return null;
+}
+function hitElement(layer, i, wx, wy) {
+  const el = layout[layer][i];
+  if (layer === 'spawnPoints') return Math.hypot(wx-el.x,wy-el.y) < 10 / cam.zoom;
+  if (layer === 'portals') {
+    if (el.shape?.type === 'circle') return Math.hypot(wx-el.shape.x,wy-el.shape.y) < (el.shape.radius||30);
+    if (el.shape?.type === 'rect') return wx>=el.shape.x && wx<=el.shape.x+(el.shape.width||60) && wy>=el.shape.y && wy<=el.shape.y+(el.shape.height||60);
+  }
+  if (layer === 'npcs') return Math.hypot(wx-el.x,wy-el.y) < (el.radius||40);
+  if (layer === 'monsterSpawns' || layer === 'ground') return wx>=el.x && wx<=el.x+el.width && wy>=el.y && wy<=el.y+el.height;
+  if (layer === 'props') return Math.hypot(wx-el.x,wy-el.y) < Math.max(18*(el.scale||1), 13 / cam.zoom);
+  if (layer === 'decals') return Math.hypot(wx-el.x,wy-el.y) < Math.max(20*(el.scale||1), 13 / cam.zoom);
+  return false;
+}
+
+function hitResizeHandle(wx, wy) {
+  if (!selected) return null;
+  const el = layout[selected.layer]?.[selected.index]; if (!el) return null;
+  let rx, ry, rw, rh;
+  if (selected.layer === 'ground' || selected.layer === 'monsterSpawns') { rx=el.x; ry=el.y; rw=el.width; rh=el.height; }
+  else if (selected.layer === 'portals' && el.shape?.type === 'rect') { rx=el.shape.x; ry=el.shape.y; rw=el.shape.width||60; rh=el.shape.height||60; }
+  else return null;
+  const tol = 8 / cam.zoom;
+  for (const h of [{name:'nw',x:rx,y:ry},{name:'ne',x:rx+rw,y:ry},{name:'se',x:rx+rw,y:ry+rh},{name:'sw',x:rx,y:ry+rh},{name:'n',x:rx+rw/2,y:ry},{name:'e',x:rx+rw,y:ry+rh/2},{name:'s',x:rx+rw/2,y:ry+rh},{name:'w',x:rx,y:ry+rh/2}]) {
+    if (Math.abs(wx-h.x)<tol && Math.abs(wy-h.y)<tol) return {handle:h.name,origX:rx,origY:ry,origW:rw,origH:rh};
+  }
+  return null;
+}
+
+// ── Marquee select ──
+function marqueeSelect() {
+  if (!marquee) return;
+  const mx1 = Math.min(marquee.wx, marquee.wx2), my1 = Math.min(marquee.wy, marquee.wy2);
+  const mx2 = Math.max(marquee.wx, marquee.wx2), my2 = Math.max(marquee.wy, marquee.wy2);
+  multiSelected = [];
+  for (const layer of LAYERS) {
+    if (!layerVisible[layer]) continue;
+    for (let i = 0; i < layout[layer].length; i++) {
+      if (isHidden(layer, i) || isLocked(layer, i)) continue;
+      const b = getElementBounds(layer, i);
+      if (b.x + b.w > mx1 && b.x < mx2 && b.y + b.h > my1 && b.y < my2) {
+        multiSelected.push({ layer, index: i });
+      }
+    }
+  }
+  if (multiSelected.length) selected = multiSelected[0];
+  else selected = null;
+  updateElementsList(); showSelectionProps(); render();
+}
+
+// ── Mouse ──
+canvas.addEventListener('mousedown', (e) => {
+  hideContextMenu();
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const w = screenToWorld(sx, sy);
+
+  if (e.button === 2) {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) { showContextMenu(e.clientX, e.clientY, w); return; }
+    panning = true; panStart = {x:sx,y:sy,camX:cam.x,camY:cam.y};
+    canvas.style.cursor = 'grabbing'; return;
+  }
+
+  if (tool === 'pan' || e.button === 1 || spaceHeld) {
+    panning = true; panStart = {x:sx,y:sy,camX:cam.x,camY:cam.y};
+    canvas.style.cursor = 'grabbing'; return;
+  }
+
+  if (tool === 'collision' || tool === 'erase-collision') {
+    pushUndo(); collisionPainting = true;
+    collisionPaintMode = tool === 'collision' ? 'add' : 'remove';
+    paintCollision(w.x, w.y); return;
+  }
+
+  if (tool === 'select') {
+    const rh = hitResizeHandle(w.x, w.y);
+    if (rh) { pushUndo(); resizing = rh; return; }
+
+    const hit = hitTest(w.x, w.y);
+    if (e.shiftKey && hit) {
+      const idx = multiSelected.findIndex(s => s.layer===hit.layer && s.index===hit.index);
+      if (idx >= 0) multiSelected.splice(idx, 1); else multiSelected.push(hit);
+      if (!selected) selected = hit;
+    } else if (hit) {
+      if (!isSelected(hit.layer, hit.index)) { selected = hit; multiSelected = []; }
+    } else {
+      // Start marquee selection
+      selected = null; multiSelected = [];
+      marquee = { sx, sy, wx: w.x, wy: w.y, wx2: w.x, wy2: w.y };
+      updateElementsList(); showSelectionProps(); render();
+      return;
+    }
+
+    if (selected || multiSelected.length) {
+      pushUndo(); dragging = true;
+      dragStart = { x: w.x, y: w.y };
+      const all = getAllSelected();
+      dragObjStarts = all.map(s => ({ ...getElementPos(s.layer, s.index) }));
+    }
+    updateElementsList(); showSelectionProps(); render(); return;
+  }
+
+  if (tool === 'ground' || tool === 'monster') {
+    drawStart = { wx: snap(w.x), wy: snap(w.y), wx2: snap(w.x), wy2: snap(w.y) }; return;
+  }
+
+  if (tool === 'decal') { addFromPicker('decals', w.x, w.y); return; }
+  if (tool === 'prop') { addFromPicker('props', w.x, w.y); return; }
+  pushUndo();
+  const px = snap(w.x), py = snap(w.y);
+  if (tool === 'npc') { const ids = contextualEntityIds('npcs'); layout.npcs.push({npcId:ids[0]||'npc_new',x:px,y:py,radius:40}); selected={layer:'npcs',index:layout.npcs.length-1}; }
+  else if (tool === 'portal') { layout.portals.push({portalId:contentIds.portals[0]||'portal_new',shape:{type:'circle',x:px,y:py,radius:40}}); selected={layer:'portals',index:layout.portals.length-1}; }
+  else if (tool === 'spawn') { layout.spawnPoints.push({id:`spawn_${idCounter++}`,x:px,y:py}); selected={layer:'spawnPoints',index:layout.spawnPoints.length-1}; }
+  multiSelected = []; dirty = true; updateElementsList(); showSelectionProps(); render();
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const w = screenToWorld(sx, sy);
+  lastMouseWorld = w;
+  $('coordInfo').textContent = `${Math.round(w.x)}, ${Math.round(w.y)}`;
+
+  if (panning) { cam.x=panStart.camX-(sx-panStart.x)/cam.zoom; cam.y=panStart.camY-(sy-panStart.y)/cam.zoom; render(); return; }
+  if (collisionPainting) { paintCollision(w.x, w.y); return; }
+  if (resizing) { applyResize(w); render(); return; }
+
+  if (marquee) {
+    marquee.wx2 = w.x; marquee.wy2 = w.y;
+    render(); return;
+  }
+
+  if (drawStart) { drawStart.wx2=snap(w.x); drawStart.wy2=snap(w.y); render(); return; }
+
+  if (dragging) {
+    const all = getAllSelected();
+    const dx = w.x - dragStart.x, dy = w.y - dragStart.y;
+    for (let i = 0; i < all.length; i++) {
+      setElementPos(all[i].layer, all[i].index, snap(dragObjStarts[i].x+dx), snap(dragObjStarts[i].y+dy));
+    }
+    snapGuides = computeSnapGuides(all);
+    // Show drag info
+    const di = $('dragInfo');
+    di.style.display = 'block';
+    di.style.left = (e.clientX - rect.left + 14) + 'px';
+    di.style.top = (e.clientY - rect.top - 10) + 'px';
+    di.textContent = `Δ${Math.round(dx)}, ${Math.round(dy)}`;
+    dirty = true; showSelectionProps(); render(); return;
+  }
+
+  $('dragInfo').style.display = 'none';
+
+  if (tool === 'select' && selected) {
+    const rh = hitResizeHandle(w.x, w.y);
+    if (rh) {
+      const c = {n:'ns-resize',s:'ns-resize',e:'ew-resize',w:'ew-resize',nw:'nwse-resize',se:'nwse-resize',ne:'nesw-resize',sw:'nesw-resize'};
+      canvas.style.cursor = c[rh.handle] || 'default';
+    } else canvas.style.cursor = hitTest(w.x, w.y) ? 'move' : 'default';
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  $('dragInfo').style.display = 'none';
+  if (panning) { panning=false; updateCursor(); return; }
+  if (collisionPainting) { collisionPainting=false; return; }
+  if (resizing) { resizing=null; return; }
+
+  if (marquee) { marqueeSelect(); marquee = null; return; }
+
+  if (drawStart) {
+    let x=Math.min(drawStart.wx,drawStart.wx2), y=Math.min(drawStart.wy,drawStart.wy2);
+    let w=Math.abs(drawStart.wx2-drawStart.wx), h=Math.abs(drawStart.wy2-drawStart.wy);
+    drawStart = null;
+    if (w<8||h<8) { render(); return; }
+    if (tool === 'ground') {
+      const gx=x, gy=y, gw=w, gh=h;
+      openAssetPicker('tiles', (key) => {
+        pushUndo();
+        layout.ground.push({instanceId:`ground_${idCounter++}`,assetKey:key,x:gx,y:gy,width:gw,height:gh});
+        selected={layer:'ground',index:layout.ground.length-1};
+        multiSelected=[]; dirty=true; updateElementsList(); showSelectionProps(); render();
+      });
+      return;
+    }
+    pushUndo();
+    if (tool === 'monster') { const ids = contextualEntityIds('monsters'); layout.monsterSpawns.push({monsterId:ids[0]||'monster_new',x,y,width:w,height:h,maxAlive:3,respawnMs:5000}); selected={layer:'monsterSpawns',index:layout.monsterSpawns.length-1}; }
+    multiSelected=[]; dirty=true; updateElementsList(); showSelectionProps(); render(); return;
+  }
+  dragging = false; snapGuides = [];
+});
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (e.altKey && selected) {
+    const el = layout[selected.layer][selected.index];
+    if (['props','decals'].includes(selected.layer)) {
+      pushUndo();
+      const step = 0.1;
+      const cur = el.scale ?? 1;
+      el.scale = Math.max(0.1, Math.round((cur + (e.deltaY < 0 ? step : -step)) * 10) / 10);
+      render(); showSelectionProps();
+      return;
+    }
+  }
+  const rect = canvas.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const wBefore = screenToWorld(sx, sy);
+  cam.zoom = Math.max(0.08, Math.min(6, cam.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15)));
+  const wAfter = screenToWorld(sx, sy);
+  cam.x -= wAfter.x - wBefore.x; cam.y -= wAfter.y - wBefore.y;
+  render();
+}, { passive: false });
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// ── Resize logic ──
+function applyResize(w) {
+  if (!selected || !resizing) return;
+  const el = layout[selected.layer][selected.index];
+  const isPortalRect = selected.layer === 'portals' && el.shape?.type === 'rect';
+  const obj = isPortalRect ? el.shape : el;
+  const h = resizing.handle;
+  const sx = snap(w.x), sy = snap(w.y);
+  let nx=resizing.origX, ny=resizing.origY, nw=resizing.origW, nh=resizing.origH;
+  if (h.includes('e')) nw=Math.max(gridSize, sx-nx);
+  if (h.includes('s')) nh=Math.max(gridSize, sy-ny);
+  if (h.includes('w')) { const r=nx+nw; nx=Math.min(sx, r-gridSize); nw=r-nx; }
+  if (h.includes('n')) { const b=ny+nh; ny=Math.min(sy, b-gridSize); nh=b-ny; }
+  obj.x=nx; obj.y=ny; obj.width=nw; obj.height=nh;
+  dirty=true; showSelectionProps();
+}
+
+// ── Collision ──
+function paintCollision(wx, wy) {
+  const gs = layout.collision.tileSize || gridSize;
+  const tx=Math.floor(wx/gs), ty=Math.floor(wy/gs);
+  if (tx<0||ty<0||tx>=Math.ceil(layout.bounds.width/gs)||ty>=Math.ceil(layout.bounds.height/gs)) return;
+  const idx = layout.collision.blocked.findIndex(([bx,by])=>bx===tx&&by===ty);
+  if (collisionPaintMode==='add'&&idx<0) { layout.collision.blocked.push([tx,ty]); dirty=true; render(); }
+  else if (collisionPaintMode==='remove'&&idx>=0) { layout.collision.blocked.splice(idx,1); dirty=true; render(); }
+}
+
+$('btnCollisionFill').onclick = function() {
+  pushUndo();
+  const gs = layout.collision.tileSize || gridSize;
+  const set = new Set(layout.collision.blocked.map(([x,y])=>`${x},${y}`));
+  for (const g of layout.ground) {
+    const sx=Math.floor(g.x/gs), sy=Math.floor(g.y/gs);
+    const ex=Math.ceil((g.x+g.width)/gs), ey=Math.ceil((g.y+g.height)/gs);
+    // Fill edges only (walls around ground regions)
+    for (let x=sx; x<ex; x++) {
+      if (!set.has(`${x},${sy}`)) { layout.collision.blocked.push([x,sy]); set.add(`${x},${sy}`); }
+      if (!set.has(`${x},${ey-1}`)) { layout.collision.blocked.push([x,ey-1]); set.add(`${x},${ey-1}`); }
+    }
+    for (let y=sy; y<ey; y++) {
+      if (!set.has(`${sx},${y}`)) { layout.collision.blocked.push([sx,y]); set.add(`${sx},${y}`); }
+      if (!set.has(`${ex-1},${y}`)) { layout.collision.blocked.push([ex-1,y]); set.add(`${ex-1},${y}`); }
+    }
+  }
+  dirty=true; render();
+  showStatus(`Filled ${layout.collision.blocked.length} collision tiles from ground edges`);
+};
+
+$('btnCollisionClear').onclick = function() {
+  if (!layout.collision.blocked.length) return;
+  pushUndo();
+  layout.collision.blocked = [];
+  dirty=true; render();
+  showStatus('Cleared all collision tiles');
+};
+
+// ── Elements list (grouped by layer, with search filter) ──
+function getElementLabel(layer, el) {
+  return layer==='npcs'?el.npcId:layer==='monsterSpawns'?el.monsterId:layer==='portals'?el.portalId:layer==='spawnPoints'?el.id:el.assetKey||el.instanceId;
+}
+function updateElementsList() {
+  const list = $('elementsList');
+  const filter = ($('elSearch')?.value || '').toLowerCase();
+  let html = '';
+  for (const layer of LAYERS) {
+    const items = layout[layer];
+    if (!items.length) continue;
+    const filteredIndices = [];
+    for (let i = 0; i < items.length; i++) {
+      if (filter && !getElementLabel(layer, items[i]).toLowerCase().includes(filter)) continue;
+      filteredIndices.push(i);
+    }
+    if (filter && !filteredIndices.length) continue;
+    const collapsed = collapsedLayers[layer];
+    html += `<div class="layer-group">`;
+    html += `<div class="layer-group-header" onclick="toggleLayerGroup('${layer}')"><span class="dot" style="background:${LAYER_COLORS[layer]}"></span>${LAYER_LABELS[layer]}<span class="count">${filteredIndices.length}</span></div>`;
+    if (!collapsed) {
+      for (const i of filteredIndices) {
+        const el = items[i]; const sel = isSelected(layer, i) ? ' selected' : '';
+        const label = getElementLabel(layer, el);
+        const hidden = isHidden(layer, i), locked = isLocked(layer, i);
+        html += `<div class="el-row"><button class="el-icon${hidden?' off':''}" onclick="toggleHide('${layer}',${i})" title="Visibility">${hidden?'○':'●'}</button><button class="el-icon${locked?'':' off'}" onclick="toggleLock('${layer}',${i})" title="Lock">${locked?'\u{1F512}':'\u{1F513}'}</button><button class="el-name${sel}" onclick="selectElement('${layer}',${i})" title="${esc(label)}">${esc(label)}</button></div>`;
+      }
+    }
+    html += `</div>`;
+  }
+  list.innerHTML = html || '<span style="color:var(--lm-text-muted);font-size:11px">No elements</span>';
+  const hasSel = selected || multiSelected.length;
+  $('btnDelete').disabled = !hasSel;
+  $('btnDuplicate').disabled = !hasSel;
+  $('selInfo').textContent = selected ? `${LAYER_LABELS[selected.layer]} #${selected.index}` : multiSelected.length ? `${multiSelected.length} selected` : '';
+}
+
+window.toggleLayerGroup = function(layer) { collapsedLayers[layer] = !collapsedLayers[layer]; updateElementsList(); };
+window.toggleHide = function(layer, index) {
+  const k=elKey(layer,index); hiddenElements.has(k)?hiddenElements.delete(k):hiddenElements.add(k); updateElementsList(); render();
+};
+window.toggleLock = function(layer, index) {
+  const k=elKey(layer,index); lockedElements.has(k)?lockedElements.delete(k):lockedElements.add(k); updateElementsList(); render();
+};
+window.selectElement = function(layer, index) {
+  selected={layer,index}; multiSelected=[]; updateElementsList(); showSelectionProps(); render();
+};
+
+// ── Selection properties ──
+function showSelectionProps() {
+  const panel = $('selProps');
+  if (!selected) { $('selTitle').innerHTML='<span class="arrow" id="arrowSelection">&#9660;</span> Selection'; panel.innerHTML='<span style="color:var(--lm-text-muted);font-size:11px">Click to select, or drag marquee</span>'; return; }
+  const el = layout[selected.layer][selected.index];
+  const layer = selected.layer;
+  $('selTitle').innerHTML = `<span class="arrow" id="arrowSelection">&#9660;</span> ${LAYER_LABELS[layer]}`;
+  let html = '';
+
+  if (layer === 'ground') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'assetKey', { autocomplete: true });
+    html += renderFieldRow2(layer, el, 'x', 'y') + renderFieldRow2(layer, el, 'width', 'height');
+    html += renderField(layer, el, 'zIndex');
+  } else if (layer === 'decals') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'assetKey', { autocomplete: true });
+    html += renderFieldRow2(layer, el, 'x', 'y');
+    html += renderField(layer, el, 'scale') + renderField(layer, el, 'rotation');
+    html += renderField(layer, el, 'zIndex') + renderFieldRow2(layer, el, 'origin.x', 'origin.y');
+  } else if (layer === 'props') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'assetKey', { autocomplete: true });
+    html += renderFieldRow2(layer, el, 'x', 'y');
+    html += renderField(layer, el, 'scale') + renderField(layer, el, 'rotation');
+    html += renderField(layer, el, 'zIndex') + renderFieldRow2(layer, el, 'origin.x', 'origin.y');
+  } else if (layer === 'npcs') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'npcId', { options: contextualEntityIds('npcs') });
+    html += renderFieldRow2(layer, el, 'x', 'y') + renderField(layer, el, 'radius');
+  } else if (layer === 'monsterSpawns') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'monsterId', { options: contextualEntityIds('monsters') });
+    html += renderFieldRow2(layer, el, 'x', 'y') + renderFieldRow2(layer, el, 'width', 'height');
+    html += renderField(layer, el, 'maxAlive') + renderField(layer, el, 'respawnMs');
+  } else if (layer === 'portals') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'portalId', { options: contentIds.portals });
+    html += renderField(layer, el, 'shape.type', { options: ['circle','rect'] });
+    if (el.shape?.type==='rect') { html += renderFieldRow2(layer, el, 'shape.x', 'shape.y') + renderFieldRow2(layer, el, 'shape.width', 'shape.height'); }
+    else { html += renderFieldRow2(layer, el, 'shape.x', 'shape.y') + renderField(layer, el, 'shape.radius'); }
+  } else if (layer === 'spawnPoints') {
+    html += renderField(layer, el, 'instanceId') + renderField(layer, el, 'id');
+    html += renderFieldRow2(layer, el, 'x', 'y');
+  }
+
+  if (supportsPlacementDefaults(layer)) {
+    html += renderResolvedCard(layer, el);
+    html += `<div class="defaults-actions"><button class="lm-btn" onclick="saveInstanceOverride()">Save Instance Override</button><button class="lm-btn lm-btn--primary" onclick="savePlacementDefaults()">Save Placement Defaults</button></div>`;
+  }
+
+  // Z-order
+  html += `<div class="zorder-row"><button class="lm-btn" onclick="sendToBack();showSelectionProps()">&#9660;&#9660;</button><button class="lm-btn" onclick="moveBack();showSelectionProps()">&#9660;</button><button class="lm-btn" onclick="moveForward();showSelectionProps()">&#9650;</button><button class="lm-btn" onclick="bringToFront();showSelectionProps()">&#9650;&#9650;</button></div>`;
+
+  // Opacity
+  if (['ground','decals','props'].includes(layer)) {
+    const opField = inspectorField(layer, 'opacity');
+    if (opField) {
+      const op = el.opacity ?? opField.defaultValue ?? 1;
+      html += `<div class="prop-row"><label>${opField.label}</label><input type="range" data-key="opacity" min="${opField.min ?? 0}" max="${opField.max ?? 1}" step="${opField.step ?? 0.05}" value="${op}" style="flex:1"><span style="font-size:10px;width:26px;text-align:right">${Math.round(op*100)}%</span></div>`;
+    }
+  }
+
+  if (layer === 'props') {
+    html += '<div class="sep-h"></div><h3 class="lm-eyebrow" style="margin-top:0">Shadow</h3>';
+    html += renderField(layer, el, 'shadow.mode') + renderFieldRow2(layer, el, 'shadow.offsetX', 'shadow.offsetY');
+    html += renderFieldRow2(layer, el, 'shadow.wPct', 'shadow.hPct') + renderFieldRow2(layer, el, 'shadow.alpha', 'shadow.blur') + renderField(layer, el, 'shadow.rotation');
+    html += '<div class="sep-h"></div><h3 class="lm-eyebrow" style="margin-top:0">Collision</h3>';
+    html += renderField(layer, el, 'collision.mode') + renderFieldRow2(layer, el, 'collision.xPct', 'collision.yPct') + renderFieldRow2(layer, el, 'collision.wPct', 'collision.hPct');
+    html += renderField(layer, el, 'collision.blocksMovement') + renderField(layer, el, 'collision.blocksPlayers') + renderField(layer, el, 'collision.blocksMonsters');
+    html += renderField(layer, el, 'legacyPixelCollision');
+  }
+
+  // Lock
+  html += `<div class="prop-row"><label>locked</label><input type="checkbox" data-action="lock" ${isLocked(layer,selected.index)?'checked':''} style="width:auto"></div>`;
+
+  // Multi-select bulk editing
+  if (multiSelected.length > 1) {
+    const all = getAllSelected();
+    const layers = new Set(all.map(s => s.layer));
+    html += `<div class="sep-h"></div><h3 class="lm-eyebrow" style="margin-top:0">Bulk (${all.length})</h3>`;
+    if (layers.size === 1 && ['ground','decals','props'].includes([...layers][0])) {
+      html += `<div class="bulk-row"><label>assetKey</label><input class="lm-input" type="text" data-bulk="assetKey" placeholder="set all..." ${assetKeys.length?'list="assetKeyList"':''}></div>`;
+    }
+    if ([...layers].every(l => ['ground','decals','props'].includes(l))) {
+      html += `<div class="bulk-row"><label>opacity</label><input type="range" data-bulk="opacity" min="0.05" max="1" step="0.05" value="1" style="flex:1"></div>`;
+    }
+    if (layers.size === 1 && [...layers][0] === 'decals') {
+      html += `<div class="bulk-row"><label>scale</label><input class="lm-input" type="number" data-bulk="scale" step="0.1" placeholder="set all..."></div>`;
+    }
+    html += `<div class="sep-h"></div><h3 class="lm-eyebrow" style="margin-top:0">Align</h3>`;
+    html += `<div class="align-row"><button class="lm-btn" onclick="alignElements('left')">Left</button><button class="lm-btn" onclick="alignElements('centerX')">CX</button><button class="lm-btn" onclick="alignElements('right')">Right</button></div>`;
+    html += `<div class="align-row"><button class="lm-btn" onclick="alignElements('top')">Top</button><button class="lm-btn" onclick="alignElements('centerY')">CY</button><button class="lm-btn" onclick="alignElements('bottom')">Bot</button></div>`;
+    html += `<div class="align-row"><button class="lm-btn" onclick="distributeElements('x')">Dist H</button><button class="lm-btn" onclick="distributeElements('y')">Dist V</button></div>`;
+  }
+
+  panel.innerHTML = html;
+  panel.querySelectorAll('input, select').forEach(inp => {
+    if (inp.dataset.action==='lock') inp.addEventListener('change',()=>{ toggleLock(selected.layer,selected.index); });
+    else if (inp.dataset.bulk) inp.addEventListener('input',()=>applyBulkProp(inp));
+    else inp.addEventListener('input',()=>updatePropFromInput(inp));
+  });
+  const rng = panel.querySelector('[data-key="opacity"]');
+  if (rng) rng.addEventListener('input',()=>{ rng.nextElementSibling.textContent=Math.round(rng.value*100)+'%'; });
+}
+
+function fieldAttrs(field, options) {
+  let extra = '';
+  if (field?.step !== undefined) extra += ` step="${field.step}"`;
+  if (field?.min !== undefined) extra += ` min="${field.min}"`;
+  if (field?.max !== undefined) extra += ` max="${field.max}"`;
+  if (options?.autocomplete && assetKeys.length) extra += ` list="assetKeyList"`;
+  if (field && !field.editable) extra += ' disabled';
+  return extra;
+}
+function renderField(layer, el, key, options) {
+  const field = inspectorField(layer, key) || { key, label: key, kind: 'number', editable: true, schemaPath: key };
+  const value = displayInspectorValue(layer, el, field, key);
+  if (field.kind === 'readonly') {
+    const label = value === '' || value === undefined ? 'none' : typeof value === 'object' ? JSON.stringify(value) : value;
+    return `<div class="prop-row"><label title="${esc(field.note || '')}">${field.label}</label>${stateBadge(layer, el, key)}<input class="lm-input" type="text" data-key="${key}" value="${esc(label)}" disabled></div>`;
+  }
+  if (field.kind === 'select') return propSelect(key, value, options?.options || field.options || [], layer, el);
+  if (field.kind === 'boolean') return `<div class="prop-row"><label>${field.label}</label>${stateBadge(layer, el, key)}<input type="checkbox" data-key="${key}" ${value ? 'checked' : ''} style="width:auto"></div>`;
+  const type = field.kind === 'text' ? 'text' : 'number';
+  return propInput(key, value, type, field, options, layer, el);
+}
+function renderFieldRow2(layer, el, k1, k2) {
+  const f1 = inspectorField(layer, k1) || { key: k1, label: k1, kind: 'number', editable: true, schemaPath: k1 };
+  const f2 = inspectorField(layer, k2) || { key: k2, label: k2, kind: 'number', editable: true, schemaPath: k2 };
+  const v1 = displayInspectorValue(layer, el, f1, k1);
+  const v2 = displayInspectorValue(layer, el, f2, k2);
+  return `<div class="prop-row"><label>${f1.label}</label>${stateBadge(layer, el, k1)}<input class="lm-input" type="number" data-key="${k1}" value="${v1??''}"${fieldAttrs(f1)} style="width:50px"><label style="width:auto;margin-left:4px">${f2.label}</label>${stateBadge(layer, el, k2)}<input class="lm-input" type="number" data-key="${k2}" value="${v2??''}"${fieldAttrs(f2)}></div>`;
+}
+function propInput(key, value, type, field, options, layer, el) {
+  let extra = fieldAttrs(field, options);
+  return `<div class="prop-row"><label>${field?.label || key}</label>${stateBadge(layer, el, key)}<input class="lm-input" type="${type}" data-key="${key}" value="${value??''}"${extra}></div>`;
+}
+function propRow2(k1, v1, k2, v2) {
+  return `<div class="prop-row"><label>${k1}</label><input class="lm-input" type="number" data-key="${k1}" value="${v1??''}" style="width:50px"><label style="width:auto;margin-left:4px">${k2}</label><input class="lm-input" type="number" data-key="${k2}" value="${v2??''}"></div>`;
+}
+function propSelect(key, value, options, layer, el) {
+  const opts = options.map(o => `<option value="${o}"${o===value?' selected':''}>${o}</option>`).join('');
+  return `<div class="prop-row"><label>${key}</label>${stateBadge(layer, el, key)}<select class="lm-select" data-key="${key}">${opts}</select></div>`;
+}
+
+function updatePropFromInput(inp) {
+  if (!selected) return;
+  pushUndo();
+  const key = inp.dataset.key;
+  const el = layout[selected.layer][selected.index];
+  const field = inspectorField(selected.layer, key);
+  let val = storageFieldValue(field, inp);
+  if (key.startsWith('shape.')) {
+    const sub = key.split('.')[1];
+    if (!el.shape) el.shape={type:'circle',x:0,y:0,radius:30};
+    if (sub==='type') {
+      if (val==='rect'&&el.shape.type!=='rect') el.shape={type:'rect',x:el.shape.x||0,y:el.shape.y||0,width:(el.shape.radius||30)*2,height:(el.shape.radius||30)*2};
+      else if (val==='circle'&&el.shape.type!=='circle') el.shape={type:'circle',x:el.shape.x||0,y:el.shape.y||0,radius:Math.min(el.shape.width||60,el.shape.height||60)/2};
+      showSelectionProps();
+    } else el.shape[sub]=val;
+  } else if (key.includes('.')) setPathValue(el, key, val);
+  else if (val === undefined || val === '') delete el[key];
+  else el[key]=val;
+  dirty=true; updateElementsList(); render();
+}
+
+function applyBulkProp(inp) {
+  const key = inp.dataset.bulk;
+  let val = inp.type==='number'||inp.type==='range' ? (inp.value===''?undefined:Number(inp.value)) : inp.value;
+  if (val === undefined || val === '') return;
+  pushUndo();
+  for (const s of getAllSelected()) {
+    const el = layout[s.layer][s.index];
+    el[key] = val;
+  }
+  dirty=true; render();
+}
+
+function formatDiff(diff) {
+  if (!diff || !diff.length) return 'No changes.';
+  return diff.map(d => `${d.path}: ${JSON.stringify(d.before)} -> ${JSON.stringify(d.after)}`).join('\n');
+}
+
+function requireLoadedLayoutMeta() {
+  if (!currentLayoutMeta.hash || typeof currentLayoutMeta.modifiedMs !== 'number') {
+    showStatus('Reload this layout before using guarded save.', true);
+    return false;
+  }
+  return true;
+}
+
+async function saveInstanceOverride() {
+  if (!selected || !supportsPlacementDefaults(selected.layer)) return;
+  if (!layout.mapId || !requireLoadedLayoutMeta()) return;
+  const el = layout[selected.layer][selected.index];
+  const res = await api('/api/zone-layout/instance-override/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mapId: layout.mapId,
+      layer: selected.layer,
+      instanceId: el.instanceId,
+      instance: el,
+      baseHash: currentLayoutMeta.hash,
+      baseModifiedMs: currentLayoutMeta.modifiedMs
+    })
+  });
+  if (!res.ok) { showStatus('Save instance override failed: ' + JSON.stringify(res), true); return; }
+  currentLayoutMeta = { hash: res.hash, modifiedMs: res.modifiedMs };
+  dirty = false;
+  showStatus(`Saved instance override: ${res.instanceId}`);
+}
+
+async function savePlacementDefaults() {
+  if (!selected || !supportsPlacementDefaults(selected.layer)) return;
+  const el = layout[selected.layer][selected.index];
+  if (!el.assetKey) { showStatus('Selected instance has no assetKey.', true); return; }
+  if (!assetPlacementDefaults.hash || typeof assetPlacementDefaults.modifiedMs !== 'number') {
+    await loadAssetPlacementDefaults();
+  }
+  if (!assetPlacementDefaults.hash || typeof assetPlacementDefaults.modifiedMs !== 'number') {
+    showStatus('Placement defaults metadata is unavailable.', true);
+    return;
+  }
+  const defaults = buildDefaultsFromInstance(selected.layer, el);
+  const preview = await api('/api/asset-placement-defaults/preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ layer: selected.layer, assetKey: el.assetKey, instance: el, defaults })
+  });
+  if (!preview.ok) { showStatus('Defaults preview failed: ' + JSON.stringify(preview), true); return; }
+  const message = `Save placement defaults for ${el.assetKey}?\n\nWrites only content/asset-editor-metadata.json\n\n${formatDiff(preview.diff)}`;
+  if (!confirm(message)) return;
+  const res = await api('/api/asset-placement-defaults/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      layer: selected.layer,
+      assetKey: el.assetKey,
+      defaults,
+      baseHash: assetPlacementDefaults.hash,
+      baseModifiedMs: assetPlacementDefaults.modifiedMs
+    })
+  });
+  if (!res.ok) { showStatus('Save placement defaults failed: ' + JSON.stringify(res), true); return; }
+  await loadAssetPlacementDefaults();
+  showSelectionProps();
+  render();
+  showStatus(`Saved placement defaults for ${el.assetKey}\n${formatDiff(res.diff)}`);
+}
+
+window.saveInstanceOverride = saveInstanceOverride;
+window.savePlacementDefaults = savePlacementDefaults;
+
+// ── Align / Distribute ──
+window.alignElements = function(mode) {
+  const all = getAllSelected(); if (all.length < 2) return;
+  pushUndo();
+  const bounds = all.map(s => getElementBounds(s.layer, s.index));
+  let target;
+  if (mode==='left') target = Math.min(...bounds.map(b=>b.x));
+  else if (mode==='right') target = Math.max(...bounds.map(b=>b.x+b.w));
+  else if (mode==='top') target = Math.min(...bounds.map(b=>b.y));
+  else if (mode==='bottom') target = Math.max(...bounds.map(b=>b.y+b.h));
+  else if (mode==='centerX') { const cx = bounds.reduce((s,b)=>s+b.x+b.w/2,0)/bounds.length; target=cx; }
+  else if (mode==='centerY') { const cy = bounds.reduce((s,b)=>s+b.y+b.h/2,0)/bounds.length; target=cy; }
+
+  for (let i=0;i<all.length;i++) {
+    const b = bounds[i], pos = getElementPos(all[i].layer, all[i].index);
+    let dx=0, dy=0;
+    if (mode==='left') dx = target - b.x;
+    else if (mode==='right') dx = target - (b.x + b.w);
+    else if (mode==='top') dy = target - b.y;
+    else if (mode==='bottom') dy = target - (b.y + b.h);
+    else if (mode==='centerX') dx = target - (b.x + b.w/2);
+    else if (mode==='centerY') dy = target - (b.y + b.h/2);
+    setElementPos(all[i].layer, all[i].index, snap(pos.x + dx), snap(pos.y + dy));
+  }
+  dirty=true; showSelectionProps(); render();
+};
+
+window.distributeElements = function(axis) {
+  const all = getAllSelected(); if (all.length < 3) return;
+  pushUndo();
+  const data = all.map((s,i) => ({ s, b: getElementBounds(s.layer, s.index), pos: getElementPos(s.layer, s.index) }));
+  data.sort((a,b) => axis==='x' ? a.b.x-b.b.x : a.b.y-b.b.y);
+  const first = data[0].b, last = data[data.length-1].b;
+  const totalSpan = axis==='x' ? (last.x+last.w) - first.x : (last.y+last.h) - first.y;
+  const totalSize = data.reduce((s,d) => s + (axis==='x'?d.b.w:d.b.h), 0);
+  const gap = (totalSpan - totalSize) / (data.length - 1);
+  let cur = axis==='x' ? first.x : first.y;
+  for (const d of data) {
+    const offset = cur - (axis==='x' ? d.b.x : d.b.y);
+    setElementPos(d.s.layer, d.s.index, snap(d.pos.x + (axis==='x'?offset:0)), snap(d.pos.y + (axis==='y'?offset:0)));
+    cur += (axis==='x' ? d.b.w : d.b.h) + gap;
+  }
+  dirty=true; showSelectionProps(); render();
+};
+
+// ── Delete / Duplicate / Copy / Paste ──
+function deleteSelected() {
+  const all = getAllSelected(); if (!all.length) return;
+  pushUndo();
+  const byLayer = {};
+  for (const s of all) (byLayer[s.layer]??=[]).push(s.index);
+  for (const [layer, indices] of Object.entries(byLayer))
+    for (const i of indices.sort((a,b)=>b-a)) layout[layer].splice(i, 1);
+  selected=null; multiSelected=[];
+  dirty=true; updateElementsList(); showSelectionProps(); render();
+}
+$('btnDelete').onclick = deleteSelected;
+
+function duplicateSelected() {
+  const all = getAllSelected(); if (!all.length) return;
+  pushUndo();
+  const newSel = [];
+  for (const s of all) {
+    const clone = JSON.parse(JSON.stringify(layout[s.layer][s.index]));
+    if (clone.x!==undefined) { clone.x+=gridSize; clone.y+=gridSize; }
+    if (clone.shape?.x!==undefined) { clone.shape.x+=gridSize; clone.shape.y+=gridSize; }
+    if (clone.instanceId) clone.instanceId+=`_${idCounter++}`;
+    if (clone.id && s.layer==='spawnPoints') clone.id=`spawn_${idCounter++}`;
+    layout[s.layer].push(clone);
+    newSel.push({layer:s.layer,index:layout[s.layer].length-1});
+  }
+  selected=newSel[0]||null; multiSelected=newSel.length>1?newSel:[];
+  dirty=true; updateElementsList(); showSelectionProps(); render();
+}
+$('btnDuplicate').onclick = duplicateSelected;
+
+function copySelected() {
+  const all = getAllSelected(); if (!all.length) return;
+  clipboard = all.map(s => ({ layer: s.layer, data: JSON.parse(JSON.stringify(layout[s.layer][s.index])) }));
+  showStatus(`Copied ${clipboard.length} element(s)`);
+}
+
+function paste() {
+  if (!clipboard.length) return;
+  pushUndo();
+  const newSel = [];
+  for (const c of clipboard) {
+    const clone = JSON.parse(JSON.stringify(c.data));
+    if (clone.x!==undefined) { clone.x+=gridSize; clone.y+=gridSize; }
+    if (clone.shape?.x!==undefined) { clone.shape.x+=gridSize; clone.shape.y+=gridSize; }
+    if (clone.instanceId) clone.instanceId=`${clone.instanceId.replace(/_\d+$/,'')}_${idCounter++}`;
+    if (clone.id && c.layer==='spawnPoints') clone.id=`spawn_${idCounter++}`;
+    layout[c.layer].push(clone);
+    newSel.push({layer:c.layer,index:layout[c.layer].length-1});
+  }
+  selected=newSel[0]||null; multiSelected=newSel.length>1?newSel:[];
+  dirty=true; updateElementsList(); showSelectionProps(); render();
+  showStatus(`Pasted ${newSel.length} element(s)`);
+}
+
+function selectAll() {
+  multiSelected = [];
+  for (const layer of LAYERS) {
+    if (!layerVisible[layer]) continue;
+    for (let i=0;i<layout[layer].length;i++) {
+      if (!isHidden(layer,i)&&!isLocked(layer,i)) multiSelected.push({layer,index:i});
+    }
+  }
+  if (multiSelected.length) selected=multiSelected[0]; else selected=null;
+  updateElementsList(); showSelectionProps(); render();
+}
+$('btnSelectAll').onclick = selectAll;
+
+// ── Context menu ──
+function showContextMenu(cx, cy, w) {
+  const hit = hitTest(w.x, w.y);
+  const menu = $('ctxMenu');
+  let html = '';
+  if (hit) {
+    if (!isSelected(hit.layer,hit.index)) { selected=hit; multiSelected=[]; updateElementsList(); showSelectionProps(); render(); }
+    html += `<button class="lm-btn" onclick="duplicateSelected();hideContextMenu()">Duplicate (Ctrl+D)</button>`;
+    html += `<button class="lm-btn" onclick="copySelected();hideContextMenu()">Copy (Ctrl+C)</button>`;
+    html += `<button class="lm-btn" onclick="deleteSelected();hideContextMenu()">Delete (Del)</button>`;
+    html += `<div class="ctx-sep"></div>`;
+    html += `<button class="lm-btn" onclick="bringToFront();hideContextMenu()">Bring to Front</button>`;
+    html += `<button class="lm-btn" onclick="sendToBack();hideContextMenu()">Send to Back</button>`;
+    html += `<div class="ctx-sep"></div>`;
+    html += `<button class="lm-btn" onclick="toggleLock('${hit.layer}',${hit.index});hideContextMenu()">${isLocked(hit.layer,hit.index)?'Unlock':'Lock'}</button>`;
+    html += `<button class="lm-btn" onclick="toggleHide('${hit.layer}',${hit.index});hideContextMenu()">Hide</button>`;
+    if (['ground','decals','props'].includes(hit.layer)) {
+      const catMap = {ground:'tiles', decals:'decals', props:'props'};
+      html += `<div class="ctx-sep"></div>`;
+      html += `<button class="lm-btn" onclick="changeAsset('${hit.layer}',${hit.index},'${catMap[hit.layer]}');hideContextMenu()">Change Asset...</button>`;
+    }
+  } else {
+    html += `<button class="lm-btn" onclick="addFromPicker('props',${Math.round(w.x)},${Math.round(w.y)});hideContextMenu()">Add Prop...</button>`;
+    html += `<button class="lm-btn" onclick="addFromPicker('decals',${Math.round(w.x)},${Math.round(w.y)});hideContextMenu()">Add Decal...</button>`;
+    html += `<button class="lm-btn" onclick="addFromPicker('tiles',${Math.round(w.x)},${Math.round(w.y)});hideContextMenu()">Add Ground...</button>`;
+    html += `<div class="ctx-sep"></div>`;
+    html += `<button class="lm-btn" onclick="paste();hideContextMenu()">Paste (Ctrl+V)</button>`;
+    html += `<button class="lm-btn" onclick="selectAll();hideContextMenu()">Select All (Ctrl+A)</button>`;
+    html += `<div class="ctx-sep"></div>`;
+    html += `<button class="lm-btn" onclick="centerCamera();render();hideContextMenu()">Zoom to Fit</button>`;
+  }
+  menu.innerHTML = html;
+  menu.style.left=cx+'px'; menu.style.top=cy+'px'; menu.style.display='block';
+}
+function hideContextMenu() { $('ctxMenu').style.display='none'; }
+window.hideContextMenu=hideContextMenu;
+window.duplicateSelected=duplicateSelected;
+window.deleteSelected=deleteSelected;
+window.copySelected=copySelected;
+window.paste=paste;
+window.selectAll=selectAll;
+window.bringToFront = function() { if(!selected)return; pushUndo(); const a=layout[selected.layer]; const e=a.splice(selected.index,1)[0]; a.push(e); selected.index=a.length-1; dirty=true; updateElementsList(); render(); };
+window.sendToBack = function() { if(!selected)return; pushUndo(); const a=layout[selected.layer]; const e=a.splice(selected.index,1)[0]; a.unshift(e); selected.index=0; dirty=true; updateElementsList(); render(); };
+window.moveForward = function() { if(!selected)return; const a=layout[selected.layer]; const i=selected.index; if(i>=a.length-1)return; pushUndo(); [a[i],a[i+1]]=[a[i+1],a[i]]; selected.index=i+1; dirty=true; updateElementsList(); render(); };
+window.moveBack = function() { if(!selected)return; const a=layout[selected.layer]; const i=selected.index; if(i<=0)return; pushUndo(); [a[i],a[i-1]]=[a[i-1],a[i]]; selected.index=i-1; dirty=true; updateElementsList(); render(); };
+
+// ── Asset Picker ──
+let assetCatalog = {};
+let assetPickerCallback = null;
+let assetPickerFilter = '';
+
+let currentPickerTarget = ''; // props|decals|tiles — the folder a placement promotes into
+let pickerItems = [];          // current filtered list backing the grid (index = identity)
+let promotedBySource = {};     // bank sourcePath -> promoted runtime key (for badge + unpromote)
+
+function prettyAssetName(name) {
+  return String(name || '').replace(/\.[a-z0-9]+$/i, '').replace(/_/g, ' ');
+}
+
+function categoryContextAssets(category) {
+  if (!bankContext || !bankContext.categories) return [];
+  const direct = bankContext.categories[category] || [];
+  if (category === 'decals') return [...direct, ...(bankContext.categories.transitions || [])];
+  return direct;
+}
+
+function combinedPickerAssets(category) {
+  const zoneAssets = categoryContextAssets(category);
+  const broadAssets = assetCatalog[category] || [];
+  const seen = new Set();
+  const merged = [];
+  for (const asset of [...zoneAssets, ...broadAssets]) {
+    const key = asset.path || asset.id || asset.name;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(asset);
+  }
+  return merged;
+}
+
+async function loadAssetCatalog() {
+  try {
+    const data = await api('/api/bank-assets');
+    assetCatalog = data.categories || {};
+  } catch(e) { assetCatalog = {}; }
+  await refreshPromoted();
+}
+
+async function refreshPromoted() {
+  try {
+    const data = await api('/api/promoted-assets');
+    promotedBySource = {};
+    for (const p of (data.promoted || [])) {
+      if (p.sourcePath) promotedBySource[p.sourcePath] = p.key;
+    }
+  } catch(e) { promotedBySource = {}; }
+}
+
+function openAssetPicker(category, callback) {
+  assetPickerCallback = callback;
+  // Promotion target is locked to the category the picker was opened for.
+  currentPickerTarget = category || '';
+  assetPickerFilter = category || '';
+  $('assetPickerSearch').value = '';
+  renderAssetPicker();
+  $('assetPickerOverlay').style.display = 'flex';
+  $('assetPickerSearch').focus();
+}
+
+function closeAssetPicker() {
+  $('assetPickerOverlay').style.display = 'none';
+  assetPickerCallback = null;
+}
+
+function filterAssetPicker() {
+  renderAssetPicker();
+}
+
+function renderAssetPicker() {
+  const search = $('assetPickerSearch').value.toLowerCase();
+  const grid = $('assetPickerGrid');
+  const tabs = $('assetPickerTabs');
+
+  // Picker is locked to its target category; show a single active tab for clarity.
+  const label = currentPickerTarget || 'assets';
+  tabs.innerHTML = '<button class="lm-tab" aria-selected="true">' + label + '</button>';
+
+  const zoneCount = categoryContextAssets(currentPickerTarget).length;
+  const assets = combinedPickerAssets(currentPickerTarget);
+  pickerItems = assets.filter(a => {
+    if (!search) return true;
+    return String(a.name || '').toLowerCase().includes(search) ||
+           String(a.path || '').toLowerCase().includes(search) ||
+           String(a.zoneLayer || '').toLowerCase().includes(search);
+  });
+
+  grid.innerHTML = pickerItems.map((item, idx) => {
+    const promoted = !!promotedBySource[item.path];
+    const badge = promoted ? '<span class="lm-badge lm-badge--ok promoted-badge">✓</span>' : '';
+    const zoneBadge = item.zoneLayer ? '<span class="lm-badge lm-badge--accent zone-badge">' + (item.zoneLayer === 'ground_tiles' ? 'zone' : item.zoneLayer) + '</span>' : '';
+    const rm = promoted ? '<button class="lm-btn lm-btn--danger unpromote-btn" title="Unpromote (remove from game)" onclick="unpromoteFromPicker(event,' + idx + ')">✕</button>' : '';
+    return '<div class="asset-picker-item" onclick="selectAsset(' + idx + ')" title="' + (item.path || item.name || '') + '">' +
+      badge + zoneBadge + rm +
+      '<img src="' + item.url + '" alt="' + (item.name || '') + '" loading="lazy">' +
+      '<span>' + prettyAssetName(item.name) + '</span></div>';
+  }).join('') || '<div style="padding:20px;color:var(--lm-text-muted);text-align:center">No usable assets found</div>';
+  if (zoneCount > 0) {
+    grid.insertAdjacentHTML('afterbegin', '<div style="grid-column:1/-1;color:var(--lm-text-gold);font-size:10px;padding:0 2px 4px">' + zoneCount + ' current-zone assets shown first. Search includes the broader bank fallback.</div>');
+  }
+}
+
+async function unpromoteFromPicker(ev, idx) {
+  ev.stopPropagation();
+  const item = pickerItems[idx];
+  if (!item) return;
+  const key = promotedBySource[item.path];
+  if (!key) return;
+  showStatus('Removing ' + key + '…');
+  let res;
+  try {
+    res = await fetch('/api/unpromote-asset', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key })
+    }).then(r => r.json());
+  } catch (e) {
+    showStatus('Unpromote failed: ' + (e && e.message ? e.message : e));
+    return;
+  }
+  if (!res || !res.ok) {
+    if (res && res.error === 'in use') {
+      const where = (res.usedBy || []).map(u => u.file + ' (' + u.count + ')').join(', ');
+      showStatus("Can't remove " + key + ' — still used in: ' + where);
+    } else {
+      showStatus('Unpromote failed' + (res && res.error ? ': ' + res.error : ''));
+    }
+    return;
+  }
+  showStatus('Removed ' + key + ' from the game');
+  await refreshPromoted();
+  renderAssetPicker();
+}
+
+async function selectAsset(idx) {
+  const item = pickerItems[idx];
+  if (!item) return;
+  const targetType = currentPickerTarget; // locked to picker's category
+  showStatus('Promoting ' + (item.name || item.path) + '…');
+  let res;
+  try {
+    res = await fetch('/api/promote-asset', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path: item.path, targetType })
+    }).then(r => r.json());
+  } catch (e) {
+    showStatus('Promote failed: ' + (e && e.message ? e.message : e));
+    return;
+  }
+  const cb = assetPickerCallback;
+  closeAssetPicker();
+  if (!res || !res.ok) { showStatus('Promote failed' + (res && res.error ? ': ' + res.error : '')); return; }
+  showStatus('Promoted ' + res.key + (res.alreadyExisted ? ' (updated)' : ''));
+  if (item.path && res.key) promotedBySource[item.path] = res.key;
+  refreshPromoted();
+  if (cb) cb(res.key, item.suggestedScale);
+}
+
+function addFromPicker(category, wx, wy) {
+  openAssetPicker(category, (key, suggestedScale) => {
+    pushUndo();
+    const px = snap(wx), py = snap(wy);
+    if (category === 'props') {
+      const item = {instanceId:'prop_'+idCounter++, assetKey:key, x:px, y:py};
+      if (!placementDefaultsFor(key)) item.scale = suggestedScale ?? 0.15;
+      layout.props.push(item);
+      selected = {layer:'props', index:layout.props.length-1};
+    } else if (category === 'decals') {
+      const item = {instanceId:'decal_'+idCounter++, assetKey:key, x:px, y:py};
+      if (!placementDefaultsFor(key)) item.scale = suggestedScale ?? 0.5;
+      layout.decals.push(item);
+      selected = {layer:'decals', index:layout.decals.length-1};
+    } else if (category === 'tiles') {
+      layout.ground.push({instanceId:'ground_'+idCounter++, assetKey:key, x:px, y:py, width:256, height:256});
+      selected = {layer:'ground', index:layout.ground.length-1};
+    }
+    multiSelected = [];
+    dirty = true;
+    updateElementsList();
+    showSelectionProps();
+    render();
+  });
+}
+
+function changeAsset(layer, index, category) {
+  openAssetPicker(category, (key) => {
+    pushUndo();
+    layout[layer][index].assetKey = key;
+    dirty = true;
+    showSelectionProps();
+    render();
+  });
+}
+
+window.closeAssetPicker = closeAssetPicker;
+window.selectAsset = selectAsset;
+window.unpromoteFromPicker = unpromoteFromPicker;
+window.filterAssetPicker = filterAssetPicker;
+window.renderAssetPicker = renderAssetPicker;
+window.addFromPicker = addFromPicker;
+window.changeAsset = changeAsset;
+
+document.addEventListener('mousedown', (e) => { if(!e.target.closest('.ctx-menu')) hideContextMenu(); });
+
+// ── Keyboard ──
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('assetPickerOverlay').style.display === 'flex') { closeAssetPicker(); e.preventDefault(); return; }
+  if (e.target.tagName==='INPUT'||e.target.tagName==='SELECT') { if(e.key==='Escape')e.target.blur(); return; }
+  if (e.key===' ') { spaceHeld=true; canvas.style.cursor='grab'; e.preventDefault(); return; }
+  if (e.key==='Delete'||e.key==='Backspace') { deleteSelected(); e.preventDefault(); }
+  if (e.key==='Escape') { if($('helpOverlay').style.display==='flex'){$('helpOverlay').style.display='none';return;} selected=null;multiSelected=[];updateElementsList();showSelectionProps();render(); }
+  if (e.key==='z'&&(e.ctrlKey||e.metaKey)&&!e.shiftKey) { e.preventDefault(); undo(); }
+  if ((e.key==='Z'||e.key==='z')&&(e.ctrlKey||e.metaKey)&&e.shiftKey) { e.preventDefault(); redo(); }
+  if (e.key==='y'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); redo(); }
+  if (e.key==='s'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); save(); }
+  if (e.key==='d'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); duplicateSelected(); }
+  if (e.key==='c'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); copySelected(); }
+  if (e.key==='v'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); paste(); }
+  if (e.key==='a'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); selectAll(); }
+  if (e.key==='e'&&(e.ctrlKey||e.metaKey)) { e.preventDefault(); $('btnPng').click(); }
+  if (e.key==='?'||e.key==='/') { $('helpOverlay').style.display=$('helpOverlay').style.display==='flex'?'none':'flex'; }
+  // Tool hotkeys (no modifiers)
+  if (!e.ctrlKey&&!e.metaKey) {
+    if (e.key==='v'&&!e.shiftKey) setTool('select');
+    if (e.key==='g') setTool('ground');
+    if (e.key==='d') setTool('decal');
+    if (e.key==='p') setTool('prop');
+    if (e.key==='n') setTool('npc');
+    if (e.key==='m') setTool('monster');
+    if (e.key==='o') setTool('portal');
+    if (e.key==='x') setTool('spawn');
+    if (e.key==='c') setTool('collision');
+    if (e.key==='e') setTool('erase-collision');
+    if (e.key==='f') { e.preventDefault(); $('elSearch').focus(); }
+    if (e.key==='Tab') { e.preventDefault(); $('btnPreview').click(); }
+  }
+  if (selected&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault(); pushUndo();
+    const step=e.shiftKey?gridSize:1;
+    for (const s of getAllSelected()) {
+      const pos=getElementPos(s.layer,s.index);
+      setElementPos(s.layer,s.index, pos.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0), pos.y+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0));
+    }
+    dirty=true; showSelectionProps(); render();
+  }
+});
+document.addEventListener('keyup', (e) => { if(e.key===' '){spaceHeld=false;updateCursor();} });
+
+window.addEventListener('beforeunload', (e) => { if(dirty){e.preventDefault();e.returnValue='';} });
+
+// ── Save / Validate / Export ──
+async function save() {
+  if (!layout.mapId) { showStatus('Set a Map ID before saving.', true); return; }
+  layout.schemaVersion = 1;
+  const saveData = JSON.parse(JSON.stringify(layout));
+  const payload = {mapId:saveData.mapId,data:saveData};
+  if (currentLayoutMeta.hash && typeof currentLayoutMeta.modifiedMs === 'number') {
+    payload.baseHash = currentLayoutMeta.hash;
+    payload.baseModifiedMs = currentLayoutMeta.modifiedMs;
+  }
+  const res = await api('/api/zone-layout/save', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if (res.ok) { dirty=false; currentLayoutMeta = { hash: res.hash || currentLayoutMeta.hash, modifiedMs: res.modifiedMs ?? currentLayoutMeta.modifiedMs }; showStatus(`Saved ${res.file}`); render(); }
+  else showStatus('Save failed: '+JSON.stringify(res), true);
+  const lr = await api('/api/zone-layouts');
+  const sel = $('layoutSelect');
+  sel.innerHTML='<option value="__new__">+ New layout...</option>';
+  for (const l of lr.layouts) sel.innerHTML+=`<option value="${l.mapId}">${l.mapId}</option>`;
+  sel.value=layout.mapId;
+}
+$('btnSave').onclick = save;
+$('btnValidate').onclick = async function() { showStatus('Validating...'); const r=await api('/api/zone-validate',{method:'POST'}); showStatus(r.output||(r.ok?'Validation passed':'Validation failed'),!r.ok); };
+$('btnExport').onclick = async function() { if(!layout.mapId){showStatus('Set a Map ID first.',true);return;} showStatus('Exporting...'); const r=await api('/api/zone-export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mapId:layout.mapId})}); showStatus(r.output||(r.ok?'Export complete':'Export failed'),!r.ok); };
+$('btnExportBuild').onclick = async function() { if(!layout.mapId){showStatus('Set a Map ID first.',true);return;} showStatus('Syncing promoted assets...'); const r0=await api('/api/sync-promoted',{method:'POST'}); if(!r0.ok){showStatus('Promoted-asset sync failed: '+(r0.output||''),true);return;} showStatus('Exporting...'); const r1=await api('/api/zone-export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mapId:layout.mapId})}); if(!r1.ok){showStatus(r1.output||'Export failed',true);return;} showStatus('Building client...'); const r2=await api('/api/build-client',{method:'POST'}); showStatus(r2.ok?'Sync + Export + Build done — refresh game tab':'Build failed: '+(r2.output||''),!r2.ok); };
+$('btnFit').onclick = function() { centerCamera(); render(); };
+
+function showStatus(msg, isError) {
+  const el=$('statusBar'); el.textContent=msg; el.style.display='block';
+  el.classList.toggle('lm-toast--error', !!isError);
+  el.classList.toggle('lm-toast--success', !isError);
+  el.classList.remove('lm-toast--enter'); void el.offsetWidth; el.classList.add('lm-toast--enter');
+  clearTimeout(el._timer); el._timer=setTimeout(()=>el.style.display='none',isError?8000:3000);
+}
+
+function centerCamera() {
+  cam.x=layout.bounds.width/2; cam.y=layout.bounds.height/2;
+  const pw=Math.max(100,wrap.clientWidth-60), ph=Math.max(100,wrap.clientHeight-60);
+  cam.zoom=Math.max(0.08,Math.min(pw/layout.bounds.width,ph/layout.bounds.height,1.5));
+}
+
+// ── Smart snap guides ──
+function computeSnapGuides(draggedSels) {
+  const guides = [];
+  const tol = 4 / cam.zoom;
+  const draggedBounds = draggedSels.map(s => getElementBounds(s.layer, s.index));
+  const draggedSet = new Set(draggedSels.map(s => elKey(s.layer, s.index)));
+  const dMinX = Math.min(...draggedBounds.map(b => b.x));
+  const dMaxX = Math.max(...draggedBounds.map(b => b.x + b.w));
+  const dCX = (dMinX + dMaxX) / 2;
+  const dMinY = Math.min(...draggedBounds.map(b => b.y));
+  const dMaxY = Math.max(...draggedBounds.map(b => b.y + b.h));
+  const dCY = (dMinY + dMaxY) / 2;
+  const edges = [dMinX, dCX, dMaxX];
+  const vedges = [dMinY, dCY, dMaxY];
+  for (const layer of LAYERS) {
+    if (!layerVisible[layer]) continue;
+    for (let i = 0; i < layout[layer].length; i++) {
+      if (draggedSet.has(elKey(layer, i)) || isHidden(layer, i)) continue;
+      const b = getElementBounds(layer, i);
+      const ox = [b.x, b.x + b.w / 2, b.x + b.w];
+      const oy = [b.y, b.y + b.h / 2, b.y + b.h];
+      for (const e of edges) for (const o of ox) if (Math.abs(e - o) < tol) guides.push({ axis: 'x', value: o });
+      for (const e of vedges) for (const o of oy) if (Math.abs(e - o) < tol) guides.push({ axis: 'y', value: o });
+    }
+  }
+  const seen = new Set();
+  return guides.filter(g => { const k = `${g.axis}_${g.value}`; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+}
+
+// ── PNG export ──
+$('btnPng').onclick = function() {
+  const offscreen = document.createElement('canvas');
+  offscreen.width = layout.bounds.width;
+  offscreen.height = layout.bounds.height;
+  const oc = offscreen.getContext('2d');
+  const saveCam = { ...cam }; const saveZoom = cam.zoom;
+  cam.x = layout.bounds.width / 2; cam.y = layout.bounds.height / 2; cam.zoom = 1;
+  const origW = canvas.width, origH = canvas.height;
+  canvas.width = layout.bounds.width; canvas.height = layout.bounds.height;
+  render();
+  oc.drawImage(canvas, 0, 0);
+  canvas.width = origW; canvas.height = origH;
+  cam.x = saveCam.x; cam.y = saveCam.y; cam.zoom = saveZoom;
+  render();
+  const link = document.createElement('a');
+  link.download = `${layout.mapId || 'zone'}_layout.png`;
+  link.href = offscreen.toDataURL('image/png');
+  link.click();
+  showStatus('PNG exported');
+};
+
+// ── Live Preview ──
+let previewOpen = false;
+let previewCamSync = true;
+let previewCam = { x: 0, y: 0, zoom: 1 };
+const pvCanvas = $('previewCanvas');
+const pvCtx = pvCanvas.getContext('2d');
+const pvWrap = $('previewWrap');
+let pvPanning = false, pvPanStart = { x:0,y:0,cx:0,cy:0 };
+
+// Texture cache — loads promoted assets from DevKit's /runtime-asset/ route
+const texCache = {};
+const texLoading = new Set();
+function getTexture(assetKey, subdir) {
+  if (!assetKey) return null;
+  const cacheKey = `${subdir}/${assetKey}`;
+  if (texCache[cacheKey]) return texCache[cacheKey];
+  if (texCache[cacheKey] === false) return null;
+  if (texLoading.has(cacheKey)) return null;
+  texLoading.add(cacheKey);
+  const img = new Image();
+  img.onload = () => { texCache[cacheKey] = img; texLoading.delete(cacheKey); if (previewOpen) renderPreview(); };
+  img.onerror = () => { texCache[cacheKey] = false; texLoading.delete(cacheKey); };
+  img.src = `/runtime-asset/${subdir}/${assetKey}.png`;
+  return null;
+}
+
+const TERRAIN_COLORS = {
+  cobble:[0x5a,0x64,0x64],stone:[0x6a,0x6a,0x72],wood:[0x7a,0x5e,0x3a],sand:[0xc2,0xa8,0x62],
+  grass:[0x34,0x5a,0x49],dirt:[0x6e,0x50,0x30],water:[0x2a,0x5a,0x8a],ice:[0x8a,0xc8,0xe8],
+  lava:[0xb8,0x3a,0x20],swamp:[0x3a,0x54,0x30],snow:[0xc8,0xd8,0xe8],brick:[0x88,0x48,0x48],
+  moss:[0x4a,0x6a,0x3a],mud:[0x5a,0x48,0x28],gravel:[0x7a,0x7a,0x6a]
+};
+const TERRAIN_ACCENTS = {
+  cobble:[[0x6a,0x74,0x74],[0x4e,0x58,0x58]],stone:[[0x7a,0x7a,0x82],[0x5a,0x5a,0x62]],
+  wood:[[0x8a,0x6e,0x4a],[0x6a,0x4e,0x2a]],sand:[[0xd2,0xb8,0x72],[0xb2,0x98,0x52]],
+  grass:[[0x42,0x6f,0x57],[0x2a,0x4a,0x3a]],dirt:[[0x7e,0x60,0x40],[0x5e,0x40,0x20]],
+  water:[[0x3a,0x6a,0x9a],[0x1a,0x4a,0x7a]],swamp:[[0x4a,0x64,0x40],[0x2a,0x44,0x20]]
+};
+const PROP_SHAPES = {
+  barrel:{shape:'circle',r:10,fill:'#8a6030',stroke:'#6a4820'},
+  crate:{shape:'rect',w:18,h:16,fill:'#9a7a40',stroke:'#7a5a20'},
+  lantern:{shape:'glow',r:6,fill:'#ffcc44',glow:'rgba(255,200,60,0.2)',glowR:28},
+  bench:{shape:'rect',w:24,h:8,fill:'#7a6a50',stroke:'#5a4a30'},
+  signpost:{shape:'rect',w:4,h:20,fill:'#8a7a50',stroke:'#6a5a30'},
+  fountain:{shape:'circle',r:20,fill:'rgba(60,130,200,0.4)',stroke:'#8a8a78'},
+  stall:{shape:'rect',w:40,h:24,fill:'#b8884a',stroke:'#8a6030'},market:{shape:'rect',w:40,h:24,fill:'#b8884a',stroke:'#8a6030'},
+  anchor:{shape:'circle',r:8,fill:'#6a6a6a',stroke:'#4a4a4a'},
+  fishing:{shape:'rect',w:3,h:22,fill:'#9a8a60',stroke:'#7a6a40'},
+  boat:{shape:'rect',w:36,h:16,fill:'#8a6a3a',stroke:'#6a4a2a'},rowboat:{shape:'rect',w:36,h:16,fill:'#8a6a3a',stroke:'#6a4a2a'},
+  campfire:{shape:'glow',r:5,fill:'#ff6620',glow:'rgba(255,120,30,0.15)',glowR:32},
+  tree:{shape:'tree',trunkW:6,trunkH:14,canopyR:18,trunk:'#6a4a2a',canopy:'#2a6a3a'},
+  oak:{shape:'tree',trunkW:8,trunkH:16,canopyR:22,trunk:'#5a3a1a',canopy:'#3a7a4a'},
+  palm:{shape:'tree',trunkW:5,trunkH:20,canopyR:16,trunk:'#8a6a3a',canopy:'#3a8a3a'},
+  rock:{shape:'circle',r:14,fill:'#6a6a68',stroke:'#4a4a48'},
+  rope:{shape:'circle',r:6,fill:'#a89868',stroke:'#887848'},
+  torch:{shape:'glow',r:4,fill:'#ff8830',glow:'rgba(255,140,40,0.15)',glowR:24},
+  bush:{shape:'circle',r:12,fill:'#3a6a3a',stroke:'#2a5a2a'}
+};
+
+function seededRandom(seedText) {
+  let seed = 2166136261;
+  for (let i = 0; i < seedText.length; i++) { seed ^= seedText.charCodeAt(i); seed = Math.imul(seed, 16777619); }
+  return () => { seed += 0x6d2b79f5; let v = seed; v = Math.imul(v ^ (v >>> 15), v | 1); v ^= v + Math.imul(v ^ (v >>> 7), v | 61); return ((v ^ (v >>> 14)) >>> 0) / 4294967296; };
+}
+
+function terrainBaseColor(assetKey) {
+  if (!assetKey) return [0x2a,0x38,0x48];
+  const k = assetKey.toLowerCase();
+  for (const [word, col] of Object.entries(TERRAIN_COLORS)) if (k.includes(word)) return col;
+  return [0x2a,0x38,0x48];
+}
+function terrainAccents(assetKey) {
+  if (!assetKey) return [[0x3a,0x48,0x58],[0x1a,0x28,0x38]];
+  const k = assetKey.toLowerCase();
+  for (const [word, cols] of Object.entries(TERRAIN_ACCENTS)) if (k.includes(word)) return cols;
+  return [[0x3a,0x48,0x58],[0x1a,0x28,0x38]];
+}
+function rgb(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function propShape(assetKey) {
+  if (!assetKey) return null;
+  const k = assetKey.toLowerCase();
+  for (const [word, shape] of Object.entries(PROP_SHAPES)) if (k.includes(word)) return shape;
+  return null;
+}
+
+$('btnPreview').onclick = function() {
+  previewOpen = !previewOpen;
+  this.setAttribute('aria-pressed', String(previewOpen));
+  pvWrap.style.display = previewOpen ? 'flex' : 'none';
+  pvWrap.style.flex = previewOpen ? '1' : '';
+  pvWrap.style.position = 'relative';
+  if (previewOpen) {
+    requestAnimationFrame(() => { resizePreview(); renderPreview(); });
+  }
+  resize();
+};
+
+$('previewCamBtn').onclick = function() {
+  previewCamSync = !previewCamSync;
+  this.textContent = previewCamSync ? 'Cam: Sync' : 'Cam: Free';
+  if (previewCamSync) renderPreview();
+};
+
+function resizePreview() {
+  if (!previewOpen) return;
+  pvCanvas.width = pvWrap.clientWidth;
+  pvCanvas.height = pvWrap.clientHeight;
+}
+
+function pvScreenToWorld(sx, sy) {
+  const c = previewCamSync ? cam : previewCam;
+  return { x: (sx - pvCanvas.width/2)/c.zoom + c.x, y: (sy - pvCanvas.height/2)/c.zoom + c.y };
+}
+
+pvCanvas.addEventListener('mousedown', (e) => {
+  if (e.button === 2) {
+    e.preventDefault();
+    const c = previewCamSync ? cam : previewCam;
+    pvPanning = true;
+    const r = pvCanvas.getBoundingClientRect();
+    pvPanStart = { x: e.clientX-r.left, y: e.clientY-r.top, cx: c.x, cy: c.y };
+    pvCanvas.style.cursor = 'grabbing';
+    if (previewCamSync) { previewCamSync = false; previewCam.x = cam.x; previewCam.y = cam.y; previewCam.zoom = cam.zoom; $('previewCamBtn').textContent = 'Cam: Free'; }
+    return;
+  }
+  if (previewCamSync) return;
+  if (e.button === 0 || e.button === 1) {
+    pvPanning = true;
+    const r = pvCanvas.getBoundingClientRect();
+    pvPanStart = { x: e.clientX-r.left, y: e.clientY-r.top, cx: previewCam.x, cy: previewCam.y };
+    pvCanvas.style.cursor = 'grabbing';
+  }
+});
+pvCanvas.addEventListener('contextmenu', e => e.preventDefault());
+pvCanvas.addEventListener('mousemove', (e) => {
+  if (!pvPanning) return;
+  const r = pvCanvas.getBoundingClientRect();
+  const sx = e.clientX-r.left, sy = e.clientY-r.top;
+  const c = previewCamSync ? cam : previewCam;
+  c.x = pvPanStart.cx - (sx-pvPanStart.x)/c.zoom;
+  c.y = pvPanStart.cy - (sy-pvPanStart.y)/c.zoom;
+  if (previewCamSync) render(); else renderPreview();
+});
+pvCanvas.addEventListener('mouseup', () => { pvPanning = false; pvCanvas.style.cursor = previewCamSync ? 'default' : 'grab'; });
+pvCanvas.addEventListener('wheel', (e) => {
+  if (previewCamSync) return;
+  e.preventDefault();
+  const r = pvCanvas.getBoundingClientRect();
+  const sx = e.clientX-r.left, sy = e.clientY-r.top;
+  const wBefore = pvScreenToWorld(sx, sy);
+  previewCam.zoom = Math.max(0.08, Math.min(6, previewCam.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15)));
+  const wAfter = pvScreenToWorld(sx, sy);
+  previewCam.x -= wAfter.x - wBefore.x;
+  previewCam.y -= wAfter.y - wBefore.y;
+  renderPreview();
+}, { passive: false });
+
+function renderPreview() {
+  if (!previewOpen) return;
+  const w = pvCanvas.width, h = pvCanvas.height;
+  if (w < 1 || h < 1) return;
+  const c = previewCamSync ? cam : previewCam;
+  pvCtx.clearRect(0, 0, w, h);
+  pvCtx.fillStyle = '#080c10'; pvCtx.fillRect(0, 0, w, h);
+  pvCtx.save();
+  pvCtx.translate(w/2, h/2);
+  pvCtx.scale(c.zoom, c.zoom);
+  pvCtx.translate(-c.x, -c.y);
+  const bw = layout.bounds.width, bh = layout.bounds.height;
+
+  // Dark void outside map
+  pvCtx.fillStyle = '#0a0e14'; pvCtx.fillRect(-200, -200, bw+400, bh+400);
+
+  // Ground — real tile texture or seeded-random procedural fallback
+  for (const g of layout.ground) {
+    const tex = getTexture(g.assetKey, 'tiles');
+    if (tex) {
+      pvCtx.save();
+      pvCtx.beginPath(); pvCtx.rect(g.x, g.y, g.width, g.height); pvCtx.clip();
+      const pat = pvCtx.createPattern(tex, 'repeat');
+      if (pat) { pvCtx.fillStyle = pat; pvCtx.fillRect(g.x, g.y, g.width, g.height); }
+      else { pvCtx.fillStyle = '#2a3848'; pvCtx.fillRect(g.x, g.y, g.width, g.height); }
+      pvCtx.restore();
+      pvCtx.strokeStyle = 'rgba(0,0,0,0.12)'; pvCtx.lineWidth = 2;
+      pvCtx.strokeRect(g.x, g.y, g.width, g.height);
+    } else {
+      const base = terrainBaseColor(g.assetKey);
+      const accents = terrainAccents(g.assetKey);
+      const rng = seededRandom(`${layout.mapId}:${g.instanceId}`);
+      pvCtx.fillStyle = rgb(base);
+      pvCtx.fillRect(g.x, g.y, g.width, g.height);
+      const blobCount = Math.max(12, Math.floor((g.width * g.height) / 8000));
+      for (let i = 0; i < blobCount; i++) {
+        const accent = rng() > 0.5 ? accents[0] : accents[1];
+        pvCtx.fillStyle = `rgba(${accent[0]},${accent[1]},${accent[2]},${0.12 + rng() * 0.1})`;
+        pvCtx.beginPath();
+        pvCtx.ellipse(g.x + rng() * g.width, g.y + rng() * g.height, 20 + rng() * 60, 8 + rng() * 30, rng() * Math.PI, 0, Math.PI * 2);
+        pvCtx.fill();
+      }
+      pvCtx.strokeStyle = 'rgba(0,0,0,0.12)'; pvCtx.lineWidth = 2;
+      pvCtx.strokeRect(g.x, g.y, g.width, g.height);
+    }
+  }
+
+  // Subtle ground variation between adjacent regions (soft edge blending)
+  for (let i = 0; i < layout.ground.length; i++) {
+    const g = layout.ground[i];
+    const rng = seededRandom(`edge:${g.instanceId}`);
+    // Scatter a few tiny accent dots along region edges for natural look
+    const perim = 2*(g.width+g.height);
+    const dotCount = Math.floor(perim / 40);
+    for (let d = 0; d < dotCount; d++) {
+      const t = rng();
+      let dx, dy;
+      if (t < 0.25) { dx = g.x + rng()*g.width; dy = g.y - 2 + rng()*4; }
+      else if (t < 0.5) { dx = g.x + rng()*g.width; dy = g.y+g.height - 2 + rng()*4; }
+      else if (t < 0.75) { dx = g.x - 2 + rng()*4; dy = g.y + rng()*g.height; }
+      else { dx = g.x+g.width - 2 + rng()*4; dy = g.y + rng()*g.height; }
+      pvCtx.fillStyle = `rgba(0,0,0,${0.05+rng()*0.08})`;
+      pvCtx.beginPath(); pvCtx.arc(dx, dy, 2+rng()*4, 0, Math.PI*2); pvCtx.fill();
+    }
+  }
+
+  // Decals — real image or soft textured splotches fallback
+  for (const d of layout.decals) {
+    const tex = getTexture(d.assetKey, 'decals');
+    if (tex) {
+      const s = resolvedScaleFor('decals', d, 1);
+      const dw = tex.width * s, dh = tex.height * s;
+      pvCtx.drawImage(tex, d.x - dw/2, d.y - dh/2, dw, dh);
+    } else {
+      const r = 20 * resolvedScaleFor('decals', d, 1);
+      const k = (d.assetKey||'').toLowerCase();
+      let cr=120,cg=160,cb=200,ca=0.25;
+      if (k.includes('water')||k.includes('puddle')) { cr=60;cg=130;cb=200;ca=0.35; }
+      else if (k.includes('leaves')||k.includes('leaf')) { cr=80;cg=140;cb=50;ca=0.35; }
+      else if (k.includes('moss')) { cr=60;cg=130;cb=50;ca=0.3; }
+      else if (k.includes('sand')||k.includes('ripple')) { cr=200;cg=180;cb=100;ca=0.25; }
+      else if (k.includes('crack')) { cr=40;cg=40;cb=50;ca=0.35; }
+      else if (k.includes('seaweed')) { cr=30;cg=110;cb=70;ca=0.35; }
+      else if (k.includes('flower')) { cr=200;cg=120;cb=180;ca=0.3; }
+      const rng = seededRandom(`decal:${d.instanceId}`);
+      for (let i = 0; i < 3; i++) {
+        const ox = (rng()-0.5)*r*0.4, oy = (rng()-0.5)*r*0.4;
+        const sr = r * (0.6 + rng()*0.5);
+        const grad = pvCtx.createRadialGradient(d.x+ox, d.y+oy, 0, d.x+ox, d.y+oy, sr);
+        grad.addColorStop(0, `rgba(${cr},${cg},${cb},${ca})`);
+        grad.addColorStop(1, 'rgba(0,0,0,0)');
+        pvCtx.fillStyle = grad;
+        pvCtx.beginPath(); pvCtx.arc(d.x+ox, d.y+oy, sr, 0, Math.PI*2); pvCtx.fill();
+      }
+    }
+  }
+
+  // Monster zones — subtle danger fog
+  for (const m of layout.monsterSpawns) {
+    const rng = seededRandom(`mz:${m.monsterId}`);
+    pvCtx.fillStyle = 'rgba(140,30,30,0.04)';
+    pvCtx.fillRect(m.x, m.y, m.width, m.height);
+    for (let i = 0; i < 5; i++) {
+      const grad = pvCtx.createRadialGradient(
+        m.x + rng()*m.width, m.y + rng()*m.height, 0,
+        m.x + rng()*m.width, m.y + rng()*m.height, 40+rng()*60
+      );
+      grad.addColorStop(0, 'rgba(180,40,40,0.06)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      pvCtx.fillStyle = grad;
+      pvCtx.fillRect(m.x, m.y, m.width, m.height);
+    }
+  }
+
+  // Props — real image or game-style shapes with shadows
+  const sorted = [...layout.props].sort((a,b) => a.y - b.y);
+  for (const p of sorted) {
+    const tex = getTexture(p.assetKey, 'props');
+    if (tex) {
+      const s = resolvedScaleFor('props', p, 1);
+      const dw = tex.width * s, dh = tex.height * s;
+      pvCtx.fillStyle = 'rgba(0,0,0,0.2)';
+      pvCtx.beginPath(); pvCtx.ellipse(p.x, p.y+2, dw*0.35, dh*0.1, 0, 0, Math.PI*2); pvCtx.fill();
+      pvCtx.drawImage(tex, p.x - dw/2, p.y - dh, dw, dh);
+      continue;
+    }
+    const shape = propShape(p.assetKey);
+    // Ground shadow
+    pvCtx.fillStyle = 'rgba(0,0,0,0.18)';
+    pvCtx.beginPath(); pvCtx.ellipse(p.x, p.y+2, 10, 4, 0, 0, Math.PI*2); pvCtx.fill();
+
+    if (shape?.shape === 'tree') {
+      // Trunk
+      pvCtx.fillStyle = shape.trunk;
+      pvCtx.fillRect(p.x-shape.trunkW/2, p.y-shape.trunkH, shape.trunkW, shape.trunkH);
+      // Canopy shadow
+      pvCtx.fillStyle = 'rgba(0,0,0,0.1)';
+      pvCtx.beginPath(); pvCtx.arc(p.x+2, p.y-shape.trunkH+2, shape.canopyR, 0, Math.PI*2); pvCtx.fill();
+      // Canopy
+      pvCtx.fillStyle = shape.canopy;
+      pvCtx.beginPath(); pvCtx.arc(p.x, p.y-shape.trunkH, shape.canopyR, 0, Math.PI*2); pvCtx.fill();
+      // Canopy highlight
+      pvCtx.fillStyle = 'rgba(255,255,255,0.06)';
+      pvCtx.beginPath(); pvCtx.arc(p.x-3, p.y-shape.trunkH-4, shape.canopyR*0.6, 0, Math.PI*2); pvCtx.fill();
+    } else if (shape?.shape === 'glow') {
+      // Glow aura
+      const grad = pvCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, shape.glowR);
+      grad.addColorStop(0, shape.glow);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      pvCtx.fillStyle = grad;
+      pvCtx.beginPath(); pvCtx.arc(p.x, p.y, shape.glowR, 0, Math.PI*2); pvCtx.fill();
+      // Core
+      pvCtx.fillStyle = shape.fill;
+      pvCtx.beginPath(); pvCtx.arc(p.x, p.y, shape.r, 0, Math.PI*2); pvCtx.fill();
+    } else if (shape?.shape === 'rect') {
+      pvCtx.fillStyle = shape.fill;
+      pvCtx.fillRect(p.x-shape.w/2, p.y-shape.h, shape.w, shape.h);
+      pvCtx.strokeStyle = shape.stroke; pvCtx.lineWidth = 1;
+      pvCtx.strokeRect(p.x-shape.w/2, p.y-shape.h, shape.w, shape.h);
+    } else if (shape?.shape === 'circle') {
+      pvCtx.fillStyle = shape.fill;
+      pvCtx.beginPath(); pvCtx.arc(p.x, p.y-shape.r, shape.r, 0, Math.PI*2); pvCtx.fill();
+      pvCtx.strokeStyle = shape.stroke; pvCtx.lineWidth = 1; pvCtx.stroke();
+    } else {
+      // Generic prop marker
+      pvCtx.fillStyle = 'rgba(100,180,220,0.5)';
+      pvCtx.beginPath(); pvCtx.arc(p.x, p.y-6, 6, 0, Math.PI*2); pvCtx.fill();
+      pvCtx.strokeStyle = 'rgba(100,180,220,0.7)'; pvCtx.lineWidth = 1; pvCtx.stroke();
+    }
+  }
+
+  // NPCs — character silhouettes with depth sorting
+  const sortedNpcs = [...layout.npcs].sort((a,b) => a.y - b.y);
+  for (const n of sortedNpcs) {
+    const nr = Math.min(n.radius||40, 24);
+    // Shadow
+    pvCtx.fillStyle = 'rgba(0,0,0,0.22)';
+    pvCtx.beginPath(); pvCtx.ellipse(n.x, n.y+nr*0.6, nr*0.4, nr*0.12, 0, 0, Math.PI*2); pvCtx.fill();
+    // Body
+    pvCtx.fillStyle = '#5ab86e';
+    pvCtx.beginPath(); pvCtx.ellipse(n.x, n.y, nr*0.3, nr*0.45, 0, 0, Math.PI*2); pvCtx.fill();
+    // Body highlight
+    pvCtx.fillStyle = 'rgba(255,255,255,0.08)';
+    pvCtx.beginPath(); pvCtx.ellipse(n.x-2, n.y-4, nr*0.15, nr*0.3, 0, 0, Math.PI*2); pvCtx.fill();
+    // Head
+    pvCtx.fillStyle = '#ffe0c0';
+    pvCtx.beginPath(); pvCtx.arc(n.x, n.y-nr*0.5, nr*0.2, 0, Math.PI*2); pvCtx.fill();
+    // Hair
+    pvCtx.fillStyle = '#4a3020';
+    pvCtx.beginPath(); pvCtx.arc(n.x, n.y-nr*0.55, nr*0.16, Math.PI, Math.PI*2); pvCtx.fill();
+    // Name tag with background
+    const npcLabel = (n.npcId||'').replace(/^npc_/,'').replace(/_/g,' ');
+    if (npcLabel && c.zoom > 0.25) {
+      const fs = Math.max(9, 11/c.zoom);
+      pvCtx.font = `bold ${fs}px system-ui`;
+      pvCtx.textAlign = 'center';
+      const tw = pvCtx.measureText(npcLabel).width;
+      const ty = n.y - nr*0.8 - 6/c.zoom;
+      // Tag background
+      pvCtx.fillStyle = 'rgba(0,0,0,0.45)';
+      const pad = 3/c.zoom;
+      pvCtx.fillRect(n.x-tw/2-pad, ty-fs*0.7, tw+pad*2, fs*1.1);
+      pvCtx.fillStyle = '#dbffe4';
+      pvCtx.fillText(npcLabel, n.x, ty);
+    }
+  }
+
+  // Portals — animated-style glow
+  for (const p of layout.portals) {
+    if (p.shape?.type === 'circle') {
+      const r = p.shape.radius || 30;
+      // Outer glow
+      const grad = pvCtx.createRadialGradient(p.shape.x, p.shape.y, r*0.2, p.shape.x, p.shape.y, r*1.3);
+      grad.addColorStop(0, 'rgba(155,226,111,0.3)');
+      grad.addColorStop(0.5, 'rgba(155,226,111,0.12)');
+      grad.addColorStop(1, 'rgba(155,226,111,0)');
+      pvCtx.fillStyle = grad;
+      pvCtx.beginPath(); pvCtx.arc(p.shape.x, p.shape.y, r*1.3, 0, Math.PI*2); pvCtx.fill();
+      // Ring
+      pvCtx.strokeStyle = 'rgba(217,255,208,0.5)';
+      pvCtx.lineWidth = 3;
+      pvCtx.beginPath(); pvCtx.arc(p.shape.x, p.shape.y, r, 0, Math.PI*2); pvCtx.stroke();
+      // Center spark
+      pvCtx.fillStyle = 'rgba(220,255,200,0.35)';
+      pvCtx.beginPath(); pvCtx.arc(p.shape.x, p.shape.y, r*0.25, 0, Math.PI*2); pvCtx.fill();
+    } else if (p.shape?.type === 'rect') {
+      pvCtx.fillStyle = 'rgba(155,226,111,0.15)';
+      pvCtx.fillRect(p.shape.x, p.shape.y, p.shape.width||60, p.shape.height||60);
+      pvCtx.strokeStyle = 'rgba(217,255,208,0.45)';
+      pvCtx.lineWidth = 3;
+      pvCtx.strokeRect(p.shape.x, p.shape.y, p.shape.width||60, p.shape.height||60);
+    }
+  }
+
+  // Spawn points — very subtle (not visible in actual game)
+  for (const s of layout.spawnPoints) {
+    pvCtx.fillStyle = 'rgba(255,226,160,0.12)';
+    pvCtx.beginPath(); pvCtx.arc(s.x, s.y, 3, 0, Math.PI*2); pvCtx.fill();
+  }
+
+  // Edge vignette
+  const vigW = 60;
+  const gradL = pvCtx.createLinearGradient(0,0,vigW,0); gradL.addColorStop(0,'rgba(0,0,0,0.4)'); gradL.addColorStop(1,'rgba(0,0,0,0)');
+  pvCtx.fillStyle = gradL; pvCtx.fillRect(0,0,vigW,bh);
+  const gradR = pvCtx.createLinearGradient(bw,0,bw-vigW,0); gradR.addColorStop(0,'rgba(0,0,0,0.4)'); gradR.addColorStop(1,'rgba(0,0,0,0)');
+  pvCtx.fillStyle = gradR; pvCtx.fillRect(bw-vigW,0,vigW,bh);
+  const gradT = pvCtx.createLinearGradient(0,0,0,vigW); gradT.addColorStop(0,'rgba(0,0,0,0.4)'); gradT.addColorStop(1,'rgba(0,0,0,0)');
+  pvCtx.fillStyle = gradT; pvCtx.fillRect(0,0,bw,vigW);
+  const gradB = pvCtx.createLinearGradient(0,bh,0,bh-vigW); gradB.addColorStop(0,'rgba(0,0,0,0.4)'); gradB.addColorStop(1,'rgba(0,0,0,0)');
+  pvCtx.fillStyle = gradB; pvCtx.fillRect(0,bh-vigW,bw,vigW);
+
+  pvCtx.restore();
+  pvCtx.textAlign = 'left'; pvCtx.textBaseline = 'alphabetic';
+}
+
+// ── Asset key datalist ──
+function buildAssetDatalist() {
+  if (!assetKeys.length) return;
+  let dl = document.getElementById('assetKeyList');
+  if (!dl) { dl=document.createElement('datalist'); dl.id='assetKeyList'; document.body.appendChild(dl); }
+  dl.innerHTML = assetKeys.map(k=>`<option value="${k}">`).join('');
+}
+
+// ── Start ──
+loadLayerVisibility();
+init().then(() => { resize(); centerCamera(); buildAssetDatalist(); render(); requestAnimationFrame(() => { resize(); centerCamera(); render(); }); }).catch(e => {
+  console.error(e); showStatus('Init failed: '+e.message, true);
+});
+</script>
+</body>
+</html>

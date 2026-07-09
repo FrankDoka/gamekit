@@ -1,0 +1,8 @@
+{
+  "verdict": "FAIL",
+  "leg_change_fraction": 0.08511,
+  "leg_change_tol": 0.02,
+  "hair_pixels": 1071,
+  "diff_threshold": 45,
+  "reason": "body/legs changed -> inpaint drifted the body, not a masked edit"
+}

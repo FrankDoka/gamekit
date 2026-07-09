@@ -1,0 +1,70 @@
+name: CI
+
+# Runs the toolkit's STANDALONE gates — the ones that pass against this repo alone
+# with no wired game. These mirror `pnpm validate` (typecheck + selftest) plus the
+# vitest suite.
+#
+# NOT included: the game-aware gates (capture:zone / smoke:client / build:client /
+# boot:server). Those need a wired game exposing @gamekit/game-contract plus a running
+# Colyseus server + Phaser client, so they cannot run in this game-agnostic CI. Add a
+# separate workflow in your game repo (or extend this one) once a game is wired.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: standalone gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Python 3.11 + Pillow + numpy back the asset self-tests that `pnpm selftest`
+      # chains (tools/asset-cleanup/*.py, tools/art-pipeline/anchor_measure.py).
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps (Pillow + numpy)
+        run: python -m pip install --upgrade pip "Pillow>=10,<13" "numpy>=1.26,<3"
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # corepack activates the pinned pnpm (packageManager: pnpm@11.7.0 in package.json).
+      - name: Enable corepack (pnpm@11.7.0)
+        run: corepack enable
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (all workspaces)
+        run: pnpm -r typecheck
+
+      - name: Vitest
+        run: pnpm test
+
+      # selftest = assets:gate-fixtures + assets:anim-fixtures + assets:tint-selftest
+      # + anchors:fixtures + bank:coverage:selftest + bank:audit:selftest + zone:lint:selftest.
+      - name: Toolkit selftest
+        run: pnpm selftest

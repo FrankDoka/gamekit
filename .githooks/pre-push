@@ -1,0 +1,29 @@
+#!/bin/sh
+# GameKit toolkit pre-push hook (generic).
+#
+# GENERICIZED from the prior game project. The original blocked pushes from any
+# branch matching `codex/*` and from any worktree other than a hardcoded absolute
+# path — that was a game-specific parallel-lane orchestration policy
+# and does NOT belong in a reusable toolkit.
+#
+# This generic version does nothing to normal pushes. It keeps ONE reusable guard:
+# a soft warning when pushing directly to a protected branch (main/master), which a
+# new game can tighten or remove. Set GAMEKIT_PUSH_OK=1 to silence the warning.
+
+protected="main master"
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+if [ "$GAMEKIT_PUSH_OK" = "1" ]; then
+  exit 0
+fi
+
+for p in $protected; do
+  if [ "$branch" = "$p" ]; then
+    echo "[pre-push] NOTE: pushing directly to protected branch '$branch'." >&2
+    echo "[pre-push] If your project uses PRs, push a feature branch instead." >&2
+    echo "[pre-push] Silence this note with GAMEKIT_PUSH_OK=1 (it does not block)." >&2
+    break
+  fi
+done
+
+exit 0

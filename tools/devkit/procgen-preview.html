@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Procgen Dungeon Preview</title>
+<link rel="stylesheet" href="/tokens.css" />
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 16px;
+    background: var(--lm-surface-base, #0d1017);
+    color: var(--lm-text, #e6ebf2);
+    font-family: var(--lm-font-body, system-ui, sans-serif);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: var(--lm-text-muted, #8b95a7); font-size: 12px; margin: 0 0 14px; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    background: var(--lm-surface-raised, #161b24);
+    border: 1px solid var(--lm-border-cool, #263042);
+    border-radius: var(--lm-radius-md, 8px);
+    padding: 12px 14px; margin-bottom: 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--lm-text-muted, #8b95a7); }
+  .field input {
+    background: var(--lm-surface-sunken, #0d1017); color: inherit;
+    border: 1px solid var(--lm-border-cool, #263042); border-radius: 6px;
+    padding: 6px 8px; font: inherit; width: 120px;
+  }
+  button {
+    background: var(--lm-accent, #4f8cff); color: #06101f; font: inherit; font-weight: 600;
+    border: 0; border-radius: 6px; padding: 7px 14px; cursor: pointer;
+  }
+  button.ghost { background: var(--lm-surface-sunken, #0d1017); color: inherit; border: 1px solid var(--lm-border-cool, #263042); }
+  .canvas-wrap {
+    background: var(--lm-surface-sunken, #0d1017);
+    border: 1px solid var(--lm-border-cool, #263042);
+    border-radius: var(--lm-radius-md, 8px);
+    padding: 10px; overflow: auto; max-height: 62vh;
+  }
+  canvas { display: block; image-rendering: pixelated; }
+  .stats { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0; font-size: 12px; color: var(--lm-text-muted, #8b95a7); }
+  .stats b { color: var(--lm-text, #e6ebf2); font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 12px; }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
+  .err { color: #ff8080; font-size: 13px; margin-top: 8px; }
+  .invalid { color: #ffcf66; }
+</style>
+</head>
+<body>
+  <h1>Procgen Dungeon Preview</h1>
+  <p class="sub">Read-only toy over <code>server/src/procgen</code>. Rooms colored by BFS semantic type, corridors in slate, monster spawns dotted by tier. Same seed &rarr; same dungeon.</p>
+
+  <div class="controls">
+    <div class="field"><label for="seed">Seed</label><input id="seed" type="number" value="12345" min="0" step="1" /></div>
+    <div class="field"><label for="roomCount">Rooms</label><input id="roomCount" type="number" value="24" min="4" max="60" step="1" /></div>
+    <div class="field"><label for="loopChance">Loop chance</label><input id="loopChance" type="number" value="0.3" min="0" max="1" step="0.05" /></div>
+    <button id="go">Generate</button>
+    <button id="rand" class="ghost">Random seed</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="err"></div>
+
+  <div class="canvas-wrap">
+    <canvas id="c" width="600" height="400"></canvas>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+<script>
+const CELL = 8; // px per tile in the preview
+const TYPE_COLOR = {
+  entrance: "#3fd0bb",
+  combat:   "#8f95a3",
+  elite:    "#9b6cf0",
+  treasure: "#d9a441",
+  shrine:   "#5a8fe8",
+  boss:     "#d8433a",
+};
+const TIER_COLOR = { 1: "#9fe66a", 2: "#e8c34a", 3: "#ff6a4a" };
+
+function b64ToBytes(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+function draw(d) {
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  canvas.width = d.W * CELL;
+  canvas.height = d.H * CELL;
+  ctx.fillStyle = "#0a0d13";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const grid = b64ToBytes(d.gridB64);
+  // Per-cell room type lookup for coloring room floors.
+  const roomTypeAt = new Map(); // "cx,cy" not needed; color by nearest via roomId not shipped.
+  // We color floors uniformly (slate) then overlay room rectangles tinted by type.
+  for (let y = 0; y < d.H; y++) {
+    for (let x = 0; x < d.W; x++) {
+      const v = grid[y * d.W + x];
+      if (v === d.WALL) { ctx.fillStyle = "#20262f"; ctx.fillRect(x * CELL, y * CELL, CELL, CELL); }
+      else if (v === d.FLOOR) { ctx.fillStyle = "#3a4250"; ctx.fillRect(x * CELL, y * CELL, CELL, CELL); }
+    }
+  }
+
+  // Tint each room's bounding footprint by its semantic type (semi-transparent overlay).
+  for (const r of d.rooms) {
+    ctx.fillStyle = TYPE_COLOR[r.type] || "#8f95a3";
+    ctx.globalAlpha = 0.42;
+    const x0 = Math.round(r.cx - r.w / 2), y0 = Math.round(r.cy - r.h / 2);
+    ctx.fillRect(x0 * CELL, y0 * CELL, r.w * CELL, r.h * CELL);
+    ctx.globalAlpha = 1;
+  }
+
+  // Edges: draw graph connections room-center to room-center.
+  ctx.lineWidth = 1;
+  for (const e of d.edges) {
+    const A = d.rooms[e.a], B = d.rooms[e.b];
+    if (!A || !B) continue;
+    ctx.strokeStyle = e.isCritical ? "rgba(216,67,58,.7)" : e.isLoop ? "rgba(90,143,232,.5)" : "rgba(255,255,255,.25)";
+    ctx.beginPath();
+    ctx.moveTo((A.cx + 0.5) * CELL, (A.cy + 0.5) * CELL);
+    ctx.lineTo((B.cx + 0.5) * CELL, (B.cy + 0.5) * CELL);
+    ctx.stroke();
+  }
+
+  // Spawn markers.
+  for (const s of d.spawns) {
+    ctx.fillStyle = TIER_COLOR[s.tier] || "#fff";
+    ctx.beginPath();
+    ctx.arc((s.x + 0.5) * CELL, (s.y + 0.5) * CELL, CELL * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Entrance / boss markers.
+  const mark = (roomIdx, label) => {
+    const r = d.rooms[roomIdx]; if (!r) return;
+    ctx.fillStyle = "#fff"; ctx.font = "bold 10px system-ui"; ctx.textAlign = "center";
+    ctx.fillText(label, (r.cx + 0.5) * CELL, (r.cy + 0.5) * CELL + 3);
+  };
+  mark(d.entrance, "S");
+  mark(d.boss, "B");
+}
+
+function renderStats(d) {
+  const s = d.stats;
+  const validTxt = d.valid ? "valid" : '<span class="invalid">INVALID (retry-bounded)</span>';
+  document.getElementById("stats").innerHTML =
+    `<span>status <b>${validTxt}</b></span>` +
+    `<span>grid <b>${d.W}&times;${d.H}</b></span>` +
+    `<span>rooms <b>${s.rooms}</b></span>` +
+    `<span>edges <b>${s.edges}</b> (loops <b>${s.loops}</b>)</span>` +
+    `<span>crit path <b>${s.critLen}</b></span>` +
+    `<span>floor tiles <b>${s.floorTiles}</b></span>` +
+    `<span>spawns <b>${d.spawns.length}</b></span>` +
+    `<span>attempts <b>${s.attempts}</b></span>` +
+    `<span>emitted: blocked <b>${d.layoutSummary.blockedTiles}</b>, monster spawns <b>${d.layoutSummary.monsterSpawns}</b>, bounds <b>${d.layoutSummary.boundsPx.width}&times;${d.layoutSummary.boundsPx.height}px</b></span>`;
+}
+
+function renderLegend() {
+  const el = document.getElementById("legend");
+  const parts = [];
+  for (const [type, color] of Object.entries(TYPE_COLOR))
+    parts.push(`<span class="item"><span class="swatch" style="background:${color}"></span>${type}</span>`);
+  parts.push(`<span class="item"><span class="swatch" style="background:#20262f"></span>wall</span>`);
+  for (const [tier, color] of Object.entries(TIER_COLOR))
+    parts.push(`<span class="item"><span class="swatch" style="border-radius:50%;background:${color}"></span>spawn t${tier}</span>`);
+  el.innerHTML = parts.join("");
+}
+
+async function generate() {
+  const err = document.getElementById("err");
+  err.textContent = "";
+  const seed = document.getElementById("seed").value;
+  const roomCount = document.getElementById("roomCount").value;
+  const loopChance = document.getElementById("loopChance").value;
+  try {
+    const res = await fetch(`/api/procgen/generate?seed=${seed}&roomCount=${roomCount}&loopChance=${loopChance}`);
+    const d = await res.json();
+    if (!d.ok) { err.textContent = "Error: " + (d.error || "generation failed"); return; }
+    draw(d);
+    renderStats(d);
+  } catch (e) {
+    err.textContent = "Request failed: " + e.message;
+  }
+}
+
+document.getElementById("go").addEventListener("click", generate);
+document.getElementById("rand").addEventListener("click", () => {
+  document.getElementById("seed").value = Math.floor(Math.random() * 0xffffffff);
+  generate();
+});
+renderLegend();
+generate();
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "sheet": "client/public/assets/sprites/player_blackhair_cel_gather_east_256.png",
+  "frameWidth": 256,
+  "frameHeight": 256,
+  "frameCount": 8,
+  "provenance": {
+    "tool": "tools/art-pipeline/anchor_measure.py",
+    "measuredAt": "2026-07-07T23:48:24Z",
+    "params": {
+      "frames": 8,
+      "alphaThreshold": 16,
+      "headTopFraction": 0.32,
+      "minHeadPixels": 24,
+      "handMode": "required",
+      "minHandPixels": 48,
+      "handReach": "east",
+      "handHeuristic": "glove-blob-extremity-v2 (card-anchor-hand-heuristic-fix)"
+    },
+    "reviewPanel": "Z:/gamekit-anchor-hand-heuristic-fix/../gather_v2_panel.png"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "handX": 171.0,
+      "handY": 169.0,
+      "headX": 129.64,
+      "headY": 93.73
+    },
+    {
+      "index": 1,
+      "handX": 184.0,
+      "handY": 172.0,
+      "headX": 127.83,
+      "headY": 94.14
+    },
+    {
+      "index": 2,
+      "handX": 186.0,
+      "handY": 153.0,
+      "headX": 123.7,
+      "headY": 94.02
+    },
+    {
+      "index": 3,
+      "handX": 171.0,
+      "handY": 173.0,
+      "headX": 129.32,
+      "headY": 93.56
+    },
+    {
+      "index": 4,
+      "handX": 186.0,
+      "handY": 143.0,
+      "headX": 116.8,
+      "headY": 93.66
+    },
+    {
+      "index": 5,
+      "handX": 176.0,
+      "handY": 177.1,
+      "headX": 133.47,
+      "headY": 94.21
+    },
+    {
+      "index": 6,
+      "handX": 190.0,
+      "handY": 142.0,
+      "headX": 117.27,
+      "headY": 94.18
+    },
+    {
+      "index": 7,
+      "handX": 172.0,
+      "handY": 170.0,
+      "headX": 129.73,
+      "headY": 93.55
+    }
+  ]
+}

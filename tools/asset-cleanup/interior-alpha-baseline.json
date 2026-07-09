@@ -1,0 +1,7 @@
+{
+ "_comment": "Interior-alpha legacy-runtime exemptions for assets:check only. Byte-hash pinned; accept/promote gates do not use this file. Do not add entries to silence new/edited defects.",
+ "generated_from": "client/public/assets",
+ "entries": {
+  "props/bloomvale_border_cliff_run_195px.png": "5f303b4f7fc3fdf4cdb390b6505881b0934bc33ab83af594375555af709047c4"
+ }
+}

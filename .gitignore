@@ -1,0 +1,81 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# environment / secrets
+.env
+.env.*
+!.env.example
+
+# local databases and runtime state
+*.db
+*.sqlite
+*.sqlite3
+.local/
+.tmp/
+tmp/
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+pnpm-debug.log*
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# art pipeline generated files (large, regenerable)
+tools/art-pipeline/frames/
+tools/art-pipeline/sprites/
+
+# capture/verification + asset-gen output — large, regenerable, per-run scratch
+tools/_capture*/
+tools/_imagegen*/
+tools/_editor-captures/
+tools/captures/
+
+# smoke test screenshots (regenerable output from smoke:client / smoke:persistence)
+tools/smoke-screenshot.png
+tools/smoke-persistence-screenshot.png
+
+# tool verdict artifacts (regenerable)
+*.zonelint-verdict.json
+*.zonedod-verdict.json
+*.recipes-verdict.json
+
+# registry safety files written alongside promoted-registry.json
+*.prev
+*.prev[0-9]
+*.corrupt-*
+promoted-registry.json.lock
+promoted-registry.json.*.tmp
+
+# local dev-tool session tokens (DevKit / Asset Bank) — never committed
+.session-token
+
+# lane orchestration runtime state (regenerable, never committed)
+tools/_lanes/
+tools/_*proof*/
+.codex-prompt.txt
+.codex-continue.txt
+.codex-last-message.txt
+.commit-msg.txt
+tools/_db-backups/
+tools/_*/raw/
+tools/_*/extracted/
+tools/_anim-verdicts/
+
+# Claude hook session-state flags
+.claude/.state/
+.claude/worktrees/

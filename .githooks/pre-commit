@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+// GameKit toolkit pre-commit hook (generic).
+//
+// GENERICIZED from the prior game project. The original classified staged files into
+// docs-only / asset / code buckets and ran that game's `pnpm validate` battery
+// (validate:data, docs:budget, sessions:check, assets:tiles-check, zone:lint:ci) —
+// several of those scripts do not exist in this toolkit.
+//
+// This version runs the generic guards, then a typecheck. The heavier `pnpm validate`
+// (typecheck + selftest, which shells out to Python) is opt-in via GAMEKIT_PRECOMMIT_FULL=1
+// so a fresh clone without a Python/Pillow env can still commit.
+//
+// Bypass everything with `git commit --no-verify` only when you know why.
+import { spawnSync } from "node:child_process";
+
+function run(command, args) {
+  const result = spawnSync(command, args, {
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
+  if (result.error) {
+    console.error(`[pre-commit] failed to run ${command}: ${result.error.message}`);
+    process.exit(1);
+  }
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+run("node", [".githooks/precommit-guards.cjs"]);
+
+if (process.env.GAMEKIT_PRECOMMIT_FULL === "1") {
+  console.log("[pre-commit] GAMEKIT_PRECOMMIT_FULL=1 — running full validate (typecheck + selftest)");
+  run("pnpm", ["validate"]);
+} else {
+  console.log("[pre-commit] running workspace typecheck (set GAMEKIT_PRECOMMIT_FULL=1 for full validate)");
+  run("pnpm", ["-r", "typecheck"]);
+}
+
+console.log("[pre-commit] OK");

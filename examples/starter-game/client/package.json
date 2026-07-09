@@ -1,0 +1,16 @@
+{
+  "name": "starter-game-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1"
+  },
+  "dependencies": {
+    "colyseus.js": "0.16.22",
+    "phaser": "^4.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

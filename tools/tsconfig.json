@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": [
+    // Game-server integration smoke: drives a game's content-registry loader + zone hot-reload
+    // (loadContentRegistry / prepareZoneReload / commitZoneReload). Those are game-server
+    // internals OUTSIDE the toolkit boundary and are not part of @gamekit/game-contract. A game
+    // that wires its server modules removes this exclusion to typecheck the leg.
+    "src/smoke/zone-reload.ts",
+    // Dedicated runner for the zone-reload leg above; same game-server boundary.
+    "src/smoke-zone-reload.ts"
+  ]
+}

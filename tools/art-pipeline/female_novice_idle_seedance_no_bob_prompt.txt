@@ -1,0 +1,11 @@
+Cute anime/chibi pixel-art female novice adventurer, red-orange twin-tail hair, warm brown eyes, short red scarf, cream cropped novice shirt, tan loose novice pants, brown gloves, belt pouches, brown boots. Right-facing 3/4 full body game sprite.
+
+Create a short seamless idle animation for a 2D RPG character standing still. Keep both boots locked to the exact same ground position. Keep hips and body height stable. No body bobbing, no stepping, no hopping, no sliding, no scale changes.
+
+Motion is subtle and cute: her eyes close and open in one natural blink, with a soft calm expression. Her twin-tail pigtails sway gently by only a few pixels, slightly delayed from the head. The scarf tip moves softly. Shoulders and hands relax with tiny breathing motion, but the overall silhouette stays stable.
+
+Keep the same outfit, face, colors, proportions, outline thickness, and character identity in every frame. Animation should feel alive, calm, and ready, not bouncy or exaggerated.
+
+Static camera, no camera movement, no zoom, no cuts, no reframing.
+
+Flat solid bright green chroma-key background only. No floor, no shadow, no scenery, no props, no spell effects, no text, no borders. Character fully visible with generous padding around hair and boots.

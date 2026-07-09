@@ -1,0 +1,61 @@
+{
+  "note": "Eyes-on-verified leading-fist knuckle per frame (max-zoom panel + per-frame crops, s22). Each point sits on the leading fist glove/knuckle. Integer px = the eye resolution; the heuristic must land within +-4px of these.",
+  "sheet": "assets/sources/accepted/player_baldbase/swing_1h/video-pilot-20260707/runtime/player_baldbase_swing_1h.clean.png",
+  "frames": [
+    {
+      "index": 0,
+      "handX": 236,
+      "handY": 220
+    },
+    {
+      "index": 1,
+      "handX": 245,
+      "handY": 219
+    },
+    {
+      "index": 2,
+      "handX": 221,
+      "handY": 192
+    },
+    {
+      "index": 3,
+      "handX": 220,
+      "handY": 188
+    },
+    {
+      "index": 4,
+      "handX": 232,
+      "handY": 191
+    },
+    {
+      "index": 5,
+      "handX": 242,
+      "handY": 197
+    },
+    {
+      "index": 6,
+      "handX": 275,
+      "handY": 167
+    },
+    {
+      "index": 7,
+      "handX": 249,
+      "handY": 175
+    },
+    {
+      "index": 8,
+      "handX": 240,
+      "handY": 181
+    },
+    {
+      "index": 9,
+      "handX": 232,
+      "handY": 218
+    },
+    {
+      "index": 10,
+      "handX": 232,
+      "handY": 218
+    }
+  ]
+}

@@ -1,0 +1,2130 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>GameKit Asset Review</title>
+<script>
+// Session-token shim: attaches x-devkit-token to every same-origin non-GET fetch so this
+// page keeps working behind the bank's CSRF gate (see asset-review-server.py do_POST).
+(() => {
+  const tokenPromise = fetch("/api/session-token").then(r => r.ok ? r.json() : { token: "" }).then(d => d.token || "").catch(() => "");
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    const method = ((init && init.method) || (input && input.method) || "GET").toUpperCase();
+    const url = typeof input === "string" ? input : (input && input.url) || "";
+    const sameOrigin = url.startsWith("/") || url.startsWith(location.origin);
+    if (method !== "GET" && sameOrigin) {
+      const token = await tokenPromise;
+      init = init || {};
+      const headers = new Headers(init.headers || (typeof input !== "string" && input.headers) || {});
+      if (token) headers.set("x-devkit-token", token);
+      init = { ...init, headers };
+    }
+    return originalFetch(input, init);
+  };
+})();
+</script>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+/* Page layout/state only. Component chrome comes from /tokens.css lm-* classes. */
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--lm-bg);color:var(--lm-text);font:var(--lm-fw-regular) var(--lm-fs-300)/var(--lm-lh-normal) var(--lm-font-ui)}
+
+/* Header — single compact bar */
+header{position:sticky;top:0;z-index:var(--lm-z-hud);background:var(--lm-surface-solid);border-bottom:1px solid var(--lm-border-cool);display:flex;align-items:center;gap:10px;padding:6px 16px;min-height:42px;flex-wrap:wrap}
+h1{font:var(--lm-fw-bold) var(--lm-fs-400)/var(--lm-lh-snug) var(--lm-font-display);color:var(--lm-text-gold);white-space:nowrap;flex-shrink:0}
+.search-wrap{position:relative;width:200px;flex-shrink:0}
+.search-wrap input{width:100%;padding-left:28px}
+.search-wrap::before{content:'\1F50D';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;opacity:.35}
+.hdr-select{font-size:var(--lm-fs-100);padding:4px 6px;cursor:pointer}
+.hdr-btn{padding:3px 8px;font-size:var(--lm-fs-100);white-space:nowrap}
+.hdr-btn.on,.hdr-btn[aria-pressed="true"]{background:linear-gradient(180deg,var(--lm-gold-300),var(--lm-gold-500));border-color:var(--lm-gold-600);color:var(--lm-accent-contrast)}
+.hdr-spacer{flex:1}
+.hdr-stats{color:var(--lm-text-muted);font-size:var(--lm-fs-100);white-space:nowrap;flex-shrink:0}
+.pager{display:flex;align-items:center;gap:4px;color:var(--lm-text-muted);font-size:var(--lm-fs-100);white-space:nowrap}
+.pager input{width:48px;padding:3px 5px;font-size:var(--lm-fs-100);text-align:center}
+
+/* Layout */
+.layout{display:flex;flex-direction:column;height:calc(100vh - 42px - 34px);overflow:hidden}
+
+/* Sidebar — minimal */
+aside{background:var(--lm-surface-solid);border-right:1px solid var(--lm-border-cool);padding:10px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--lm-border-cool) transparent;font-size:var(--lm-fs-100);display:none}
+.sb-label{color:var(--lm-text-gold);text-transform:uppercase;letter-spacing:var(--lm-tracking-label);font-size:9px;font-weight:var(--lm-fw-bold);margin:10px 0 4px}
+.sb-label:first-child{margin-top:0}
+.sb-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
+.sb-btn{padding:3px 7px;font-size:10px}
+.sb-btn.on{background:linear-gradient(180deg,var(--lm-gold-300),var(--lm-gold-500));border-color:var(--lm-gold-600);color:var(--lm-accent-contrast)}
+.sb-btn.wide{width:100%}
+.sb-info{color:var(--lm-text-muted);font-size:10px;line-height:1.3;margin:4px 0}
+.sb-summary{display:grid;gap:2px;color:var(--lm-text-muted);font-size:10px}
+.sb-summary b{color:var(--lm-text-gold)}
+.queue-list{display:flex;flex-direction:column;gap:2px;max-height:160px;overflow-y:auto}
+.queue-list .sb-btn{justify-content:space-between;display:flex;font-size:10px}
+.q-count{opacity:.5;margin-left:4px}
+.slider-row{display:flex;align-items:center;gap:6px}
+.slider-row input[type=range]{flex:1;accent-color:var(--lm-accent);height:3px}
+.slider-row span{font-size:10px;color:var(--lm-text-muted);min-width:22px;text-align:right}
+
+/* Main */
+main{overflow-y:auto;padding:10px;flex:1}
+
+/* Grid view */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--asset-card-w,240px),1fr));gap:10px}
+
+/* List view */
+.list-view{display:flex;flex-direction:column;gap:1px}
+.list-row{display:grid;grid-template-columns:48px 1fr 100px 90px 90px auto;gap:8px;align-items:center;padding:6px 10px;border-radius:var(--lm-radius-sm);font-size:var(--lm-fs-100);cursor:default}
+.list-row:hover{background:var(--lm-surface-raised)}
+.list-row img{width:48px;height:36px;object-fit:contain;border-radius:3px;cursor:zoom-in}
+.list-row .lr-id{font-weight:var(--lm-fw-semibold);font-size:var(--lm-fs-100);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-row .lr-path{font-size:10px;color:var(--lm-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-row .lr-cat{color:var(--lm-text-muted);font-size:10px}
+.list-row .lr-dec{font-size:10px;font-weight:var(--lm-fw-semibold)}
+.lr-dec.accepted{color:var(--lm-success)}.lr-dec.rejected{color:var(--lm-danger)}.lr-dec.needs-cleanup{color:var(--lm-amber-400)}.lr-dec.promote-later{color:var(--lm-info)}.lr-dec.unreviewed{color:var(--lm-text-muted);font-weight:var(--lm-fw-regular)}.lr-dec.hidden,.lr-dec.broken-preview{color:var(--lm-text-muted)}.lr-dec.runtime-promoted{color:var(--lm-info)}.lr-dec.pending-related{color:var(--lm-amber-400)}
+.list-row .lr-actions{display:flex;gap:3px;opacity:0;transition:opacity .1s}
+.list-row:hover .lr-actions{opacity:1}
+.lr-actions button{padding:2px 6px;font-size:9px}
+.lr-copy{padding:1px 4px;font-size:9px;background:none;border:1px solid transparent;border-radius:3px;color:var(--lm-text-muted);cursor:pointer;opacity:0;transition:opacity .1s}
+.list-row:hover .lr-copy{opacity:.6}
+.lr-copy:hover{opacity:1!important;border-color:var(--lm-border-cool)}
+
+/* Card */
+.card{overflow:hidden;position:relative;transition:border-color .12s}.card.selected,.list-row.selected{border-color:var(--lm-accent);box-shadow:var(--lm-glow-accent)}.sel-cb{position:absolute;top:6px;left:6px;z-index:5;accent-color:var(--lm-accent);cursor:pointer}
+.card:hover{border-color:var(--lm-border-strong)}
+.card.focused{border-color:var(--lm-accent)}
+.card.dup{border-left:2px solid var(--lm-info)}
+.card.has-fringe{box-shadow:inset 0 0 0 2px var(--lm-danger)}
+.card.compare-selected{border-color:var(--lm-info)}
+.card .dbar{position:absolute;top:0;left:0;right:0;height:2px;z-index:1}
+.dbar.accepted{background:var(--lm-success)}.dbar.rejected{background:var(--lm-danger)}.dbar.needs-cleanup{background:var(--lm-amber-400)}.dbar.promote-later{background:var(--lm-info)}.dbar.hidden{background:var(--lm-text-muted)}
+
+.thumb{height:var(--asset-thumb-h,150px);display:flex;align-items:center;justify-content:center;cursor:zoom-in;position:relative;overflow:hidden;background:var(--lm-slate-300);background-image:linear-gradient(45deg,var(--lm-slate-500) 25%,transparent 25%),linear-gradient(-45deg,var(--lm-slate-500) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--lm-slate-500) 75%),linear-gradient(-45deg,transparent 75%,var(--lm-slate-500) 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}
+.thumb.dark{background:var(--lm-bg);background-image:none}
+.thumb.light{background:var(--lm-slate-50);background-image:none}
+.thumb.grass{background-color:var(--lm-green-500);background-image:linear-gradient(135deg,var(--lm-green-400),var(--lm-green-500))}
+.thumb.stone{background-color:var(--lm-slate-500);background-image:linear-gradient(135deg,var(--lm-slate-300),var(--lm-slate-500))}
+.thumb.magenta{background:var(--lm-coral-400);background-image:none}
+.thumb img{max-width:100%;max-height:100%;object-fit:contain}
+.thumb.loading::after{content:'Loading preview...';position:absolute;left:8px;bottom:6px;background:color-mix(in srgb,var(--lm-bg) 78%,transparent);border:1px solid var(--lm-border-cool);border-radius:4px;padding:2px 6px;color:var(--lm-text-muted);font-size:10px;pointer-events:none}
+.thumb.loaded::after{display:none}
+.thumb.load-error{cursor:default}
+.thumb.low-content::before{content:'Low visible content';position:absolute;left:8px;top:6px;background:color-mix(in srgb,var(--lm-amber-400) 18%,var(--lm-surface-solid));border:1px solid color-mix(in srgb,var(--lm-amber-400) 45%,transparent);border-radius:4px;padding:2px 6px;color:var(--lm-amber-400);font-size:10px;z-index:2;pointer-events:none}
+.group-badge{position:absolute;right:6px;bottom:6px;cursor:pointer;z-index:2}
+.group-badge:hover{filter:brightness(1.12)}
+.mini-sel{font-size:10px;padding:1px 2px;max-width:96px;cursor:pointer}
+.mini-sel:hover{border-color:var(--lm-border-strong)}
+.thumb audio,.thumb video{width:88%}
+
+.cmeta{padding:8px 10px 6px}
+.cmeta .cid{font-weight:var(--lm-fw-semibold);font-size:var(--lm-fs-100);line-height:1.2;word-break:break-all;display:flex;align-items:center;gap:4px}
+.cmeta .cid .copy-btn{padding:0 3px;font-size:9px;background:none;border:1px solid transparent;border-radius:3px;color:var(--lm-text-muted);cursor:pointer;opacity:0;transition:opacity .1s;line-height:1.4}
+.card:hover .copy-btn{opacity:.5}
+.copy-btn:hover{opacity:1!important;border-color:var(--lm-border-cool)}
+.cmeta .cinfo{font-size:10px;color:var(--lm-text-muted);margin-top:2px;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.cdec{font-weight:600}
+.cdec.accepted{color:var(--lm-success)}.cdec.rejected{color:var(--lm-danger)}.cdec.needs-cleanup{color:var(--lm-amber-400)}.cdec.promote-later{color:var(--lm-info)}.cdec.considered{color:var(--lm-accent)}.cdec.unreviewed{color:var(--lm-text-muted);font-weight:var(--lm-fw-regular)}.cdec.hidden,.cdec.broken-preview{color:var(--lm-text-muted)}.cdec.runtime-promoted{color:var(--lm-info)}.cdec.pending-related{color:var(--lm-amber-400)}
+.cmeta .cpath{font-size:9px;color:var(--lm-text-muted);word-break:break-all;margin-top:3px;line-height:1.2;max-height:2.4em;overflow:hidden;display:flex;align-items:start;gap:4px}
+.cmeta .cpath .copy-btn{flex-shrink:0}
+.cbadges{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.reason-line{margin-top:5px;border-left:2px solid var(--lm-border-cool);padding-left:6px;color:var(--lm-text-muted);font-size:10px;line-height:1.25;max-height:2.5em;overflow:hidden}
+.reason-line.duplicate{border-left-color:var(--lm-danger);color:color-mix(in srgb,var(--lm-danger) 62%,var(--lm-text));background:color-mix(in srgb,var(--lm-danger) 8%,transparent);border-radius:2px;padding-top:2px;padding-bottom:2px}
+/* Card actions — single tight row */
+.cactions{display:flex;gap:3px;padding:4px 10px 8px;opacity:0;transition:opacity .1s}
+.card:hover .cactions,.card.focused .cactions{opacity:1}
+.cactions button{flex:1;padding:4px 2px;font-size:9px}
+.cactions .cd{flex:.55}.cactions .cp{flex:.8}
+
+/* Expandable */
+.card-expand{padding:0 10px 8px;display:none;font-size:11px}
+.card.expanded .card-expand{display:block}
+.card-expand textarea{width:100%;height:40px;font-size:11px;padding:4px 6px;resize:vertical}
+.card-expand .xbtns{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.card-expand .xbtns button{padding:2px 6px;font-size:9px}
+.xtoggle{text-align:center;padding:2px;font-size:9px;color:var(--lm-text-muted);cursor:pointer;opacity:0;transition:all .1s}
+.card:hover .xtoggle{opacity:.6}
+.xtoggle:hover{opacity:1!important;color:var(--lm-text)}
+
+/* Related */
+.related-box{margin-top:6px;border:1px solid var(--lm-border-cool);border-radius:4px;background:var(--lm-surface-sunken);padding:6px;font-size:10px}
+.related-box ul{margin:3px 0 0;padding-left:12px;max-height:80px;overflow:auto}
+.related-box li{margin-bottom:2px;color:var(--lm-text-muted);font-size:9px}
+.related-box .sb-row{margin-top:4px}
+
+/* Game sizes */
+.sizes{display:flex;gap:6px;align-items:flex-end;margin-top:6px}
+.sizebox{background:var(--lm-surface-sunken);border:1px solid var(--lm-border-cool);display:flex;align-items:center;justify-content:center;border-radius:2px}
+.sizebox img{max-width:100%;max-height:100%;object-fit:contain}
+.sz-label{font-size:9px;color:var(--lm-text-muted);margin-bottom:1px}
+
+/* Lightbox */
+.lightbox{position:fixed;inset:0;z-index:var(--lm-z-overlay);background:color-mix(in srgb,var(--lm-bg) 95%,transparent);display:none;align-items:center;justify-content:center;cursor:zoom-out;flex-direction:column}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:85vh;object-fit:contain;image-rendering:pixelated;transition:transform .06s ease}
+.lb-ui{position:absolute;z-index:calc(var(--lm-z-overlay) + 1)}
+.lb-close{top:12px;right:16px;color:var(--lm-text-dim);font-size:24px;cursor:pointer;transition:color .1s}
+.lb-close:hover{color:var(--lm-text)}
+.lb-hint{top:12px;left:16px;color:var(--lm-text-dim);font-size:10px}
+.lb-info{bottom:12px;left:50%;transform:translateX(-50%);color:var(--lm-text-muted);font-size:11px;background:color-mix(in srgb,var(--lm-bg) 70%,transparent);padding:4px 12px;border-radius:4px;white-space:nowrap}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:30px;color:var(--lm-text-dim);cursor:pointer;padding:16px;transition:color .1s;user-select:none;z-index:calc(var(--lm-z-overlay) + 1)}
+.lb-nav:hover{color:var(--lm-text)}
+.lb-prev{left:6px}.lb-next{right:6px}
+.lb-counter{position:absolute;top:12px;left:50%;transform:translateX(-50%);color:var(--lm-text-dim);font-size:11px;z-index:calc(var(--lm-z-overlay) + 1)}
+
+/* Compare */
+.compare-overlay{position:fixed;inset:0;z-index:var(--lm-z-overlay);background:color-mix(in srgb,var(--lm-bg) 96%,transparent);display:none;flex-direction:column}
+.compare-overlay.open{display:flex}
+.compare-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--lm-border-cool)}
+.compare-header h2{font-size:var(--lm-fs-300);font-weight:var(--lm-fw-medium)}
+.compare-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1px;overflow:hidden}
+.compare-pane{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;overflow:auto;background:var(--lm-surface-sunken)}
+.compare-pane img{max-width:100%;max-height:70vh;object-fit:contain;image-rendering:pixelated}
+.compare-pane .meta{text-align:center;margin-top:8px;font-size:11px;color:var(--lm-text-muted)}
+.compare-pane .meta b{color:var(--lm-text)}
+.compare-ph{color:var(--lm-text-muted);font-size:12px}
+
+/* Toast */
+.toast{position:fixed;right:14px;bottom:14px;z-index:var(--lm-z-toast);display:none;align-items:center;gap:10px}
+.toast.show{display:flex}
+.toast .undo-btn{font-size:10px;white-space:nowrap}
+
+/* Progress bar */
+.progress-wrap{position:relative;height:3px;background:var(--lm-bar-track);flex:0 0 80px;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--lm-success);border-radius:2px;transition:width .3s}
+.progress-text{font-size:9px;color:var(--lm-text-muted);white-space:nowrap}
+
+/* Spritesheet animation in lightbox */
+.lb-anim-controls{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;z-index:calc(var(--lm-z-overlay) + 2);background:color-mix(in srgb,var(--lm-bg) 80%,transparent);padding:4px 10px;border-radius:4px}
+.lb-anim-controls button{padding:2px 8px;font-size:10px}
+.lb-anim-controls button.on{background:linear-gradient(180deg,var(--lm-gold-300),var(--lm-gold-500));border-color:var(--lm-gold-600);color:var(--lm-accent-contrast)}
+.lb-anim-controls span{font-size:10px;color:var(--lm-text-muted)}
+.lb-anim-controls input[type=range]{width:60px;accent-color:var(--lm-accent);height:3px}
+
+/* Misc */
+.media-fallback{display:grid;gap:4px;place-items:center;text-align:center;color:var(--lm-text-muted);padding:10px;font-size:11px}
+.media-fallback strong{color:var(--lm-text)}
+.media-fallback a{font-size:10px}
+.broken-img{color:var(--lm-amber-400);font-size:10px;padding:8px;text-align:center;display:grid;gap:6px;place-items:center}
+.broken-img button{padding:2px 8px;font-size:10px}
+.diag-box{margin-top:6px;border:1px solid var(--lm-border-cool);border-radius:4px;background:var(--lm-surface-sunken);padding:6px;font-size:10px;color:var(--lm-text-muted);line-height:1.45}
+.diag-box b{color:var(--lm-text)}
+.diag-box.warn{border-color:color-mix(in srgb,var(--lm-amber-400) 45%,transparent);color:var(--lm-amber-400)}
+.diag-box.bad{border-color:color-mix(in srgb,var(--lm-danger) 45%,transparent);color:var(--lm-danger)}
+.empty{text-align:center;padding:50px 16px;color:var(--lm-text-muted);font-size:var(--lm-fs-300)}
+.empty.offline{max-width:560px;margin:40px auto;padding:24px 18px;display:grid;gap:10px}
+.empty.offline strong{color:var(--lm-text-gold);font-size:var(--lm-fs-500)}
+.offline-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.fs-btn{position:fixed;bottom:10px;right:10px;z-index:9;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+.kb-hint{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:9;background:color-mix(in srgb,var(--lm-surface-solid) 92%,transparent);border:1px solid var(--lm-border-cool);border-radius:4px;padding:3px 10px;font-size:10px;color:var(--lm-text-muted);pointer-events:none;opacity:0;transition:opacity .25s}
+.kb-hint.show{opacity:1}
+.kb-hint kbd{background:var(--lm-surface-raised);border:1px solid var(--lm-border-cool);border-radius:2px;padding:0 4px;margin:0 1px;font-size:9px;color:var(--lm-text)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--lm-border-cool);border-radius:3px}
+@media(max-width:860px){aside{border-right:0;border-bottom:1px solid var(--lm-border-cool)}}
+@media(max-width:860px){.hdr-spacer{display:none}.search-wrap{width:min(100%,220px)}}
+/* Special views */
+.special-view{padding:20px;overflow-y:auto;max-height:calc(100vh - 100px)}
+.sv-section{margin-bottom:24px}
+.sv-section h2{font-size:var(--lm-fs-500);font-weight:var(--lm-fw-semibold);margin-bottom:12px;color:var(--lm-text-gold)}
+.sv-section h3{font-size:var(--lm-fs-300);font-weight:var(--lm-fw-semibold);margin:12px 0 6px;color:var(--lm-text)}
+.sv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.sv-card{padding:12px;cursor:pointer;transition:border-color .12s}
+.sv-card:hover{border-color:var(--lm-border-strong)}
+.sv-card .sv-title{font-weight:var(--lm-fw-semibold);font-size:var(--lm-fs-400);margin-bottom:4px}
+.sv-card .sv-sub{font-size:var(--lm-fs-100);color:var(--lm-text-muted)}
+.sv-card .sv-bar{height:6px;background:var(--lm-bar-track);border-radius:3px;margin-top:8px;overflow:hidden}
+.sv-card .sv-fill{height:100%;background:var(--lm-success);border-radius:3px;transition:width .3s}
+.sv-card .sv-fill.low{background:var(--lm-danger)}.sv-card .sv-fill.mid{background:var(--lm-amber-400)}
+/* Entity profile detail */
+.ep-detail{padding:16px}
+.ep-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.ep-header h2{font-size:var(--lm-fs-600);font-weight:var(--lm-fw-semibold)}
+.ep-header .ep-type{font-size:var(--lm-fs-100)}
+.ep-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.ep-slot{padding:8px;display:flex;align-items:center;gap:8px}
+.ep-slot.filled{border-color:var(--lm-success)}.ep-slot.empty{border-color:var(--lm-border-cool);border-style:dashed}
+.ep-slot.required{border-color:var(--lm-danger);border-style:dashed}
+.ep-slot .ep-slot-name{font-size:var(--lm-fs-100);color:var(--lm-text-muted);min-width:80px}
+.ep-slot .ep-slot-asset{font-size:var(--lm-fs-100);color:var(--lm-text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ep-slot .ep-slot-status{font-size:10px;padding:1px 6px;border-radius:8px}
+.ep-slot img{width:80px;height:80px;object-fit:contain;border-radius:3px;background:var(--lm-surface-sunken);cursor:pointer}
+.ep-slot .ep-assign{font-size:10px;padding:2px 6px}
+/* Zone pack detail */
+.zp-layer{margin-bottom:12px}
+.zp-layer-title{font-size:var(--lm-fs-200);font-weight:var(--lm-fw-semibold);color:var(--lm-text-muted);margin-bottom:6px;text-transform:uppercase}
+.zp-assets{display:flex;flex-wrap:wrap;gap:6px}
+.zp-asset{width:64px;height:64px;background:var(--lm-surface-sunken);border:1px solid var(--lm-border-cool);border-radius:4px;overflow:hidden;cursor:pointer}
+.zp-asset img{width:100%;height:100%;object-fit:contain}
+.zp-asset{position:relative}.zp-asset:hover{border-color:var(--lm-border-strong)}.zp-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;background:color-mix(in srgb,var(--lm-bg) 70%,transparent);color:var(--lm-danger);border-radius:50%;font-size:12px;line-height:16px;text-align:center;cursor:pointer;display:none}.zp-asset:hover .zp-remove{display:block}
+/* Coverage */
+.cov-entity{padding:10px;margin-bottom:8px}
+.cov-entity .cov-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cov-entity .cov-name{font-weight:var(--lm-fw-semibold);font-size:var(--lm-fs-300)}
+.cov-entity .cov-pct{font-size:var(--lm-fs-100);color:var(--lm-text-muted)}
+.cov-slots{display:flex;flex-wrap:wrap;gap:4px}
+.cov-slot{font-size:10px;padding:2px 6px;border-radius:8px}
+.cov-slot.filled{color:var(--lm-success);border:1px solid color-mix(in srgb,var(--lm-success) 45%,transparent)}.cov-slot.missing{color:var(--lm-danger);border:1px solid color-mix(in srgb,var(--lm-danger) 45%,transparent)}
+/* Collection */
+.coll-grid{display:flex;flex-wrap:wrap;gap:8px}
+.coll-item{width:80px;text-align:center;cursor:pointer}
+.coll-item img{width:64px;height:64px;object-fit:contain;background:var(--lm-surface-sunken);border:1px solid var(--lm-border-cool);border-radius:4px}
+.coll-item:hover img{border-color:var(--lm-border-strong)}.coll-item:hover .zp-remove{display:block!important}
+.coll-item .coll-label{font-size:9px;color:var(--lm-text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-back{display:inline-flex;align-items:center;gap:4px;font-size:var(--lm-fs-200);cursor:pointer;margin-bottom:12px}
+.sv-back:hover{text-decoration:underline}
+/* Search modal */
+.search-modal{position:fixed;inset:0;z-index:var(--lm-z-overlay);background:color-mix(in srgb,var(--lm-bg) 85%,transparent);display:none;align-items:flex-start;justify-content:center;padding-top:10vh}
+.search-modal.open{display:flex}
+.search-modal-box{width:560px;max-height:70vh;display:flex;flex-direction:column}
+.sm-header{padding:12px 16px;border-bottom:1px solid var(--lm-border-cool);display:flex;gap:8px;align-items:center}
+.sm-header input{flex:1;padding:8px 12px;font-size:var(--lm-fs-300)}
+.sm-close{background:none;border:none;color:var(--lm-text-muted);font-size:20px;cursor:pointer;padding:0 4px}.sm-close:hover{color:var(--lm-text)}
+.sm-results{overflow-y:auto;padding:8px;flex:1;min-height:120px}
+.sm-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:background .08s}
+.sm-item:hover,.sm-item.sm-focused{background:var(--lm-surface-raised)}
+.sm-item img{width:48px;height:48px;object-fit:contain;border-radius:4px;background:var(--lm-surface-sunken)}
+.sm-item-info{flex:1;min-width:0}
+.sm-item-name{font-size:var(--lm-fs-200);font-weight:var(--lm-fw-semibold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sm-item-meta{font-size:10px;color:var(--lm-text-muted)}
+.sm-empty{text-align:center;padding:24px;color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+.sm-hint{padding:4px 16px 8px;font-size:10px;color:var(--lm-text-muted);border-top:1px solid var(--lm-border-cool)}
+/* Slideshow */
+.slideshow{position:fixed;inset:0;z-index:var(--lm-z-overlay);background:color-mix(in srgb,var(--lm-bg) 97%,transparent);display:none;flex-direction:column;align-items:center;justify-content:center}
+.slideshow.open{display:flex}
+.ss-media{max-width:85vw;max-height:70vh;object-fit:contain;image-rendering:pixelated}
+.ss-info{position:absolute;bottom:60px;text-align:center;color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+.ss-info b{color:var(--lm-text)}
+.ss-controls{position:absolute;bottom:16px;display:flex;gap:8px;align-items:center}
+.ss-controls button{padding:6px 14px;font-size:var(--lm-fs-100)}
+.ss-counter{position:absolute;top:16px;left:50%;transform:translateX(-50%);color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+.ss-close{position:absolute;top:12px;right:16px;color:var(--lm-text-dim);font-size:24px;cursor:pointer}.ss-close:hover{color:var(--lm-text)}
+.ss-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:36px;color:var(--lm-text-dim);cursor:pointer;padding:16px;user-select:none}.ss-nav:hover{color:var(--lm-text)}
+.ss-prev{left:6px}.ss-next{right:6px}
+/* Slot indicators on cards */
+.slot-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap}
+.slot-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--lm-border-cool)}.slot-dot.filled{background:var(--lm-success);border-color:var(--lm-success)}.slot-dot.missing{background:transparent;border-color:var(--lm-danger)}.slot-dot.opt{border-color:var(--lm-text-muted)}
+/* SV search bar */
+.sv-search{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.sv-search input{flex:1;max-width:300px;padding:6px 12px;font-size:var(--lm-fs-200)}
+.sv-create-btn,.sv-export-btn{padding:4px 10px;font-size:var(--lm-fs-100)}
+/* Promote button */
+.sv-promote-btn,.sv-unpromote-btn{padding:4px 10px;font-size:var(--lm-fs-100)}
+.qg-result{margin-top:8px;padding:8px 12px;border-radius:4px;font-size:11px;line-height:1.5}
+.qg-result.pass{border:1px solid color-mix(in srgb,var(--lm-success) 45%,transparent);color:var(--lm-success)}
+.qg-result.fail{border:1px solid color-mix(in srgb,var(--lm-danger) 45%,transparent);color:var(--lm-danger)}
+.qg-result .qg-warn{color:var(--lm-amber-400)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Asset Review</h1>
+  <div class="search-wrap"><input class="lm-input" id="q" placeholder="Search..." autocomplete="off"></div>
+  <select class="lm-select hdr-select" id="mode"><option value="best">Best First</option><option value="zone">Zone</option><option value="characters">Characters</option><option value="vfx">VFX</option><option value="audio">Audio</option><option value="cleanup">Cleanup</option><option value="accepted">Accepted</option><option value="similar">Similar</option><option value="hidden">Hidden</option><option value="all">All</option><option value="entities">Entities</option><option value="zones">Zones</option><option value="collections">Collections</option><option value="coverage">Coverage</option></select>
+  <select class="lm-select hdr-select" id="sort"><option value="decision">By Decision</option><option value="default">Default</option><option value="name-asc">Name A-Z</option><option value="name-desc">Name Z-A</option><option value="size-desc">Largest</option><option value="size-asc">Smallest</option><option value="category">By Category</option><option value="readiness">By Readiness</option></select>
+  <select class="lm-select hdr-select" id="bg"><option value="dark" selected>Dark</option><option value="checker">Checker</option><option value="light">Light</option><option value="grass">Grass</option><option value="stone">Stone</option><option value="magenta">Magenta</option></select>
+  <button class="lm-btn hdr-btn" id="viewToggle" title="Toggle grid/list view">List</button>
+  <button class="lm-btn lm-btn--toggle hdr-btn" aria-pressed="true" id="groupToggle" title="Collapse animation frames/variants into one card per entity" onclick="toggleGroup()">Group: on</button>
+  <button class="lm-btn hdr-btn" id="healthBtn" title="Asset Bank health report">Health</button>
+  <span class="lm-badge" id="driftBadge" title="Runtime-vs-bank reconcile drift" style="display:none">Drift 0</span>
+  <button class="lm-btn lm-btn--primary hdr-btn" id="entityBack" style="display:none" onclick="exitEntity()">← Back to all</button>
+  <div class="hdr-spacer"></div>
+  <button class="lm-btn hdr-btn" id="slideshowBtn" title="Slideshow review mode">Slideshow</button>
+  <button class="lm-btn hdr-btn" id="refreshBtn">Refresh</button>
+  <button class="lm-btn hdr-btn" id="exportBtn">Export</button>
+  <div class="pager" id="pagerTop">
+    <button class="lm-btn hdr-btn" id="prevPageBtn" title="Previous page">Prev</button>
+    <span>Page</span><input class="lm-input" id="pageInput" type="number" min="1" value="1">
+    <span id="pageTotal">/ 1</span>
+    <button class="lm-btn hdr-btn" id="nextPageBtn" title="Next page">Next</button>
+  </div>
+  <span class="progress-text" id="progressText"></span>
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="hdr-stats" id="stats"></span>
+</header>
+
+<!-- Filter row — always visible -->
+<div id="filterBar" style="display:flex;padding:4px 16px;background:var(--lm-surface-solid);border-bottom:1px solid var(--lm-border-cool);gap:6px;flex-wrap:wrap;align-items:center">
+  <select class="lm-select hdr-select" id="category" title="Group: where the asset belongs, like monsters, props, ui, or vfx"><option value="">All groups</option></select>
+  <select class="lm-select hdr-select" id="kind" title="Subcategory inside the selected group"><option value="">All subcategories</option></select>
+  <select class="lm-select hdr-select" id="status" title="Catalog/file status, not review decision"><option value="">All catalog statuses</option></select>
+  <select class="lm-select hdr-select" id="decision" title="Review decision"><option value="">All review decisions</option></select>
+  <select class="lm-select hdr-select" id="readiness"><option value="">All readiness</option></select>
+  <button class="lm-btn hdr-btn" id="sheetsBtn">Sheets</button>
+  <button class="lm-btn hdr-btn" id="archiveBtn">Archive</button>
+  <button class="lm-btn hdr-btn" id="supportBtn">Support</button>
+  <button class="lm-btn lm-btn--toggle hdr-btn on" aria-pressed="true" id="cropPreviewBtn" title="Crop previews to visible pixels for the grid">Crop previews</button>
+  <div style="flex:1"></div>
+  <span style="font-size:10px;color:var(--lm-text-muted)">Per page</span>
+  <select class="lm-select hdr-select" id="pageSize"><option>50</option><option selected>100</option><option>200</option></select>
+  <div class="slider-row" style="gap:4px">
+    <span style="font-size:10px;color:var(--lm-text-muted)">Size</span>
+    <input type="range" id="thumbSlider" min="140" max="450" value="240" step="10" style="width:80px">
+    <span id="thumbVal" style="font-size:10px;color:var(--lm-text-muted);min-width:22px">240</span>
+  </div>
+  <button class="lm-btn hdr-btn" id="compareToggle" title="Shift+click two cards">Compare</button>
+</div>
+
+<div id="bulkBar" style="display:none;padding:4px 16px;background:var(--lm-accent);color:var(--lm-accent-contrast);gap:8px;align-items:center;font-size:13px;font-weight:600">
+  <span id="bulkCount">0 selected</span>
+  <button class="lm-btn hdr-btn" onclick="bulkAction('accepted')">Accept</button>
+  <button class="lm-btn hdr-btn" onclick="bulkAction('needs-cleanup')">Cleanup</button>
+  <button class="lm-btn hdr-btn" onclick="bulkAction('rejected')">Reject</button>
+  <button class="lm-btn hdr-btn" onclick="bulkAction('promote-later')">Later</button>
+  <button class="lm-btn lm-btn--danger hdr-btn" onclick="bulkRemoveFromBank()">Remove</button>
+  <span style="opacity:.55">|</span>
+  <select id="bulkCat" class="lm-select hdr-select"><option value="">Group...</option><option value="monsters">Monsters</option><option value="npcs">NPCs</option><option value="players">Players</option><option value="characters">Characters</option><option value="environments">Environments</option><option value="tilesets">Tilesets</option><option value="decals">Decals</option><option value="ui">UI</option><option value="vfx">VFX</option><option value="items">Items</option><option value="props">Props</option><option value="icons">Icons</option><option value="portraits">Portraits</option><option value="backgrounds">Backgrounds</option><option value="audio">Audio</option><option value="animation">Animation</option><option value="unknown">Unknown</option></select>
+  <select id="bulkKind" class="lm-select hdr-select"><option value="">Subcategory...</option><option value="sprite">Final sprites</option><option value="spritesheet">Animation sheets</option><option value="contact_sheet">Contact sheets</option><option value="source_sheet">Source sheets</option><option value="source">Source files</option><option value="prop">Props</option><option value="tile">Tiles</option><option value="decal">Decals</option><option value="transition-decal">Transition decals</option><option value="icon">Icons</option><option value="portrait">Portraits</option><option value="vfx">VFX</option><option value="audio">Audio</option><option value="video">Video</option></select>
+  <button class="lm-btn hdr-btn" onclick="bulkRecategorize()">Set</button>
+  <div style="flex:1"></div>
+  <button class="lm-btn hdr-btn" onclick="clearSelection()">Clear</button>
+</div>
+<div class="layout" id="layout">
+<aside>
+  <div class="sb-summary" id="summary"></div>
+  <div class="sb-label">Batch</div>
+  <div class="sb-row">
+    <button class="lm-btn lm-btn--primary sb-btn accept" data-batch="accepted">Accept</button>
+    <button class="lm-btn sb-btn cleanup" data-batch="needs-cleanup">Cleanup</button>
+    <button class="lm-btn sb-btn later" data-batch="promote-later">Later</button>
+    <button class="lm-btn lm-btn--danger sb-btn reject" data-batch="rejected">Reject</button>
+  </div>
+  <button class="lm-btn sb-btn wide" id="batchAllBtn">All filtered...</button>
+  <div class="sb-label">Queues</div>
+  <div class="sb-row">
+    <button class="lm-btn lm-btn--toggle sb-btn on" aria-pressed="true" id="clearQueueBtn">None</button>
+    <button class="lm-btn lm-btn--toggle sb-btn" aria-pressed="false" id="clearGroupBtn">No Group</button>
+  </div>
+  <div class="queue-list" id="queues"></div>
+  <button class="lm-btn sb-btn wide" id="packBtn">Generate Pack</button>
+</aside>
+
+<main>
+  <div id="grid" class="grid"></div>
+  <div id="listView" class="list-view" style="display:none"></div>
+  <div class="empty" id="emptyState" style="display:none">No assets match your filters</div>
+  <div id="pageBar" style="text-align:center;padding:20px;display:none">
+    <button class="lm-btn hdr-btn" onclick="pagePrev()" style="padding:8px 18px;font-size:12px">Previous</button>
+    <span id="pageInfo" style="display:inline-block;margin:0 12px;font-size:11px;color:var(--lm-text-muted)"></span>
+    <button class="lm-btn hdr-btn" onclick="pageNext()" style="padding:8px 18px;font-size:12px">Next</button>
+  </div>
+</main>
+</div>
+
+<!-- Special views (entities, zones, collections, coverage) -->
+<div id="specialView" class="special-view" style="display:none"></div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+  <span class="lb-ui lb-close" onclick="closeLightbox()">&times;</span>
+  <span class="lb-ui lb-hint">Scroll zoom &middot; Drag pan &middot; Arrows prev/next</span>
+  <span class="lb-counter lb-ui" id="lbCounter"></span>
+  <span class="lb-nav lb-prev" onclick="event.stopPropagation();lbPrev()">&#8249;</span>
+  <span class="lb-nav lb-next" onclick="event.stopPropagation();lbNext()">&#8250;</span>
+  <img id="lightboxImg" src="" onclick="event.stopPropagation()" draggable="false">
+  <div class="lb-ui lb-info" id="lightboxInfo"></div>
+  <div class="lb-anim-controls" id="lbAnimControls" style="display:none">
+    <button id="lbAnimToggle" onclick="event.stopPropagation();toggleSheetAnim()">Play</button>
+    <span id="lbAnimFrame">1/1</span>
+    <span>FPS</span>
+    <input type="range" id="lbAnimFps" min="2" max="30" value="8" onclick="event.stopPropagation()" oninput="event.stopPropagation();updateSheetFps(this.value)">
+    <span id="lbAnimFpsVal">8</span>
+  </div>
+</div>
+
+<!-- Compare -->
+<div id="compareOverlay" class="compare-overlay">
+  <div class="compare-header"><h2>Compare</h2><div style="display:flex;gap:4px"><button class="lm-btn hdr-btn" onclick="clearCompare()">Clear</button><button class="lm-btn hdr-btn" onclick="closeCompare()">Close</button></div></div>
+  <div class="compare-body">
+    <div class="compare-pane" id="compareA"><span class="compare-ph">Shift+click a card</span></div>
+    <div class="compare-pane" id="compareB"><span class="compare-ph">Shift+click another</span></div>
+  </div>
+</div>
+
+<!-- Search Modal -->
+<div id="searchModal" class="search-modal" onclick="if(event.target===this)closeSearchModal()">
+  <div class="lm-card search-modal-box">
+    <div class="sm-header">
+      <input class="lm-input" id="smInput" placeholder="Type to search assets..." autocomplete="off">
+      <button class="sm-close" onclick="closeSearchModal()">&times;</button>
+    </div>
+    <div class="sm-results" id="smResults"><div class="sm-empty">Start typing to search...</div></div>
+    <div class="sm-hint">↑↓ navigate · Enter select · Esc close</div>
+  </div>
+</div>
+
+<!-- Slideshow -->
+<div id="slideshow" class="slideshow">
+  <span class="ss-close" onclick="closeSlideshow()">&times;</span>
+  <span class="ss-counter" id="ssCounter">1/1</span>
+  <span class="ss-nav ss-prev" onclick="ssNav(-1)">&#8249;</span>
+  <span class="ss-nav ss-next" onclick="ssNav(1)">&#8250;</span>
+  <img id="ssMedia" class="ss-media" src="">
+  <div class="ss-info" id="ssInfo"></div>
+  <div class="ss-controls">
+    <button class="lm-btn lm-btn--primary ss-accept" onclick="ssReview('accepted')">Accept (A)</button>
+    <button class="lm-btn ss-cleanup" onclick="ssReview('needs-cleanup')">Cleanup (C)</button>
+    <button class="lm-btn ss-later" onclick="ssReview('promote-later')">Later (L)</button>
+    <button class="lm-btn lm-btn--danger ss-reject" onclick="ssReview('rejected')">Reject (R)</button>
+    <button class="lm-btn" onclick="closeSlideshow()">Exit (Esc)</button>
+  </div>
+</div>
+
+<button class="lm-btn fs-btn" id="fsToggle" title="Fullscreen (F11)">&#x26F6;</button>
+<div class="kb-hint" id="kbHint"><kbd>←→↑↓</kbd> Navigate <kbd>Space</kbd> Select <kbd>Enter</kbd> Zoom <kbd>A</kbd> Accept <kbd>R</kbd> Reject <kbd>C</kbd> Cleanup <kbd>L</kbd> Later <kbd>E</kbd> Expand <kbd>N</kbd>/<kbd>P</kbd> Page <kbd>V</kbd> View <kbd>/</kbd> Search <kbd>?</kbd> Help <kbd>F11</kbd> Fullscreen</div>
+<div class="lm-toast toast" id="toast"></div>
+
+<script>
+const URL_PARAMS=new URLSearchParams(location.search);
+const VISUAL_KINDS=['sprite','spritesheet','contact_sheet','source_sheet','prop','tile','decal','transition-decal','icon','portrait','vfx','image','source'];
+let DATA={assets:[]},STATUS={reviews:[]},QUEUES={queues:{}},RELATED={groups:{},asset_to_group:{}},RECONCILE={driftCount:0};
+let assets=[],decisions={},pageSize=parseInt(localStorage.getItem('assetReviewPageSize')||URL_PARAMS.get('pageSize')||'100',10),currentPage=0,showArchive=false,showSupport=false,showSheets=false,cropPreview=true;
+let decisionsByPath={};
+let activeQueue=URL_PARAMS.get('queue')||'',activeGroup=URL_PARAMS.get('group')||'';
+let duplicateCounts={},assetMap={};
+let focusedCardId=null,compareSlots=[null,null],filteredList=[],expandedCards=new Set(),selectedCards=new Set(),lastSelectedCardId=null;
+let bankOfflineState=null;
+let diagnosticsCache={};
+let groupEntities=true,activeEntityGroup=null,healthOpen=false;
+function animationFamilyKey(a){
+  const raw=[a.id||'',a.name||'',pathOf(a)||''].join('_').toLowerCase().replace(/\.[a-z0-9]+/g,'_');
+  const entity=raw.match(/(?:^|[_/\\-])((?:monster|npc|player|class)_[a-z0-9]+(?:_[a-z0-9]+)*?)(?=_(?:concept|master|idle|walk|run|attack|cast|hurt|hit|die|death|spawn|move|portrait|source|animation|contact|frame|sheet|128|256|384|south|north|east|west|side)(?:_|$)|$)/i);
+  if(entity)return 'family::'+entity[1];
+  return '';
+}
+// Derive an animation-series key so frames/variants of one action collapse into one card.
+function animationSeriesKey(a){
+  const p=(pathOf(a)||'').replace(/\\/g,'/');const dir=p.split('/').slice(0,-1).join('/');const name=(a.id||'');
+  if(/animation-source|contact_sliced|sliced_candidates|\/frames?\//i.test(dir))return 'dir::'+dir;
+  const m=name.match(/^(.*?)[_-](?:contact[_-])?frame[_-]?\d+/i);
+  if(m)return 'grp::'+dir+'::'+m[1];
+  return 'one::'+a.id;
+}
+// Top-level entity grouping may collapse multiple animations for one character.
+function entityKey(a){const rg=relatedGroup(a);return rg?'related::'+rg:(animationFamilyKey(a)||animationSeriesKey(a))}
+// Drilled entity views keep action/variant groups visible instead of dumping every frame.
+function detailEntityKey(a){return animationSeriesKey(a)}
+function toggleGroup(){groupEntities=!groupEntities;activeEntityGroup=null;$('groupToggle').textContent='Group: '+(groupEntities?'on':'off');$('entityBack').style.display='none';buildFilters();resetPage();render()}
+function drillEntity(k){activeEntityGroup=decodeURIComponent(k);$('entityBack').style.display='';buildFilters();resetPage();render();window.scrollTo(0,0)}
+function exitEntity(){activeEntityGroup=null;$('entityBack').style.display='none';buildFilters();resetPage();render();window.scrollTo(0,0)}
+let viewMode='grid';
+
+const $=id=>document.getElementById(id);
+const enc=s=>encodeURI(s||'').replace(/#/g,'%23');
+const esc=s=>(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const GROUP_LABELS={audio:'Audio',characters:'Characters',decals:'Decals',environments:'Environments',items:'Items',monsters:'Monsters',npcs:'NPCs',players:'Players',props:'Props',tilesets:'Tilesets',ui:'UI',vfx:'VFX',icons:'Icons',portraits:'Portraits',backgrounds:'Backgrounds',animation:'Animation',unknown:'Unknown'};
+const SUBCATEGORY_LABELS={sprite:'Final sprites',spritesheet:'Animation sheets',contact_sheet:'Contact sheets',source_sheet:'Source sheets',source:'Source files',prop:'Props',tile:'Tiles',decal:'Decals','transition-decal':'Transition decals',icon:'Icons',portrait:'Portraits',vfx:'VFX',audio:'Audio',video:'Video',document:'Documents',bgm:'Audio · BGM',ambience:'Audio · Ambience','sfx/combat':'Audio · SFX Combat','sfx/ui':'Audio · SFX UI',candidates:'Audio · Candidates'};
+function groupLabel(value){return GROUP_LABELS[value]||value}
+function subcategoryLabel(value){return SUBCATEGORY_LABELS[value]||(value&&value.startsWith('sfx/monsters/')?'Audio · SFX '+value.slice('sfx/monsters/'.length):value)}
+// The review UI models "subcategory" as the kind field; audio rows carry a folder-family
+// subcategory (bgm, sfx/combat, sfx/monsters/<id>, sfx/ui) so the filter splits the Audio bucket.
+function subcat(a){return a.subcategory||a.kind}
+function selectedGroupLabel(){
+  const group=$('category')?.value||'';
+  return group?groupLabel(group).replace(/s$/,'').toLowerCase():'';
+}
+function labelForFilter(id,value){
+  if(id==='category')return groupLabel(value);
+  if(id==='kind')return subcategoryLabel(value);
+  if(id==='status'&&value==='unknown')return'uncategorized catalog status';
+  if(id==='status')return'catalog '+value;
+  if(id==='decision'&&value==='runtime-promoted')return'review runtime promoted';
+  if(id==='decision'&&value==='promote-later')return'review promote later';
+  if(id==='decision'&&value==='needs-cleanup')return'review needs cleanup';
+  if(id==='decision'&&value==='pending-related')return'review pending related';
+  if(id==='decision'&&value==='broken-preview')return'review broken preview';
+  if(id==='decision')return'review '+value;
+  return value;
+}
+function decisionBadgeClass(decision){
+  if(decision==='accepted'||decision==='runtime-promoted')return'lm-badge--ok';
+  if(decision==='rejected'||decision==='hidden'||decision==='broken-preview')return'lm-badge--danger';
+  if(decision==='needs-cleanup'||decision==='pending-related')return'lm-badge--warn';
+  if(decision==='promote-later'||decision==='considered')return'lm-badge--info';
+  return'';
+}
+function readinessBadgeClass(kind){
+  if(kind==='ready')return'lm-badge--ok';
+  if(kind==='bad')return'lm-badge--danger';
+  if(kind==='warn')return'lm-badge--warn';
+  if(kind==='concept')return'lm-badge--info';
+  return'';
+}
+
+let lastUndo=null;
+function toast(msg,undoFn){
+  const el=$('toast');el.innerHTML='';clearTimeout(el._t);
+  el.appendChild(document.createTextNode(msg));
+  if(undoFn){lastUndo=undoFn;const btn=document.createElement('button');btn.className='lm-btn undo-btn';btn.textContent='Undo';btn.onclick=()=>{undoFn();el.classList.remove('show','lm-toast--enter');lastUndo=null};el.appendChild(btn)}
+  el.classList.remove('lm-toast--enter');void el.offsetWidth;el.classList.add('show','lm-toast--enter');el._t=setTimeout(()=>{el.classList.remove('show','lm-toast--enter');lastUndo=null},undoFn?5000:1800);
+}
+async function api(path,opts){
+  const r=await fetch(path,opts);
+  if(!r.ok){
+    let message=await r.text();
+    try{const parsed=JSON.parse(message);message=parsed.error||message}catch{}
+    throw new Error(message);
+  }
+  return r.json();
+}
+function devkitStartUrl(){
+  return location.port && location.port !== '8765' ? '/api/start-asset-bank' : 'http://127.0.0.1:8787/api/start-asset-bank';
+}
+async function devkitReportsBankStopped(){
+  if(!location.port || location.port === '8765')return false;
+  try{
+    const r=await fetch('/api/status');
+    if(!r.ok)return false;
+    const status=await r.json();
+    return status?.assetBank?.running === false;
+  }catch{return false}
+}
+async function startAssetBankFromReview(){
+  const btn=$('startBankBtn');if(btn)btn.disabled=true;
+  try{
+    const r=await fetch(devkitStartUrl(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const text=await r.text();
+    if(!r.ok)throw new Error(text||`HTTP ${r.status}`);
+    toast('Asset Bank start requested');
+    setTimeout(()=>location.reload(),900);
+  }catch(e){
+    toast('Start from hub failed: '+(e?.message||e));
+    if(btn)btn.disabled=false;
+  }
+}
+function copyText(txt){navigator.clipboard.writeText(txt).then(()=>toast('Copied')).catch(()=>{})}
+async function openAssetLocation(id){
+  try{
+    await api('/api/asset/open-location',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    toast('Opened file location');
+  }catch(err){
+    toast('Open location failed: '+(err?.message||err));
+  }
+}
+
+// Data
+async function load(){
+  bankOfflineState=null;
+  if(await devkitReportsBankStopped()){
+    bankOfflineState={message:'DevKit status reports Asset Bank stopped'};
+    DATA={assets:[]};STATUS={reviews:[]};QUEUES={queues:{}};RELATED={groups:{},asset_to_group:{}};RECONCILE={driftCount:0};
+    assets=[];assetMap={};decisions={};decisionsByPath={};
+    render();
+    return;
+  }
+  try{
+    DATA=await api('/api/data');STATUS=await api('/api/status');
+  }catch(e){
+    bankOfflineState={message:e?.message||String(e)};
+    DATA={assets:[]};STATUS={reviews:[]};QUEUES={queues:{}};RELATED={groups:{},asset_to_group:{}};RECONCILE={driftCount:0};
+    assets=[];assetMap={};decisions={};decisionsByPath={};
+    render();
+    return;
+  }
+  try{QUEUES=await api('/api/queues')}catch{QUEUES={queues:{}}}
+  try{RELATED=await api('/api/related-groups')}catch{RELATED={groups:{},asset_to_group:{}}}
+  try{RECONCILE=await api('/api/reconcile')}catch{RECONCILE={driftCount:0}}
+  assets=DATA.assets||[];assetMap={};for(const a of assets)assetMap[a.id]=a;decisions={};decisionsByPath={};
+  for(const r of(STATUS.reviews||[])){decisions[r.id]=r;const rp=normAssetPath(r.path);if(rp)decisionsByPath[rp]=r}
+  buildDuplicates();buildFilters();renderQueues();render();
+}
+function buildFilters(){
+  for(const id of['category','kind','status']){
+    const selectedGroup=selectedGroupLabel();
+    const allLabel={category:'All groups',kind:selectedGroup?`All ${selectedGroup} subcategories`:'All subcategories',status:'All catalog statuses'}[id];
+    const el=$(id),val=el.value;el.innerHTML='<option value="">'+allLabel+'</option>';const counts={};
+    for(const a of countableFiltered(id)){const v=id==='kind'?subcat(a):a[id];if(v)counts[v]=(counts[v]||0)+1}
+    Object.keys(counts).sort().forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=labelForFilter(id,v)+' ('+counts[v]+')';el.appendChild(o)});el.value=val
+  }
+  const d=$('decision'),val=d.value;d.innerHTML='<option value="">All review decisions</option>';const dc={};for(const a of countableFiltered('decision')){const v=currentDecision(a);dc[v]=(dc[v]||0)+1}
+  ['unreviewed','accepted','considered','needs-cleanup','promote-later','later','rejected','runtime-promoted','pending-related','hidden','broken-preview'].forEach(v=>{if(!dc[v]&&!['considered','later'].includes(v))return;let o=document.createElement('option');o.value=v;o.textContent=labelForFilter('decision',v)+' ('+(dc[v]||0)+')';d.appendChild(o)});d.value=val;
+  const rd=$('readiness'),rv=rd.value;rd.innerHTML='<option value="">All readiness</option>';const rc={};for(const a of countableFiltered('readiness')){const v=readiness(a)[0];if(v)rc[v]=(rc[v]||0)+1}Object.keys(rc).sort().forEach(v=>{let o=document.createElement('option');o.value=v;o.textContent=v+' ('+rc[v]+')';rd.appendChild(o)});rd.value=rv;
+}
+function queueItemId(item){
+  if(!item)return'';
+  if(typeof item==='string')return item;
+  const id=item.id||item.assetId||item.asset_id||'';
+  if(id&&assetMap[id])return id;
+  const p=pathOf(item).toLowerCase();
+  if(!p)return id;
+  const matched=assets.find(a=>pathOf(a).toLowerCase()===p);
+  return matched?.id||id;
+}
+function queueStats(queue){
+  const items=queue.items||[];
+  let live=0;
+  for(const item of items){
+    const id=queueItemId(item);
+    if(id&&assetMap[id])live++;
+  }
+  return{total:items.length,live,stale:Math.max(0,items.length-live)};
+}
+function renderQueues(){
+  const q=QUEUES.queues||{};$('queues').innerHTML=Object.entries(q).sort().map(([k,v])=>{const s=queueStats(v);const label=s.stale?`${s.live}/${s.total}`:s.live;return`<button class="lm-btn lm-btn--toggle sb-btn${k===activeQueue?' on':''}" aria-pressed="${k===activeQueue?'true':'false'}" data-queue="${k}" title="${s.live} live assets${s.stale?`, ${s.stale} stale queue entries`:''}">${k}<span class="q-count">${label}</span></button>`}).join('')||'<span class="sb-info">No queues</span>';
+  document.querySelectorAll('[data-queue]').forEach(b=>{b.onclick=()=>{activeQueue=b.dataset.queue;activeGroup='';$('q').value='';['category','kind','status','decision','readiness'].forEach(id=>$(id).value='');document.querySelectorAll('[data-queue],#clearQueueBtn').forEach(x=>x.classList.remove('on'));$('clearGroupBtn')?.classList.remove('on');b.classList.add('on');buildFilters();resetPage();render()}});
+  $('clearQueueBtn').classList.toggle('on',!activeQueue);
+}
+
+// Helpers
+function normAssetPath(p){return(p||'').replace(/\\/g,'/').toLowerCase()}
+function reviewForAsset(a){
+  const candidates=[decisions[a.id],a.review_decision,a.review,decisionsByPath[normAssetPath(pathOf(a))]].filter(Boolean);
+  return candidates.find(r=>r.decision==='runtime-promoted')||candidates[0]||null;
+}
+function currentDecision(a){return reviewForAsset(a)?.decision||'unreviewed'}
+function currentNotes(a){return reviewForAsset(a)?.notes||''}
+function compactReviewNotes(a){
+  return currentNotes(a).replace(/\s+/g,' ').replace(/^Score:\s*\d+\s*\/\s*100\.\s*/i,'').trim();
+}
+function sentenceAround(text,word){
+  const parts=(text||'').split(/[.!?]\s+/);
+  const found=parts.find(p=>p.toLowerCase().includes(word));
+  return found||text||'';
+}
+function hasDuplicateReason(a){
+  const decision=currentDecision(a);
+  if(['accepted','runtime-promoted'].includes(decision))return false;
+  const tags=(a.tags||[]).join(' ');
+  const explicitHay=[a.status||'',tags].join(' ').toLowerCase();
+  if(/\bduplicate\b|dupe\b|same as|near[- ]duplicate|already accepted|already exists/.test(explicitHay))return true;
+  const notes=currentNotes(a).toLowerCase();
+  if(isStalePathDuplicateNote(a))return false;
+  return /\bduplicate\b|dupe\b|same as|near[- ]duplicate|already accepted|already exists/.test(notes);
+}
+function isStalePathDuplicateNote(a){
+  return /duplicate path-based entry/.test(currentNotes(a).toLowerCase())&&duplicateCount(a)<=1;
+}
+function visibleReasonHtml(a){
+  const notes=compactReviewNotes(a);
+  const d=currentDecision(a);
+  if(hasDuplicateReason(a)){
+    const text=sentenceAround(notes,'duplicate')||'Possible duplicate.';
+    return `<div class="reason-line duplicate" title="${esc(text)}">Duplicate: ${esc(text).slice(0,180)}</div>`;
+  }
+  if(isStalePathDuplicateNote(a)){
+    return `<div class="reason-line" title="${esc(notes)}">Old duplicate note: no matching duplicate is currently in the bank.</div>`;
+  }
+  if(!notes||!['considered','needs-cleanup','promote-later','rejected','pending-related','broken-preview'].includes(d))return'';
+  return `<div class="reason-line" title="${esc(notes)}">${esc(notes).slice(0,180)}</div>`;
+}
+function setLocalDecision(assetId,decision,extra={}){
+  const a=assetMap[assetId]||{};
+  decisions[assetId]=Object.assign(decisions[assetId]||{},{
+    id:assetId,path:a.path||'',decision,status:a.status||'',notes:currentNotes({id:assetId}),updated_at:new Date().toISOString()
+  },extra);
+}
+function pathOf(a){return(a.path||'').replace(/\\/g,'/')}
+function isVisualAsset(a){return VISUAL_KINDS.includes(a.kind)}
+function thumbSrc(a){return'/api/asset/thumb?id='+encodeURIComponent(a.id)+(cropPreview?'&crop=alpha':'')}
+function resetPage(){currentPage=0;document.querySelector('main')?.scrollTo(0,0)}
+function pageCount(){return Math.max(1,Math.ceil(filteredList.length/pageSize))}
+function currentPageItems(){const start=currentPage*pageSize;return filteredList.slice(start,start+pageSize)}
+function groupMembersForRep(a){
+  if(!groupEntities||!a._groupMembers||a._groupCount<=1)return[a];
+  const ids=new Set(a._groupMembers||[]);
+  return assets.filter(x=>ids.has(x.id));
+}
+function isArchiveAsset(a){const p=pathOf(a);return a.category==='archive'||a.status==='archived'||a.status==='duplicate'||p.startsWith('_archive/')||p.includes('/_archive/')}
+function isSupportAsset(a){const p=pathOf(a).toLowerCase();const n=(a.name||'').toLowerCase();const tags=a.tags||[];return a.review?.hide_reason==='support-doc'||tags.includes('hide:support-doc')||tags.includes('review:hidden')||tags.includes('support-file')||a.kind==='document'||p.startsWith('_manifests/')||(p.startsWith('_review/')&&!p.startsWith('_review/thumbs/'))||p.startsWith('_curated/')||p.startsWith('_devkit/')||p.startsWith('_promotion-plans/')||p.includes('/qa/')||n.startsWith('qa-')||n.startsWith('qa_')||n==='readme.md'||n==='manifest.json'||n==='prompts.md'||n==='prompt-log.md'||n==='index.json'}
+function dupKey(a){let n=(a.name||pathOf(a).split('/').pop()||'').toLowerCase().replace(/\.[^.]+$/,'');n=n.replace(/[_ -]*(candidate|copy|final|v\d+|\d{2,}|\d)$/g,'');const img=a.image||{};return[a.category,a.kind,n,img.width||'',img.height||''].join('|')}
+function buildDuplicates(){const c={};for(const a of assets){if(isArchiveAsset(a)||isSupportAsset(a))continue;const k=dupKey(a);c[k]=(c[k]||0)+1}duplicateCounts=c}
+function duplicateCount(a){return duplicateCounts[dupKey(a)]||1}
+function isAnimationSeriesGroupKey(k){return /^dir::|^grp::|^one::/.test(k||'')}
+function readiness(a){
+  const p=pathOf(a).toLowerCase(),n=(a.name||'').toLowerCase(),tags=new Set(a.tags||[]),img=a.image||{};
+  const decision=currentDecision(a);
+  if(isArchiveAsset(a))return['archived','bad'];if(isSupportAsset(a))return['support','bad'];
+  if(decision==='broken-preview')return['broken','bad'];
+  if(decision==='rejected'||decision==='hidden')return[decision,'bad'];
+  if(decision==='needs-cleanup')return['needs-cleanup','warn'];
+  if(decision==='runtime-promoted')return['promoted','ready'];
+  if(decision==='accepted')return['accepted','ready'];
+  if(decision==='promote-later')return['later','concept'];
+  if(decision==='considered')return['considered','concept'];
+  if(decision==='pending-related')return['pending-related','warn'];
+  if(a.kind==='audio')return[p.startsWith('audio/generated/')?'review':'audio-src','warn'];
+  if(a.kind==='video')return['frame-pick','warn'];
+  if(VISUAL_KINDS.includes(a.kind)){if(a.kind==='source')return['source','warn'];if(a.kind==='transition-decal')return['transition','ready'];if((img.width||0)>1024||(img.height||0)>1024)return['downscale','warn'];if(n.includes('sheet')||n.includes('contact'))return['slice','warn'];if(tags.has('source:generated')||p.includes('runtime'))return['ready','ready'];if(p.includes('concept')||n.includes('concept')||tags.has('use:concept'))return['concept','concept'];return['review','warn']}
+  return['review','warn'];
+}
+function queueIds(){if(!activeQueue)return null;const q=(QUEUES.queues||{})[activeQueue]||{};return new Set((q.items||[]).map(queueItemId).filter(id=>id&&assetMap[id]))}
+function groupIds(){if(!activeGroup)return null;const g=(RELATED.groups||{})[activeGroup]||{};return new Set((g.items||[]).map(x=>x.id))}
+function relatedGroup(a){return(RELATED.asset_to_group||{})[a.id]||''}
+function relatedItems(a){const key=relatedGroup(a);const group=(RELATED.groups||{})[key]||{};return(group.items||[]).filter(x=>x.id!==a.id)}
+function relatedRole(a){const key=relatedGroup(a);const items=((RELATED.groups||{})[key]||{}).items||[];return(items.find(x=>x.id===a.id)||{}).role||''}
+function representativeScore(a,topLevel){
+  const role=relatedRole(a),name=(a.name||a.id||'').toLowerCase(),path=pathOf(a).toLowerCase(),d=currentDecision(a);
+  let score=0;
+  if(topLevel){
+    if(role==='concept_master')score+=1200;
+    if(role==='idle_sprite'||role==='portrait')score+=1050;
+    if(role.includes('concept')||role.includes('master'))score+=900;
+    if(path.includes('/concept')||name.includes('concept')||name.includes('master'))score+=760;
+    if(a.kind==='sprite'||a.kind==='portrait'||a.kind==='image')score+=520;
+    if(a.kind==='spritesheet')score+=220;
+    if(a.kind==='contact_sheet'||a.kind==='source_sheet'||a.kind==='source'||a.kind==='document')score-=180;
+  }else{
+    if(/(^|_)sheet$/.test(role)&&!role.includes('review'))score+=800;
+    if(role.includes('preview'))score+=620;
+    if(role.includes('contact'))score+=520;
+    if(a.kind==='spritesheet')score+=460;
+    if(a.kind==='sprite'||a.kind==='portrait')score+=360;
+    if(a.kind==='contact_sheet')score+=260;
+    if(a.kind==='source'||a.kind==='document')score-=120;
+    if(path.endsWith('.webp'))score+=40;
+  }
+  if(d==='runtime-promoted')score+=80;
+  else if(d==='accepted')score+=60;
+  if((a.status||'')==='accepted')score+=20;
+  return score;
+}
+function chooseGroupRepresentative(mem,topLevel){
+  return [...mem].sort((a,b)=>representativeScore(b,topLevel)-representativeScore(a,topLevel))[0]||mem[0];
+}
+
+// Filter + Sort
+function modePass(a){
+  const mode=$('mode').value,p=pathOf(a).toLowerCase(),d=currentDecision(a);
+  if(mode==='all')return true;if(mode==='best')return!activeQueue?(['characters','environments','props','items','ui','vfx','audio','monsters','npcs','players','tilesets','decals','icons','portraits','backgrounds','unknown'].includes(a.category)&&VISUAL_KINDS.concat(['audio','video','document']).includes(a.kind)):true;
+  if(mode==='zone')return/mossgrove|town|harbor|thornhollow|tidecrest|zone:/.test(p+' '+(a.tags||[]).join(' '));
+  if(mode==='characters')return a.category==='monsters'||a.category==='npcs'||a.category==='players'||a.category==='characters'||/monster|character|npc|slime|bloop/.test(p);
+  if(mode==='vfx')return a.category==='vfx'||p.includes('vfx');if(mode==='audio')return a.kind==='audio'||a.category==='audio';
+  if(mode==='cleanup')return d==='needs-cleanup'||d==='broken-preview'||readiness(a)[0].startsWith('needs-');
+  if(mode==='accepted')return d==='accepted'||d==='runtime-promoted';if(mode==='similar')return duplicateCount(a)>1;
+  if(mode==='hidden')return isArchiveAsset(a)||isSupportAsset(a)||d==='hidden';return true;
+}
+function rawFiltered(ignore=''){
+  const q=$('q').value.toLowerCase(),c=$('category').value,k=$('kind').value,s=$('status').value,dv=$('decision').value,rv=$('readiness').value,ids=queueIds(),gids=groupIds();
+  return assets.filter(a=>{
+    const d=currentDecision(a),hay=(a.id+' '+pathOf(a)+' '+(a.tags||[]).join(' ')+' '+currentNotes(a)).toLowerCase();
+    if(ids&&!ids.has(a.id))return false;if(gids&&!gids.has(a.id))return false;
+    const accepted=d==='accepted'||d==='runtime-promoted';if(!ids&&!showArchive&&!accepted&&isArchiveAsset(a))return false;if(!ids&&!showSupport&&!accepted&&isSupportAsset(a))return false;if(!ids&&!showSheets&&!accepted&&(a.kind==='source_sheet'||a.kind==='contact_sheet'||a.kind==='source'))return false;
+    if(!modePass(a))return false;if(ignore!=='category'&&c&&a.category!==c)return false;if(ignore!=='kind'&&k&&subcat(a)!==k)return false;
+    if(ignore!=='status'&&s&&a.status!==s)return false;if(ignore!=='decision'&&dv&&d!==dv)return false;if(ignore!=='readiness'&&rv&&readiness(a)[0]!==rv)return false;if(q&&!hay.includes(q))return false;return true;
+  });
+}
+function countableFiltered(ignore=''){
+  const list=rawFiltered(ignore);
+  if(!groupEntities||activeEntityGroup)return list;
+  const seen=new Set();
+  return list.filter(a=>{const k=entityKey(a);if(seen.has(k))return false;seen.add(k);return true});
+}
+function filtered(){
+  let list=rawFiltered();
+  const sort=$('sort').value;
+  if(sort==='name-asc')list.sort((a,b)=>(a.id||'').localeCompare(b.id||''));
+  else if(sort==='name-desc')list.sort((a,b)=>(b.id||'').localeCompare(a.id||''));
+  else if(sort==='size-desc')list.sort((a,b)=>((b.image?.width||0)*(b.image?.height||0))-((a.image?.width||0)*(a.image?.height||0)));
+  else if(sort==='size-asc')list.sort((a,b)=>((a.image?.width||0)*(a.image?.height||0))-((b.image?.width||0)*(b.image?.height||0)));
+  else if(sort==='decision')list.sort((a,b)=>currentDecision(a).localeCompare(currentDecision(b)));
+  else if(sort==='category')list.sort((a,b)=>(a.category||'').localeCompare(b.category||''));
+  else if(sort==='readiness')list.sort((a,b)=>readiness(a)[0].localeCompare(readiness(b)[0]));
+  // Entity collapse: one representative card per entity, unless drilled into a specific group.
+  if(activeEntityGroup){
+    const isSeriesGroup=isAnimationSeriesGroupKey(activeEntityGroup);
+    list=list.filter(a=>isSeriesGroup?detailEntityKey(a)===activeEntityGroup||entityKey(a)===activeEntityGroup:entityKey(a)===activeEntityGroup);
+    if(groupEntities&&!isSeriesGroup){
+      const groups=new Map();
+      for(const a of list){const k=detailEntityKey(a);(groups.get(k)||groups.set(k,[]).get(k)).push(a)}
+      list=[...groups.values()].map(mem=>{const rep=chooseGroupRepresentative(mem,false);rep._groupCount=mem.length;rep._groupKey=detailEntityKey(rep);rep._groupMembers=mem.map(x=>x.id);return rep});
+    }else{
+      list.forEach(a=>{a._groupCount=1;delete a._groupMembers;delete a._groupKey});
+    }
+  } else if(groupEntities){
+    const groups=new Map();
+    for(const a of list){const k=entityKey(a);(groups.get(k)||groups.set(k,[]).get(k)).push(a)}
+    list=[...groups.values()].map(mem=>{const rep=chooseGroupRepresentative(mem,true);rep._groupCount=mem.length;rep._groupKey=entityKey(rep);rep._groupMembers=mem.map(x=>x.id);return rep});
+  } else {list.forEach(a=>{a._groupCount=1;delete a._groupMembers})}
+  return list;
+}
+
+// Media
+function media(a){
+  if(isVisualAsset(a)){const src=thumbSrc(a);const fb='/api/asset/image?id='+encodeURIComponent(a.id);return`<img src="${enc(src)}" loading="eager" decoding="async" data-fallback="${enc(fb)}" onload="imageLoaded(this,'${a.id}')" onerror="imageFailed(this,'${a.id}')">`}
+  if(a.kind==='audio'){const asrc='/api/asset/image?id='+encodeURIComponent(a.id);return`<audio controls preload="metadata" src="${enc(asrc)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'media-fallback',innerHTML:'<strong>Audio unavailable</strong><a href=&quot;${enc(asrc)}&quot; target=_blank>Open</a><span style=&quot;font-size:9px&quot;>Mark broken-preview if this is a decode error</span>'}))"></audio>`}
+  if(a.kind==='video'){const vsrc='/api/asset/image?id='+encodeURIComponent(a.id);if(isArchiveAsset(a))return`<div class="media-fallback"><strong>Archived</strong><a href="${enc(vsrc)}" target="_blank">Open</a></div>`;return`<video controls preload="metadata" src="${enc(vsrc)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'media-fallback',innerHTML:'<strong>Unavailable</strong>'}))"></video>`}
+  return'<span style="font-size:10px;color:var(--lm-text-muted)">doc</span>';
+}
+function gameSizes(a){
+  if(!isVisualAsset(a))return'';const src=enc('/api/asset/image?id='+encodeURIComponent(a.id));
+  return`<div class="sizes"><div><div class="sz-label">32</div><div class="sizebox" style="width:32px;height:32px"><img src="${src}"></div></div><div><div class="sz-label">64</div><div class="sizebox" style="width:64px;height:64px"><img src="${src}"></div></div><div><div class="sz-label">128</div><div class="sizebox" style="width:128px;height:128px"><img src="${src}"></div></div></div>`;
+}
+function imageLoaded(img,id){
+  const thumb=img.closest('.thumb');if(!thumb)return;
+  thumb.classList.remove('loading','load-error');thumb.classList.add('loaded');
+  const a=assetMap[id];if(!a||!isVisualAsset(a))return;
+  if(!diagnosticsCache[id])return;
+  const diag=diagnosticsCache[id];
+  thumb.classList.toggle('low-content',!!diag.mostly_transparent);
+}
+function imageFailed(img,id){
+  if(img.dataset.fallback&&!img.dataset.uf){img.dataset.uf='1';img.src=img.dataset.fallback;return}
+  const thumb=img.closest('.thumb');
+  if(thumb){thumb.classList.remove('loading');thumb.classList.add('load-error')}
+  const box=document.createElement('div');
+  box.className='broken-img';
+  box.innerHTML=`<strong>No preview</strong><button onclick="event.stopPropagation();retryPreview('${id}')">Retry</button><button onclick="event.stopPropagation();checkDiagnostics(assetMap['${id}'])">Details</button>`;
+  img.replaceWith(box);
+}
+function retryPreview(id){const a=assetMap[id];if(!a)return;delete diagnosticsCache[id];render()}
+function restoreMainScroll(scrollTop){
+  const main=document.querySelector('main');if(!main)return;
+  const top=Math.max(0,Math.min(scrollTop,main.scrollHeight-main.clientHeight));
+  main.scrollTop=top;
+  requestAnimationFrame(()=>{const m=document.querySelector('main');if(m)m.scrollTop=Math.max(0,Math.min(scrollTop,m.scrollHeight-m.clientHeight))});
+}
+function refreshAssetView({reset=false,preserveScroll=true}={}){
+  const main=document.querySelector('main');
+  const scrollTop=main?main.scrollTop:0;
+  buildFilters();
+  if(reset)resetPage();
+  render();
+  if(!reset&&preserveScroll)restoreMainScroll(scrollTop);
+}
+async function checkDiagnostics(a){
+  if(!a)return;
+  const target=$('diag_'+safeDomId(a.id));
+  if(target)target.innerHTML='<div class="diag-box">Checking preview...</div>';
+  try{
+    const diag=await api('/api/asset/diagnostics?id='+encodeURIComponent(a.id));
+    diagnosticsCache[a.id]=diag;
+    const html=diagnosticsHtml(diag);
+    if(target)target.innerHTML=html;else toast(diag.ok?'Diagnostics loaded':'Diagnostics failed');
+    const card=document.querySelector(`.card[data-id="${CSS.escape(a.id)}"]`);
+    if(card&&diag.mostly_transparent)card.querySelector('.thumb')?.classList.add('low-content');
+  }catch(e){
+    if(target)target.innerHTML=`<div class="diag-box bad">Diagnostics failed: ${esc(e.message)}</div>`;
+    else toast('Diagnostics failed');
+  }
+}
+function diagnosticsHtml(d){
+  if(!d)return'';
+  if(!d.ok)return`<div class="diag-box bad">Preview diagnostics failed: ${esc(d.error||'unknown')}</div>`;
+  if(d.media!=='image')return`<div class="diag-box"><b>Diagnostics</b><br>Non-image file · ${d.bytes||0} bytes</div>`;
+  const meta=d.metadata_image?`${d.metadata_image.width||'?'}×${d.metadata_image.height||'?'}`:'none';
+  const klass=d.mostly_transparent?'warn':'';
+  return`<div class="diag-box ${klass}"><b>Diagnostics</b><br>File ${d.width}×${d.height} · metadata ${meta} · ${d.bytes} bytes<br>Visible alpha ${d.alpha_visible_percent}% · strong alpha ${d.alpha_strong_percent}% · content ${d.content_width}×${d.content_height}${d.mostly_transparent?'<br>Mostly transparent: cropped preview is recommended.':''}</div>`;
+}
+function safeDomId(id){return(id||'').replace(/[^a-zA-Z0-9_-]/g,'_')}
+function healthMetric(label,value,kind=''){
+  return`<div class="lm-card sv-card" style="cursor:default"><div class="sv-title ${kind}">${esc(String(value))}</div><div class="sv-sub">${esc(label)}</div></div>`;
+}
+function healthExamples(title,items){
+  if(!items||!items.length)return'';
+  return`<h3>${esc(title)}</h3><ul style="color:var(--lm-text-muted);font-size:11px;line-height:1.5;max-height:180px;overflow:auto">${items.map(x=>`<li>${esc(typeof x==='string'?x:JSON.stringify(x))}</li>`).join('')}</ul>`;
+}
+async function openHealthPanel(){
+  healthOpen=true;$('layout').style.display='none';$('specialView').style.display='';$('specialView').innerHTML='<div class="sv-section"><h2>Asset Bank Health</h2><p class="sv-sub">Checking catalog, decisions, groups, and workflow hygiene...</p></div>';
+  try{
+    const h=await api('/api/asset-bank/health');
+    const wf=h.workflow||{},rv=h.reviews||{},gr=h.groups||{},cat=h.catalog||{};
+    let html='<button class="sv-back" onclick="closeHealthPanel()">← Back</button><div class="sv-section"><h2>Asset Bank Health</h2>';
+    html+='<div class="sv-grid">';
+    html+=healthMetric('catalog assets',cat.total||0);
+    html+=healthMetric('review records',rv.total||0);
+    html+=healthMetric('orphan review records',rv.orphanReviewIds||0,(rv.orphanReviewIds||0)?'cdec rejected':'');
+    html+=healthMetric('unknown decision values',rv.unknownDecisionValues||0,(rv.unknownDecisionValues||0)?'cdec rejected':'');
+    html+=healthMetric('stale group item refs',gr.staleGroupItems||0,(gr.staleGroupItems||0)?'cdec rejected':'');
+    html+=healthMetric('group map mismatches',gr.groupItemMappingMismatches||0,(gr.groupItemMappingMismatches||0)?'cdec needs-cleanup':'');
+    html+=healthMetric('uncategorized status',wf.unknownStatus||0,(wf.unknownStatus||0)?'cdec needs-cleanup':'');
+    html+=healthMetric('unknown category',wf.unknownCategory||0,(wf.unknownCategory||0)?'cdec needs-cleanup':'');
+    html+=healthMetric('accepted still in incoming',wf.acceptedStillIncoming||0,(wf.acceptedStillIncoming||0)?'cdec needs-cleanup':'');
+    html+=healthMetric('rejected outside _rejected',wf.rejectedOutsideRejectedFolder||0,(wf.rejectedOutsideRejectedFolder||0)?'cdec needs-cleanup':'');
+    html+=healthMetric('unsupported kinds',wf.unsupportedKinds||0,(wf.unsupportedKinds||0)?'cdec needs-cleanup':'');
+    html+='</div></div>';
+    html+='<div class="sv-section"><h2>Safe Metadata Repair</h2><p class="sv-sub">These repairs remove references to assets that are no longer in the catalog. They do not move or delete asset files.</p><div class="sb-row"><button class="lm-btn lm-btn--primary sv-promote-btn" onclick="repairHealthSafe()">Repair orphan reviews + stale groups</button><button class="lm-btn sv-export-btn" onclick="openHealthPanel()">Refresh report</button></div></div>';
+    html+='<div class="sv-section"><h2>Manual Workflow Cleanup</h2><p class="sv-sub">These need deliberate file moves or status decisions, so the tool reports them instead of moving files blindly.</p>';
+    html+=healthExamples('Uncategorized status examples',wf.examples?.unknownStatus||[]);
+    html+=healthExamples('Accepted files still in _incoming-unsorted',wf.examples?.acceptedStillIncoming||[]);
+    html+=healthExamples('Rejected files outside _rejected',wf.examples?.rejectedOutsideRejectedFolder||[]);
+    html+=healthExamples('Unknown category examples',wf.examples?.unknownCategory||[]);
+    html+=healthExamples('Unsupported kind examples',wf.examples?.unsupportedKinds||[]);
+    html+='</div>';
+    html+='<div class="sv-section"><h2>Stale Reference Examples</h2>';
+    html+=healthExamples('Orphan review IDs',rv.examples?.orphanReviewIds||[]);
+    html+=healthExamples('Unknown decision values',rv.examples?.unknownDecisionValues||[]);
+    html+=healthExamples('Stale related-group items',gr.examples?.staleGroupItems||[]);
+    html+=healthExamples('Group map mismatches',gr.examples?.groupItemMappingMismatches||[]);
+    html+=healthExamples('Duplicate group items',gr.examples?.duplicateGroupItems||[]);
+    html+='</div>';
+    $('specialView').innerHTML=html;
+  }catch(e){
+    $('specialView').innerHTML=`<button class="sv-back" onclick="closeHealthPanel()">← Back</button><div class="sv-section"><h2>Asset Bank Health</h2><p class="cdec rejected">Health check failed: ${esc(e.message)}</p></div>`;
+  }
+}
+function closeHealthPanel(){healthOpen=false;$('specialView').style.display='none';$('layout').style.display='';render()}
+async function repairHealthSafe(){
+  if(!confirm('Repair safe stale metadata now? This removes orphan review rows and stale related-group references, but does not move asset files.'))return;
+  const res=await api('/api/asset-bank/repair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actions:'safe'})});
+  toast('Repaired stale metadata');await load();await openHealthPanel();
+}
+
+// Reviews
+async function saveReview(a,decision,extra={}){
+  const notes=document.getElementById('notes_'+a.id)?.value??currentNotes(a);
+  const prevDecision=decisions[a.id]?{...decisions[a.id]}:null;
+  const prevRaw=a.review?.decision||'unreviewed';
+  const payload={id:a.id,path:a.path,decision,status:a.status,priority:extra.priority||'normal',notes:extra.notes||notes};
+  try{
+    await api('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(e){
+    toast('Review blocked: '+e.message);
+    return false;
+  }
+  decisions[a.id]=Object.assign(decisions[a.id]||{},payload,{updated_at:new Date().toISOString()});
+  const undoDecision=prevDecision?.decision||prevRaw;
+  toast(decision,()=>{
+    const undoPayload={id:a.id,path:a.path,decision:undoDecision,status:a.status,priority:'normal',notes:prevDecision?.notes||''};
+    api('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(undoPayload)}).then(()=>{
+      if(undoDecision==='unreviewed')delete decisions[a.id];
+      else decisions[a.id]=Object.assign(decisions[a.id]||{},undoPayload,{updated_at:new Date().toISOString()});
+      toast('Undone');refreshAssetView();
+    });
+  });
+  refreshAssetView();
+  return true;
+}
+async function reviewAction(a,decision){
+  const members=groupMembersForRep(a);
+  if(members.length<=1){await saveReview(a,decision);return}
+  if(!confirm(`Apply "${decision}" to all ${members.length} assets in this group?`))return;
+  await saveGroupReview(members,decision);
+}
+async function saveGroupReview(members,decision){
+  const reviews=members.map(x=>({id:x.id,path:x.path,decision,status:x.status,priority:decision==='needs-cleanup'?'cleanup':'normal',notes:currentNotes(x)}));
+  const res=await api('/api/reviews/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviews})});
+  const saved=applyBulkReviewResult(reviews,res);
+  const blocked=(res.blocked||[]).length;
+  toast(`${decision} x${saved}${blocked?` · ${blocked} blocked`:''}`);
+  refreshAssetView();
+}
+function applyBulkReviewResult(reviews,res){
+  const blockedIds=new Set((res.blocked||[]).map(x=>String(x.id)));
+  let saved=0;
+  for(const r of reviews){
+    if(blockedIds.has(String(r.id)))continue;
+    decisions[r.id]=Object.assign(decisions[r.id]||{},r,{updated_at:new Date().toISOString()});
+    saved++;
+  }
+  if(blockedIds.size)console.warn('Bulk review blocked:',res.blocked);
+  return saved;
+}
+async function markBroken(id){const a=assetMap[id];if(!a||decisions[id]?.decision==='broken-preview')return;await saveReview(a,'broken-preview',{priority:'cleanup',notes:'Preview failed.'})}
+async function refreshFringe(id){try{const res=await api('/api/asset/refresh-fringe?id='+encodeURIComponent(id));const a=assetMap[id];if(a&&res.asset){a.fringe=res.asset.fringe;a.fringe_kind=res.asset.fringe_kind;a.fringe_audit_version=res.asset.fringe_audit_version}for(const item of assets){if(item.id===id&&res.asset){item.fringe=res.asset.fringe;item.fringe_kind=res.asset.fringe_kind;item.fringe_audit_version=res.asset.fringe_audit_version}}toast(res.fringe?`Cleanup defect still detected (${res.fringe_kind||'?'})`:'Cleanup defect badge cleared');render()}catch(e){toast('Defect recheck failed: '+e.message)}}
+async function removeFromBank(a){
+  const members=groupMembersForRep(a);
+  const toRemove=members.length>1?members:[a];
+  const label=toRemove.length>1?`${toRemove.length} assets in this visible group`:a.id;
+  if(!confirm(`Remove ${label} from the Asset Bank?\n\nThis moves the file(s) to Z:/Assets/_deleted so they disappear from the bank, and prunes review/group/profile references. Runtime-promoted assets must be unpromoted first.`))return;
+  let ok=0,blocked=[];
+  for(const item of toRemove){
+    try{
+      const res=await api('/api/asset/remove-from-bank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:item.id})});
+      if(res.ok)ok++;
+      else blocked.push(`${item.id}: ${res.error||'failed'}`);
+    }catch(e){blocked.push(`${item.id}: ${e.message}`)}
+  }
+  clearSelection();
+  expandedCards.clear();
+  await load();
+  toast(`Removed ${ok}/${toRemove.length} from bank${blocked.length?` · ${blocked.length} blocked`:''}`);
+  if(blocked.length)console.warn('Remove from bank blocked:',blocked);
+}
+function relatedPanel(a){
+  const key=relatedGroup(a);if(!key)return'';const group=(RELATED.groups||{})[key]||{};const items=relatedItems(a);
+  const shown=items.slice(0,3).map(x=>`<li><b>${x.role||x.kind}</b> ${x.name||x.id}</li>`).join('');
+  return`<div class="related-box"><span style="color:var(--lm-text-gold)">${group.label||key}</span> &middot; ${items.length} related<ul>${shown}</ul>${items.length>3?`<span>+${items.length-3} more</span>`:''}<div class="sb-row"><button class="lm-btn lm-btn--primary sb-btn accept" onclick="acceptWithRelated(assetMap['${a.id}'])">Accept+Related</button><button class="lm-btn sb-btn" onclick="openGroup('${key}')">Group</button></div></div>`;
+}
+function openGroup(key){activeGroup=key;activeQueue='';document.querySelectorAll('[data-queue],#clearQueueBtn').forEach(x=>x.classList.remove('on'));$('clearGroupBtn').classList.add('on');buildFilters();resetPage();render();toast('Group: '+key)}
+function clearGroup(){activeGroup='';$('clearGroupBtn').classList.remove('on');buildFilters();resetPage();render()}
+function setCardSelected(id,on){if(on)selectedCards.add(id);else selectedCards.delete(id);const el=document.querySelector(`.card[data-id="${id}"],.list-row[data-id="${id}"]`);if(el)el.classList.toggle('selected',selectedCards.has(id));const cb=document.querySelector(`.sel-cb[data-id="${id}"]`);if(cb)cb.checked=selectedCards.has(id)}
+function toggleSelect(id,e){if(e)e.stopPropagation();if(e?.shiftKey&&lastSelectedCardId){const pageIds=currentPageItems().map(a=>a.id);const a=pageIds.indexOf(lastSelectedCardId),b=pageIds.indexOf(id);if(a>=0&&b>=0){const start=Math.min(a,b),end=Math.max(a,b);for(const rangeId of pageIds.slice(start,end+1))setCardSelected(rangeId,true);lastSelectedCardId=id;updateBulkBar();return}}setCardSelected(id,!selectedCards.has(id));lastSelectedCardId=id;updateBulkBar()}
+function clearSelection(){selectedCards.clear();lastSelectedCardId=null;updateBulkBar();document.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));document.querySelectorAll('.sel-cb').forEach(cb=>cb.checked=false)}
+function updateBulkBar(){const n=selectedCards.size;$('bulkBar').style.display=n?'flex':'none';$('bulkCount').textContent=n+' selected'}
+function expandReviewAssets(list){
+  const expanded=[];
+  const seen=new Set();
+  for(const a of list){
+    for(const member of groupMembersForRep(a)){
+      if(!member||seen.has(member.id))continue;
+      seen.add(member.id);expanded.push(member);
+    }
+  }
+  return expanded;
+}
+async function bulkAction(decision){const selected=[...selectedCards].map(id=>assetMap[id]).filter(Boolean);if(!selected.length)return;const assetsToReview=expandReviewAssets(selected);if(!confirm(`Apply "${decision}" to ${assetsToReview.length} assets${assetsToReview.length!==selected.length?` across ${selected.length} selected groups/cards`:''}?`))return;const reviews=assetsToReview.map(a=>({id:a.id,path:a.path||'',decision,status:a.status||'',priority:'normal',notes:''}));const res=await api('/api/reviews/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviews})});const saved=applyBulkReviewResult(reviews,res);const blocked=(res.blocked||[]).length;clearSelection();toast(`${decision} x${saved}${blocked?` · ${blocked} blocked`:''}`);refreshAssetView()}
+async function bulkRemoveFromBank(){const selected=[...selectedCards].map(id=>assetMap[id]).filter(Boolean);if(!selected.length)return;const assetsToRemove=expandReviewAssets(selected);if(!confirm(`Remove ${assetsToRemove.length} selected asset${assetsToRemove.length===1?'':'s'} from the Asset Bank?\n\nThis moves files to Z:/Assets/_deleted so they disappear from the bank. Runtime-promoted assets will be blocked until unpromoted.`))return;let ok=0,blocked=[];for(const a of assetsToRemove){try{const res=await api('/api/asset/remove-from-bank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:a.id})});if(res.ok)ok++;else blocked.push(`${a.id}: ${res.error||'failed'}`)}catch(e){blocked.push(`${a.id}: ${e.message}`)}}clearSelection();expandedCards.clear();await load();toast(`Removed ${ok}/${assetsToRemove.length} from bank${blocked.length?` · ${blocked.length} blocked`:''}`);if(blocked.length)console.warn('Bulk remove from bank blocked:',blocked)}
+// --- Recategorize (manual category/kind reassignment) ---
+const CAT_LIST=['monsters','npcs','players','characters','environments','tilesets','decals','ui','vfx','items','props','icons','portraits','backgrounds','audio','animation','unknown'];
+const KIND_LIST=['sprite','spritesheet','contact_sheet','source_sheet','source','prop','tile','decal','transition-decal','icon','portrait','vfx','audio','video','document'];
+function catOptions(cur){return['<option value="">- group -</option>'].concat(CAT_LIST.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${groupLabel(c)}</option>`)).join('')}
+function kindOptions(cur){return['<option value="">- subcategory -</option>'].concat(KIND_LIST.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${subcategoryLabel(k)}</option>`)).join('')}
+async function recategorizeOne(id,field,value){if(!value)return;const a=assetMap[id];if(!a)return;const body={id};body[field]=value;const r=await api('/api/asset/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(r&&r.ok){a[field]=value;toast(`${field} → ${value}`);refreshAssetView()}else{toast('Update failed')}}
+async function bulkRecategorize(){const selected=[...selectedCards].map(id=>assetMap[id]).filter(Boolean);if(!selected.length)return;const assetsToUpdate=expandReviewAssets(selected);const cat=$('bulkCat').value,kind=$('bulkKind').value;if(!cat&&!kind){toast('Pick a category or kind');return}if(!confirm(`Set ${[cat&&'category='+cat,kind&&'kind='+kind].filter(Boolean).join(', ')} on ${assetsToUpdate.length} assets?`))return;let ok=0;for(const a0 of assetsToUpdate){const id=a0.id;const body={id};if(cat)body.category=cat;if(kind)body.kind=kind;const r=await api('/api/asset/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(r&&r.ok){const a=assetMap[id];if(a){if(cat)a.category=cat;if(kind)a.kind=kind}ok++}}clearSelection();$('bulkCat').value='';$('bulkKind').value='';toast(`Recategorized ${ok}/${assetsToUpdate.length}`);refreshAssetView()}
+async function acceptWithRelated(a){
+  const key=relatedGroup(a);if(!(await saveReview(a,'accepted',{notes:currentNotes(a)||'Lead for '+key})))return;
+  const items=relatedItems(a).filter(x=>!['accepted','rejected','runtime-promoted'].includes(decisions[x.id]?.decision));
+  const reviews=items.map(x=>({id:x.id,path:x.path,decision:'pending-related',status:'related',priority:'related',notes:'Pending for '+key}));
+  let saved=0,blocked=0;
+  if(reviews.length){const res=await api('/api/reviews/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviews})});saved=applyBulkReviewResult(reviews,res);blocked=(res.blocked||[]).length}
+  toast(`Accepted +${saved}${blocked?` · ${blocked} blocked`:''}`);refreshAssetView();
+}
+async function plan(a){const payload={id:a.id,decision:currentDecision(a),notes:currentNotes(a)};const res=await api('/api/generate-promotion-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});toast('Plan saved');window.open('/_promotion-plans/generated/'+res.path.split(/[\\/]/).pop(),'_blank')}
+async function batch(decision,all=false){
+  const displayList=all?filtered():currentPageItems();if(!displayList.length){toast('No assets');return}
+  const list=expandReviewAssets(displayList);
+  if(!confirm(`Apply "${decision}" to ${list.length} assets${list.length!==displayList.length?` across ${displayList.length} visible groups/cards`:''}?`))return;
+  const reviews=list.map(a=>({id:a.id,path:a.path,decision,status:a.status,priority:decision==='needs-cleanup'?'cleanup':'normal',notes:currentNotes(a)}));
+  const res=await api('/api/reviews/bulk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reviews})});
+  const saved=applyBulkReviewResult(reviews,res);const blocked=(res.blocked||[]).length;toast(`${decision} x${saved}${blocked?` · ${blocked} blocked`:''}`);refreshAssetView();
+}
+async function generatePack(){
+  const list=filtered().filter(a=>['accepted','runtime-promoted'].includes(currentDecision(a)));if(!list.length){toast('No accepted');return}
+  const res=await api('/api/generate-promotion-pack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:activeQueue||$('mode').value||'pack',ids:list.map(a=>a.id)})});toast('Pack saved');window.open('/_promotion-plans/generated/packs/'+res.path.split(/[\\/]/).pop(),'_blank');
+}
+// Origin badge: repo-origin rows (client/public/assets, assets/sources/accepted) are READ-ONLY
+// to the bank — already in the repo pipeline; the bank browses/reviews them but never promotes
+// or mutates them. The badge tells the operator why Accept/Promote won't apply.
+function originBadgeHtml(a){
+  if(a.origin==='repo-runtime')return`<span class="lm-badge lm-badge--info" title="Read-only: lives in client/public/assets (runtime). Promote/accept disabled — already in the pipeline.">REPO</span>`;
+  if(a.origin==='repo-source')return`<span class="lm-badge lm-badge--info" title="Read-only: lives in assets/sources/accepted (source evidence). Promote/accept disabled — already in the pipeline.">REPO-SRC</span>`;
+  return'';
+}
+function groupBadgeHtml(a){
+  if(!a._groupCount||a._groupCount<=1)return'';
+  if(activeEntityGroup&&a._groupKey)return`<div class="lm-badge lm-badge--accent group-badge" onclick="event.stopPropagation();drillEntity('${encodeURIComponent(a._groupKey)}')" title="Open frames — ${a._groupCount} assets">&#9638; ${a._groupCount}</div>`;
+  if(activeEntityGroup)return`<div class="lm-badge lm-badge--accent group-badge" title="Animation frames — ${a._groupCount} assets">&#9638; ${a._groupCount}</div>`;
+  return`<div class="lm-badge lm-badge--accent group-badge" onclick="event.stopPropagation();drillEntity('${encodeURIComponent(a._groupKey||'')}')" title="Open entity — ${a._groupCount} assets">&#9638; ${a._groupCount}</div>`;
+}
+
+// Card (grid view)
+function card(a){
+  const d=currentDecision(a),bg=$('bg').value,[ready,klass]=readiness(a),dup=duplicateCount(a);
+  const duplicateReason=hasDuplicateReason(a),reasonHtml=visibleReasonHtml(a);
+  const thumbState=isVisualAsset(a)?' loading':'';
+  return`<div class="lm-card card${dup>1||duplicateReason?' dup':''}${a.fringe?' has-fringe':''}${compareSlots.includes(a.id)?' compare-selected':''}${focusedCardId===a.id?' focused':''}${expandedCards.has(a.id)?' expanded':''}" data-id="${a.id}" onmouseenter="focusCard('${a.id}')" onmouseleave="blurCard('${a.id}')">
+  <div class="dbar ${d}"></div><input type="checkbox" class="sel-cb" data-id="${a.id}" ${selectedCards.has(a.id)?'checked':''} onclick="toggleSelect('${a.id}',event)" title="Select. Shift+click selects a range.">
+  <div class="thumb ${bg==='checker'?'':bg}${thumbState}">${media(a)}${groupBadgeHtml(a)}</div>
+  <div class="cmeta">
+    <div class="cid">${esc(a.id)}<button class="copy-btn" onclick="event.stopPropagation();copyText('${esc(a.id)}')" title="Copy ID">ID</button></div>
+    <div class="cinfo"><span class="lm-badge ${decisionBadgeClass(d)} cdec ${d}">${d}</span><select class="lm-select mini-sel" title="Group" onclick="event.stopPropagation()" onchange="recategorizeOne('${a.id}','category',this.value)">${catOptions(a.category)}</select><select class="lm-select mini-sel" title="Subcategory" onclick="event.stopPropagation()" onchange="recategorizeOne('${a.id}','kind',this.value)">${kindOptions(a.kind)}</select> ${a.image?.width?`<span>${a.image.width}&times;${a.image.height}</span>`:''}</div>
+    <div class="cpath">${esc(a.path)}<button class="copy-btn" onclick="event.stopPropagation();openAssetLocation('${esc(a.id)}')" title="Open file location">open</button></div>
+    <div class="cbadges"><span class="lm-badge ${readinessBadgeClass(klass)}" title="Readiness/workflow hint, separate from the review decision">FLOW ${ready}</span>${originBadgeHtml(a)}${(d==='runtime-promoted'||a.status==='promoted')?`<span class="lm-badge lm-badge--ok" title="Promoted into the runtime registry (in-game)">IN GAME</span>`:''}${duplicateReason?`<span class="lm-badge lm-badge--danger" title="Review note/status says this is a duplicate">DUPLICATE</span>`:''}${a.fringe?`<span class="lm-badge lm-badge--danger" title="Asset cleanup defect (${a.fringe_kind||'?'}) — fix before accept/promote">DEFECT${a.fringe_kind?' '+a.fringe_kind:''}</span>`:''}${dup>1?`<span class="lm-badge lm-badge--warn" title="Similar assets with matching name/dimensions">x${dup}</span>`:''}</div>
+    ${reasonHtml}
+  </div>
+  <div class="cactions">
+    <button class="lm-btn lm-btn--primary ca" title="Accept${a._groupCount>1?' whole group':''}" onclick="reviewAction(assetMap['${a.id}'],'accepted')">Accept</button>
+    <button class="lm-btn cc" title="Needs cleanup${a._groupCount>1?' for whole group':''}" onclick="reviewAction(assetMap['${a.id}'],'needs-cleanup')">Cleanup</button>
+    <button class="lm-btn cl" title="Promote later${a._groupCount>1?' for whole group':''}" onclick="reviewAction(assetMap['${a.id}'],'promote-later')">Later</button>
+    <button class="lm-btn lm-btn--danger cr" title="Reject${a._groupCount>1?' whole group':''}" onclick="reviewAction(assetMap['${a.id}'],'rejected')">Reject</button>
+    ${d==='runtime-promoted'
+      ?`<button class="lm-btn lm-btn--danger cp" title="Unpromote from runtime registry" onclick="unpromoteAsset('${a.id}')">Unpromote</button>`
+      :`<button class="lm-btn lm-btn--primary cp" title="Promote into runtime registry" onclick="promoteAsset('${a.id}')">Promote</button>`}
+    <button class="lm-btn lm-btn--danger cd" title="Remove from Asset Bank${a._groupCount>1?' whole group':''}" onclick="removeFromBank(assetMap['${a.id}'])">Del</button>
+  </div>
+  <div class="xtoggle" onclick="toggleExpand('${a.id}',this.closest('.card'))">...</div>
+  <div class="card-expand">
+    <textarea class="lm-input" id="notes_${a.id}" placeholder="Notes">${esc(currentNotes(a))}</textarea>
+    ${gameSizes(a)}${relatedPanel(a)}
+    <div class="xbtns">
+      <button class="lm-btn sb-btn" onclick="saveReview(assetMap['${a.id}'],'considered',{priority:'normal'})">Consider</button>
+      <button class="lm-btn sb-btn" onclick="saveReview(assetMap['${a.id}'],'later',{priority:'normal'})">Later</button>
+      <button class="lm-btn sb-btn" onclick="saveReview(assetMap['${a.id}'],'hidden',{priority:'hidden',notes:'Hidden.'})">Hide</button>
+      <button class="lm-btn sb-btn" onclick="saveReview(assetMap['${a.id}'],'broken-preview',{priority:'cleanup',notes:'Broken.'})">Broken</button>
+      <button class="lm-btn sb-btn" onclick="checkDiagnostics(assetMap['${a.id}'])">Diagnostics</button>
+      ${a.fringe?`<button class="lm-btn sb-btn" onclick="refreshFringe('${a.id}')">Recheck defect</button><button class="lm-btn sb-btn" onclick="openLightbox('/api/asset/fringe-overlay?id=${encodeURIComponent(a.id)}','Defect overlay: ${esc(a.id)}')">Show overlay</button>`:''}
+      ${d==='runtime-promoted'
+        ?`<button class="lm-btn lm-btn--danger sb-btn" onclick="unpromoteAsset('${a.id}')">Unpromote</button>`
+        :`<button class="lm-btn lm-btn--primary sb-btn" onclick="promoteAsset('${a.id}')">Promote</button>`}
+      <button class="lm-btn sb-btn" onclick="qualityCheck('${a.id}')">QC</button>
+      <button class="lm-btn sb-btn" onclick="toggleCompare('${a.id}')">Compare</button>
+      <button class="lm-btn lm-btn--danger sb-btn" onclick="removeFromBank(assetMap['${a.id}'])">Remove from Bank</button>
+    </div>
+    <div id="diag_${safeDomId(a.id)}">${diagnosticsCache[a.id]?diagnosticsHtml(diagnosticsCache[a.id]):''}</div>
+    <div id="qg-${safeDomId(a.id)}"></div>
+  </div></div>`;
+}
+
+// List row
+function listRow(a){
+  const d=currentDecision(a),isVis=isVisualAsset(a),src=isVis?enc(thumbSrc(a)):'',full=isVis?enc('/api/asset/image?id='+encodeURIComponent(a.id)):'';
+  return`<div class="lm-card lm-card--sunken list-row" data-id="${a.id}" onmouseenter="focusCard('${a.id}')" onmouseleave="blurCard('${a.id}')">
+  ${src?`<img src="${src}" loading="lazy" decoding="async" onclick="event.stopPropagation();openLightbox('${full}','${esc(a.id)}','${a.id}')">`:'<span></span>'}
+  <div><div class="lr-id">${esc(a.id)} <button class="lr-copy" onclick="copyText('${esc(a.id)}')" title="Copy ID">ID</button></div><div class="lr-path">${esc(a.path)} <button class="lr-copy" onclick="openAssetLocation('${esc(a.id)}')" title="Open file location">open</button></div></div>
+  <div class="lr-cat">${a.category} &middot; ${a.kind}${a.image?.width?`<br>${a.image.width}&times;${a.image.height}`:''}</div>
+  <div class="lm-badge ${decisionBadgeClass(d)} lr-dec ${d}">${d}</div>
+  <div class="lr-actions">
+    <button class="lm-btn lm-btn--primary la" title="Accept" onclick="reviewAction(assetMap['${a.id}'],'accepted')">Accept</button>
+    <button class="lm-btn lc" title="Needs cleanup" onclick="reviewAction(assetMap['${a.id}'],'needs-cleanup')">Cleanup</button>
+    <button class="lm-btn lm-btn--danger lr" title="Reject" onclick="reviewAction(assetMap['${a.id}'],'rejected')">Reject</button>
+    <button class="lm-btn lm-btn--danger ld" title="Remove from Asset Bank" onclick="removeFromBank(assetMap['${a.id}'])">Del</button>
+  </div></div>`;
+}
+
+function focusCard(id){focusedCardId=id}
+function blurCard(id){if(focusedCardId===id)focusedCardId=null}
+function toggleExpand(id,el){if(expandedCards.has(id)){expandedCards.delete(id);el.classList.remove('expanded')}else{expandedCards.add(id);el.classList.add('expanded')}}
+
+// Render
+function render(append=false){
+  if(bankOfflineState){
+    filteredList=[];currentPage=0;
+    $('stats').textContent='Asset Bank offline';
+    $('progressFill').style.width='0%';
+    $('progressText').textContent='0%';
+    $('summary').innerHTML='<span>Asset Bank server is not running</span>';
+    $('pageInput').value=1;$('pageTotal').textContent='/ 1';
+    $('prevPageBtn').disabled=true;$('nextPageBtn').disabled=true;$('pageBar').style.display='none';
+    $('grid').style.display='none';$('listView').style.display='none';
+    $('emptyState').className='empty offline lm-card';
+    $('emptyState').style.display='';
+    $('emptyState').innerHTML='<strong>Asset Bank server is not running</strong><span>Start it from the hub, then refresh this page.</span><div class="offline-actions"><button class="lm-btn lm-btn--primary" id="startBankBtn">Start Asset Bank</button><a class="lm-btn" href="http://127.0.0.1:8787/index.html" target="_blank">Open Hub</a></div>';
+    $('startBankBtn').onclick=startAssetBankFromReview;
+    return;
+  }
+  $('emptyState').className='empty';
+  assetMap={};for(const a of assets)assetMap[a.id]=a;
+  if(!append)filteredList=filtered();
+  const totalPages=pageCount();
+  if(currentPage>=totalPages)currentPage=totalPages-1;
+  if(currentPage<0)currentPage=0;
+  const page=currentPageItems();
+  const start=currentPage*pageSize;
+  const end=start+page.length;
+  const accepted=filteredList.filter(a=>['accepted','runtime-promoted'].includes(currentDecision(a))).length;
+  const reviewed=filteredList.filter(a=>currentDecision(a)!=='unreviewed').length;
+  const pct=filteredList.length?Math.round(reviewed/filteredList.length*100):0;
+  const nAccepted=filteredList.filter(a=>currentDecision(a)==='accepted'||currentDecision(a)==='runtime-promoted').length;
+  const nConsidered=filteredList.filter(a=>currentDecision(a)==='considered').length;
+  const nRejected=filteredList.filter(a=>currentDecision(a)==='rejected').length;
+  const nCleanup=filteredList.filter(a=>currentDecision(a)==='needs-cleanup').length;
+  const nUnrev=filteredList.filter(a=>currentDecision(a)==='unreviewed').length;
+  const unit=groupEntities&&!activeEntityGroup?'groups':'assets';
+  $('stats').innerHTML=`<span>${filteredList.length?`${start+1}-${end}`:'0'}/${filteredList.length} ${unit}</span> · <span class="lm-badge lm-badge--ok cdec accepted">${nAccepted} accepted</span> · <span class="lm-badge lm-badge--info cdec considered">${nConsidered} considered</span> · <span class="lm-badge lm-badge--warn cdec needs-cleanup">${nCleanup} cleanup</span> · <span class="lm-badge lm-badge--danger cdec rejected">${nRejected} rejected</span> · <span style="color:var(--lm-text-muted)">${nUnrev} unreviewed</span>`;
+  const drift=Number(RECONCILE&&RECONCILE.driftCount||0),badge=$('driftBadge');if(badge){badge.style.display='';badge.textContent=`Drift ${drift}`;badge.className='lm-badge '+(drift?'lm-badge--warn':'lm-badge--ok')}
+  $('progressFill').style.width=pct+'%';
+  $('progressText').textContent=`${pct}%`;
+  $('summary').innerHTML=`<span>Queue: <b>${activeQueue||'none'}</b> &middot; Group: <b>${activeGroup||'none'}</b></span><span>Reviewed: <b>${reviewed}/${filteredList.length}</b> &middot; Accepted: <b>${accepted}</b></span>`;
+  $('pageInput').value=currentPage+1;
+  $('pageTotal').textContent='/ '+totalPages;
+  $('prevPageBtn').disabled=currentPage<=0;
+  $('nextPageBtn').disabled=currentPage>=totalPages-1;
+  $('pageBar').style.display=filteredList.length>pageSize?'':'none';
+  $('pageInfo').textContent=filteredList.length?`Page ${currentPage+1} of ${totalPages} · showing ${start+1}-${end} of ${filteredList.length} ${unit}`:'';
+  if(page.length){
+    if(viewMode==='grid'){
+      $('grid').innerHTML=page.map(card).join('');
+      $('grid').style.display='';$('listView').style.display='none';
+    }else{
+      $('listView').innerHTML=page.map(listRow).join('');
+      $('listView').style.display='';$('grid').style.display='none';
+    }
+    $('emptyState').style.display='none';
+  }else{$('grid').style.display='none';$('listView').style.display='none';$('emptyState').style.display=''}
+}
+function pagePrev(){if(currentPage>0){currentPage--;render();document.querySelector('main').scrollTo(0,0)}}
+function pageNext(){if(currentPage<pageCount()-1){currentPage++;render();document.querySelector('main').scrollTo(0,0)}}
+function pageTo(n){const p=Math.max(0,Math.min(pageCount()-1,n-1));if(p!==currentPage){currentPage=p;render();document.querySelector('main').scrollTo(0,0)}else render()}
+
+// Thumb slider — drives the grid card width (--asset-card-w) and a proportional thumb
+// height (--asset-thumb-h). The lm-kit migration (d76ed414) renamed the grid var but left
+// this handler writing the old dead --card-w, so the slider silently did nothing.
+function applyThumbSize(px){const w=parseInt(px,10)||240;$('thumbVal').textContent=String(w);document.documentElement.style.setProperty('--asset-card-w',w+'px');document.documentElement.style.setProperty('--asset-thumb-h',Math.round(w*0.625)+'px')}
+$('thumbSlider').addEventListener('input',function(){applyThumbSize(this.value)});
+applyThumbSize($('thumbSlider').value);
+
+// View toggle
+$('viewToggle').addEventListener('click',function(){viewMode=viewMode==='grid'?'list':'grid';this.textContent=viewMode==='grid'?'List':'Grid';render()});
+$('pageSize').value=String(pageSize);
+$('pageSize').addEventListener('input',function(){pageSize=parseInt(this.value,10)||100;localStorage.setItem('assetReviewPageSize',String(pageSize));resetPage();render()});
+$('prevPageBtn').onclick=pagePrev;$('nextPageBtn').onclick=pageNext;
+$('pageInput').addEventListener('change',function(){pageTo(parseInt(this.value,10)||1)});
+$('cropPreviewBtn').onclick=()=>{cropPreview=!cropPreview;$('cropPreviewBtn').classList.toggle('on',cropPreview);render()};
+$('healthBtn').onclick=openHealthPanel;
+
+// Fullscreen
+let isFs=false;
+$('fsToggle').addEventListener('click',()=>{isFs=!isFs;$('fsToggle').textContent=isFs?'▣':'⛶'});
+
+// Events
+['q','category','kind','status','decision','readiness','bg','mode','sort'].forEach(id=>$(id).addEventListener('input',()=>{
+  if(healthOpen)closeHealthPanel();
+  if(id==='mode'&&$('mode').value==='hidden'){showArchive=true;showSupport=true;$('archiveBtn').classList.add('on');$('supportBtn').classList.add('on')}
+  buildFilters();resetPage();render();
+}));
+$('sheetsBtn').onclick=()=>{showSheets=!showSheets;$('sheetsBtn').classList.toggle('on',showSheets);buildFilters();resetPage();render()};
+$('archiveBtn').onclick=()=>{showArchive=!showArchive;$('archiveBtn').classList.toggle('on',showArchive);buildFilters();resetPage();render()};
+$('supportBtn').onclick=()=>{showSupport=!showSupport;$('supportBtn').classList.toggle('on',showSupport);buildFilters();resetPage();render()};
+$('clearQueueBtn').onclick=()=>{activeQueue='';document.querySelectorAll('[data-queue]').forEach(x=>x.classList.remove('on'));$('clearQueueBtn').classList.add('on');buildFilters();resetPage();render()};
+$('clearGroupBtn').onclick=clearGroup;
+document.querySelectorAll('[data-batch]').forEach(b=>b.onclick=()=>batch(b.dataset.batch,false));
+$('batchAllBtn').onclick=()=>{const d=prompt('Decision for all filtered:\naccepted, considered, needs-cleanup, promote-later, later, rejected, pending-related, hidden, broken-preview');if(['accepted','considered','needs-cleanup','promote-later','later','rejected','pending-related','hidden','broken-preview'].includes(d))batch(d,true)};
+$('refreshBtn').onclick=load;$('packBtn').onclick=generatePack;
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify({generated_at:new Date().toISOString(),reviews:Object.values(decisions)},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='asset-review-export.json';a.click()};
+
+// Lightbox
+let lbScale=1,lbX=0,lbY=0,lbDrag=false,lbDS={x:0,y:0,ox:0,oy:0},lbIndex=-1;
+function getLbItems(){return currentPageItems().filter(isVisualAsset)}
+function openLightbox(src,info,aid){$('lightboxImg').src=src;lbScale=1;lbX=0;lbY=0;lbApply();$('lightboxInfo').textContent=info||'';$('lightbox').classList.add('open');const items=getLbItems();lbIndex=items.findIndex(a=>a.id===aid);lbUpdateCounter();document.addEventListener('keydown',lbKey)}
+function closeLightbox(){$('lightbox').classList.remove('open');document.removeEventListener('keydown',lbKey)}
+function lbUpdateCounter(){const items=getLbItems();$('lbCounter').textContent=lbIndex>=0?`${lbIndex+1}/${items.length}`:''}
+function lbNav(dir){const items=getLbItems();if(!items.length)return;lbIndex=(lbIndex+dir+items.length)%items.length;const a=items[lbIndex];$('lightboxImg').src=enc(a.path_from_review_html||'../'+a.path);$('lightboxInfo').textContent=a.id;lbScale=1;lbX=0;lbY=0;lbApply();lbUpdateCounter()}
+function lbPrev(){lbNav(-1)}function lbNext(){lbNav(1)}
+function lbKey(e){if(e.key==='Escape')closeLightbox();if(e.key==='ArrowLeft'){e.preventDefault();lbPrev()}if(e.key==='ArrowRight'){e.preventDefault();lbNext()}if(e.key==='+'||e.key==='='){lbScale=Math.min(lbScale*1.3,30);lbApply()}if(e.key==='-'){lbScale=Math.max(lbScale/1.3,.1);lbApply()}if(e.key==='0'){lbScale=1;lbX=0;lbY=0;lbApply()}}
+function lbApply(){$('lightboxImg').style.transform=`translate(${lbX}px,${lbY}px) scale(${lbScale})`}
+$('lightboxImg').addEventListener('wheel',function(e){e.preventDefault();e.stopPropagation();lbScale=e.deltaY<0?Math.min(lbScale*1.2,30):Math.max(lbScale/1.2,.1);lbApply()},{passive:false});
+$('lightboxImg').addEventListener('mousedown',function(e){e.preventDefault();lbDrag=true;lbDS={x:e.clientX,y:e.clientY,ox:lbX,oy:lbY};this.style.cursor='grabbing'});
+document.addEventListener('mousemove',function(e){if(!lbDrag)return;lbX=lbDS.ox+(e.clientX-lbDS.x);lbY=lbDS.oy+(e.clientY-lbDS.y);lbApply()});
+document.addEventListener('mouseup',function(){if(lbDrag){lbDrag=false;$('lightboxImg').style.cursor=''}});
+$('grid').addEventListener('click',function(e){const t=e.target.closest('.thumb');if(!t)return;const img=t.querySelector('img');if(!img)return;e.stopPropagation();const card=t.closest('.card');openLightbox(img.dataset.fallback||img.src,card?.dataset.id||'',card?.dataset.id||'')});
+
+// Compare
+function toggleCompare(id){const i=compareSlots.indexOf(id);if(i>=0)compareSlots[i]=null;else if(!compareSlots[0])compareSlots[0]=id;else if(!compareSlots[1])compareSlots[1]=id;else{compareSlots[0]=compareSlots[1];compareSlots[1]=id}render();if(compareSlots[0]&&compareSlots[1])showCompare()}
+function showCompare(){
+  for(let i=0;i<2;i++){const pane=$(i===0?'compareA':'compareB');const a=assetMap[compareSlots[i]];
+    if(a&&isVisualAsset(a)){const src=enc('/api/asset/image?id='+encodeURIComponent(a.id));pane.innerHTML=`<img src="${src}"><div class="meta"><b>${a.id}</b><br>${a.image?.width||'?'}&times;${a.image?.height||'?'}</div>`}
+    else if(a)pane.innerHTML=`<div class="meta"><b>${a.id}</b><br>${a.kind}</div>`;
+    else pane.innerHTML='<span class="compare-ph">Shift+click a card</span>'}
+  $('compareOverlay').classList.add('open');
+}
+function closeCompare(){$('compareOverlay').classList.remove('open')}
+function clearCompare(){compareSlots=[null,null];closeCompare();render()}
+$('compareToggle').onclick=()=>{if(compareSlots[0]||compareSlots[1])showCompare();else toast('Shift+click two cards')};
+$('grid').addEventListener('click',function(e){if(!e.shiftKey)return;const c=e.target.closest('.card');if(!c)return;e.preventDefault();toggleCompare(c.dataset.id)});
+
+// Keyboard
+let kbT;function showKb(){$('kbHint').classList.add('show');clearTimeout(kbT);kbT=setTimeout(()=>$('kbHint').classList.remove('show'),2500)}
+document.addEventListener('keydown',function(e){
+  if($('lightbox').classList.contains('open'))return;
+  if($('compareOverlay').classList.contains('open')&&e.key==='Escape'){closeCompare();return}
+  const t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT')return;
+  if(e.key==='F11'){e.preventDefault();isFs=!isFs;$('fsToggle').textContent=isFs?'▣':'⛶';return}
+  if(e.key==='?'){showKb();return}
+  if(e.key==='/'){e.preventDefault();$('q').focus();return}
+  if(e.key==='v'){viewMode=viewMode==='grid'?'list':'grid';$('viewToggle').textContent=viewMode==='grid'?'List':'Grid';render();return}
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'||e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const cards=[...document.querySelectorAll('.card,.list-row')];if(!cards.length)return;let idx=cards.findIndex(c=>c.dataset.id===focusedCardId);if(idx<0)idx=0;else if(e.key==='ArrowRight'||e.key==='ArrowDown')idx=Math.min(idx+1,cards.length-1);else idx=Math.max(idx-1,0);const nid=cards[idx].dataset.id;focusedCardId=nid;document.querySelectorAll('.focused').forEach(c=>c.classList.remove('focused'));cards[idx].classList.add('focused');cards[idx].scrollIntoView({block:'nearest'});return}
+  if(e.key===' '&&focusedCardId){e.preventDefault();toggleSelect(focusedCardId);return}
+  if(e.key==='n'||e.key==='N'||e.key==='PageDown'){e.preventDefault();pageNext();return}
+  if(e.key==='p'||e.key==='P'||e.key==='PageUp'){e.preventDefault();pagePrev();return}
+  if(!focusedCardId||!assetMap[focusedCardId])return;const a=assetMap[focusedCardId];
+  if(e.key==='a'||e.key==='A')reviewAction(a,'accepted');
+  else if(e.key==='r'||e.key==='R')reviewAction(a,'rejected');
+  else if(e.key==='c'||e.key==='C')reviewAction(a,'needs-cleanup');
+  else if(e.key==='l'||e.key==='L')reviewAction(a,'promote-later');
+  else if(e.key==='e'||e.key==='E'){const el=document.querySelector(`.card[data-id="${focusedCardId}"]`);if(el)toggleExpand(focusedCardId,el)}
+  else if(e.key==='Enter'){e.preventDefault();const el=document.querySelector(`.card[data-id="${focusedCardId}"] .thumb img`);if(el)openLightbox(el.dataset.fallback||el.src,focusedCardId,focusedCardId)}
+});
+setTimeout(showKb,1200);
+
+// Spritesheet animation in lightbox
+let sheetAnim={active:false,timer:null,frame:0,cols:1,rows:1,total:1,fps:8,fw:0,fh:0,img:null,canvas:null};
+function isSheet(a){if(!a)return false;if(a.kind==='spritesheet')return true;const n=((a.name||'')+(a.id||'')).toLowerCase();return n.includes('sheet')||n.includes('strip')||n.includes('anim')}
+function detectSheetGrid(a){
+  const img=a.image||{};const w=img.width||0,h=img.height||0;if(!w||!h)return null;
+  const n=((a.name||'')+(a.id||'')).toLowerCase();
+  const stripMatch=n.match(/(\d+)\s*frames?/i);
+  if(stripMatch){const frames=parseInt(stripMatch[1]);if(w>h){return{cols:frames,rows:1,fw:Math.round(w/frames),fh:h,total:frames}}else{return{cols:1,rows:frames,fw:w,fh:Math.round(h/frames),total:frames}}}
+  if(w===h){const side=Math.round(Math.sqrt(w*h/(64*64)));if(side>1)return{cols:side,rows:side,fw:Math.round(w/side),fh:Math.round(h/side),total:side*side}}
+  const candidates=[];
+  for(const fw of[16,24,32,48,64,96,128,256]){if(w%fw!==0)continue;const cols=w/fw;for(const fh of[16,24,32,48,64,96,128,256]){if(h%fh!==0)continue;const rows=h/fh;const total=cols*rows;if(total>=2&&total<=256)candidates.push({cols,rows,fw,fh,total,score:Math.abs(fw-fh)+Math.abs(total-8)})}}
+  if(!candidates.length){if(w>h&&w/h>=2){const cols=Math.round(w/h);return{cols,rows:1,fw:Math.round(w/cols),fh:h,total:cols}}if(h>w&&h/w>=2){const rows=Math.round(h/w);return{cols:1,rows,fw:w,fh:Math.round(h/rows),total:rows}}return null}
+  candidates.sort((a,b)=>a.score-b.score);return candidates[0];
+}
+function startSheetPreview(a){
+  const grid=detectSheetGrid(a);if(!grid){$('lbAnimControls').style.display='none';return}
+  sheetAnim.cols=grid.cols;sheetAnim.rows=grid.rows;sheetAnim.total=grid.total;sheetAnim.fw=grid.fw;sheetAnim.fh=grid.fh;sheetAnim.frame=0;sheetAnim.fps=8;sheetAnim.active=false;
+  $('lbAnimFps').value=8;$('lbAnimFpsVal').textContent='8';
+  $('lbAnimToggle').textContent='Play';$('lbAnimToggle').classList.remove('on');
+  $('lbAnimFrame').textContent=`1/${grid.total}`;
+  $('lbAnimControls').style.display='flex';
+  const lbImg=$('lightboxImg');
+  const srcImg=new Image();srcImg.crossOrigin='anonymous';
+  srcImg.onload=()=>{
+    sheetAnim.img=srcImg;
+    if(!sheetAnim.canvas){sheetAnim.canvas=document.createElement('canvas')}
+    sheetAnim.canvas.width=grid.fw;sheetAnim.canvas.height=grid.fh;
+    drawSheetFrame(0);
+  };
+  srcImg.src=lbImg.src;
+}
+function drawSheetFrame(f){
+  if(!sheetAnim.img)return;
+  const s=sheetAnim,col=f%s.cols,row=Math.floor(f/s.cols);
+  const ctx=s.canvas.getContext('2d');ctx.clearRect(0,0,s.fw,s.fh);
+  ctx.drawImage(s.img,col*s.fw,row*s.fh,s.fw,s.fh,0,0,s.fw,s.fh);
+  $('lightboxImg').src=s.canvas.toDataURL();
+  $('lbAnimFrame').textContent=`${f+1}/${s.total}`;
+}
+function toggleSheetAnim(){
+  sheetAnim.active=!sheetAnim.active;
+  $('lbAnimToggle').textContent=sheetAnim.active?'Stop':'Play';
+  $('lbAnimToggle').classList.toggle('on',sheetAnim.active);
+  if(sheetAnim.active){sheetAnim.timer=setInterval(()=>{sheetAnim.frame=(sheetAnim.frame+1)%sheetAnim.total;drawSheetFrame(sheetAnim.frame)},1000/sheetAnim.fps)}
+  else{clearInterval(sheetAnim.timer)}
+}
+function updateSheetFps(v){sheetAnim.fps=parseInt(v);$('lbAnimFpsVal').textContent=v;if(sheetAnim.active){clearInterval(sheetAnim.timer);sheetAnim.timer=setInterval(()=>{sheetAnim.frame=(sheetAnim.frame+1)%sheetAnim.total;drawSheetFrame(sheetAnim.frame)},1000/sheetAnim.fps)}}
+function stopSheetAnim(){sheetAnim.active=false;clearInterval(sheetAnim.timer);$('lbAnimControls').style.display='none'}
+
+// Patch lightbox open/close/nav to handle spritesheets
+const _origOpenLb=openLightbox;
+openLightbox=function(src,info,aid){
+  _origOpenLb(src,info,aid);
+  const a=assetMap[aid];
+  if(a&&isSheet(a))setTimeout(()=>startSheetPreview(a),100);
+  else $('lbAnimControls').style.display='none';
+};
+const _origCloseLb=closeLightbox;
+closeLightbox=function(){stopSheetAnim();_origCloseLb()};
+const _origLbNav=lbNav;
+lbNav=function(dir){
+  stopSheetAnim();
+  const items=getLbItems();if(!items.length)return;
+  lbIndex=(lbIndex+dir+items.length)%items.length;
+  const a=items[lbIndex];
+  $('lightboxImg').src=enc(a.path_from_review_html||'../'+a.path);
+  $('lightboxInfo').textContent=a.id;lbScale=1;lbX=0;lbY=0;lbApply();lbUpdateCounter();
+  if(isSheet(a))setTimeout(()=>startSheetPreview(a),100);
+  else $('lbAnimControls').style.display='none';
+};
+
+// === Special Views: Entities, Zones, Collections, Coverage ===
+let PROFILES={entities:{}},ZONEPACKS={zones:{}},COLLECTIONS={collections:{}};
+let svDetailView=null; // {type:'entity'|'zone'|'collection', id:string}
+
+async function loadProfiles(){
+  try{PROFILES=await api('/api/entity-profiles')}catch{PROFILES={entities:{}}}
+  try{ZONEPACKS=await api('/api/zone-packs')}catch{ZONEPACKS={zones:{}}}
+  try{COLLECTIONS=await api('/api/collections')}catch{COLLECTIONS={collections:{}}}
+}
+
+const REQUIRED_SLOTS={monster:['idle_sprite'],npc:['idle_sprite'],player:['idle_sprite','walk_sheet','attack_sheet'],item:['icon'],currency:['icon']};
+// Full slot schema per entity type — the entity detail view renders ALL of these (empty ones as
+// assignable placeholders) so audio/vfx/sheet slots are always reachable even when an entity's
+// stored profile only has a subset populated (fixes: slime showed only idle_sprite, no audio slot).
+const ALL_SLOTS={monster:['idle_sprite','walk_sheet','attack_sheet','hit_sheet','death_sheet','death_vfx','portrait','attack_audio','hit_audio','death_audio','move_audio','spawn_vfx','loot_vfx'],npc:['idle_sprite','walk_sheet','portrait','dialogue_audio','interact_vfx'],player:['idle_sprite','walk_sheet','attack_sheet','hit_sheet','death_sheet','cast_sheet','portrait','footstep_audio','attack_audio','hit_audio','death_audio','levelup_vfx'],item:['icon','drop_sprite','use_vfx','use_audio','equip_sprite'],currency:['icon']};
+
+function isSpecialMode(){return['entities','zones','collections','coverage'].includes($('mode').value)}
+
+function renderSpecialView(){
+  const mode=$('mode').value;
+  const sv=$('specialView');
+  if(!isSpecialMode()){sv.style.display='none';$('layout').style.display='';return}
+  $('layout').style.display='none';sv.style.display='';
+  if(svDetailView){
+    if(svDetailView.type==='entity')renderEntityDetail(svDetailView.id);
+    else if(svDetailView.type==='zone')renderZoneDetail(svDetailView.id);
+    else if(svDetailView.type==='collection')renderCollectionDetail(svDetailView.id);
+    return;
+  }
+  if(mode==='entities')renderEntitiesList();
+  else if(mode==='zones')renderZonesList();
+  else if(mode==='collections')renderCollectionsList();
+  else if(mode==='coverage')renderCoverage();
+}
+
+function svBack(){svDetailView=null;svFilter='';renderSpecialView()}
+
+function assetThumb(assetId,size){
+  size=size||48;
+  // Use the catalog asset's id if known; otherwise fall back to the raw assetId. The
+  // server /api/asset/image route resolves RUNTIME names (e.g. monster_blossom_slime,
+  // player_blackhair_cel_idle_east_256) to the keyed in-game file, so entity slots bound
+  // to a runtime name still render their real sprite. Show "?" only if the image itself
+  // fails to load (genuinely missing), via onerror swapping in the placeholder.
+  const a=assetMap[assetId];
+  const id=a?a.id:assetId;
+  const ph=`<div style=&quot;width:${size}px;height:${size}px;background:var(--lm-surface-sunken);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--lm-text-muted)&quot;>?</div>`;
+  if(!id)return`<div style="width:${size}px;height:${size}px;background:var(--lm-surface-sunken);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--lm-text-muted)">?</div>`;
+  const src='/api/asset/image?id='+encodeURIComponent(id);
+  return`<img src="${enc(src)}" style="width:${size}px;height:${size}px;object-fit:contain;border-radius:3px;background:var(--lm-surface-sunken)" onerror="this.outerHTML='${ph}'">`;
+}
+
+// --- Entities List ---
+let svFilter='';
+function renderEntitiesList(){
+  const ents=PROFILES.entities||{};
+  const fl=svFilter.toLowerCase();
+  const sorted=Object.entries(ents).filter(([id,e])=>!fl||(e.label||id).toLowerCase().includes(fl)||id.includes(fl)).sort((a,b)=>a[0].localeCompare(b[0]));
+  const byType={monster:[],npc:[],player:[],item:[],currency:[]};
+  for(const[id,e]of sorted)(byType[e.type]||(byType.other=byType.other||[])).push([id,e]);
+  let html=`<div class="sv-search"><input class="lm-input" placeholder="Filter entities..." value="${esc(svFilter)}" oninput="svFilter=this.value;renderEntitiesList()"><button class="lm-btn sv-create-btn" onclick="createEntity()">+ New Entity</button></div>`;
+  for(const[type,list]of Object.entries(byType)){
+    if(!list||!list.length)continue;
+    html+=`<div class="sv-section"><h2>${type.charAt(0).toUpperCase()+type.slice(1)}s (${list.length})</h2><div class="sv-grid">`;
+    for(const[id,e]of list){
+      const slots=e.slots||{};const total=Object.keys(slots).length;
+      const filled=Object.values(slots).filter(s=>s!==null).length;
+      const pct=total?Math.round(filled/total*100):0;
+      const req=REQUIRED_SLOTS[e.type]||[];
+      const reqFilled=req.filter(s=>slots[s]!==null).length;
+      const idleAsset=slots.idle_sprite||slots.icon;
+      html+=`<div class="lm-card sv-card" onclick="svDetailView={type:'entity',id:'${id}'};renderSpecialView()">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${idleAsset?assetThumb(idleAsset.assetId,40):''}
+          <div><div class="sv-title">${esc(e.label||id)}</div>
+          <div class="sv-sub">${e.type} · ${filled}/${total} slots · req ${reqFilled}/${req.length}</div>
+          ${slotDotsHtml(id)}</div>
+        </div>
+        <div class="sv-bar"><div class="sv-fill${pct<30?' low':pct<70?' mid':''}" style="width:${pct}%"></div></div>
+      </div>`;
+    }
+    html+='</div></div>';
+  }
+  $('specialView').innerHTML=html||'<p style="color:var(--lm-text-muted);padding:20px">No entity profiles found.</p>';
+}
+
+// --- Entity Detail ---
+function renderEntityDetail(entityId){
+  const e=(PROFILES.entities||{})[entityId];
+  if(!e){svBack();return}
+  const slots=e.slots||{};
+  const req=new Set(REQUIRED_SLOTS[e.type]||[]);
+  // Render the FULL schema for this type (empty slots become assignable placeholders), then append
+  // any extra slots the stored profile has that aren't in the schema — so audio/vfx/sheet settings
+  // are always reachable even when the profile only stored a subset (e.g. slime had only idle_sprite).
+  const schema=ALL_SLOTS[e.type]||[];
+  const slotOrder=[...schema,...Object.keys(slots).filter(s=>!schema.includes(s))];
+  let slotsHtml='';
+  for(const slot of slotOrder){const val=slots[slot];
+    const isReq=req.has(slot);
+    if(val){
+      const a=assetMap[val.assetId];
+      const status=a?currentDecision(a):(val.status||'unreviewed');
+      const src='/api/asset/image?id='+encodeURIComponent(a?a.id:val.assetId);
+      const isAudio=slotHasAudio(slot);
+      const audioSrc=isAudio?('/api/asset/image?id='+encodeURIComponent(a?a.id:val.assetId)):'';
+      const metaLabelStyle='font-size:10px;color:var(--lm-text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+      const sourceLabel=val.assignedAssetId?`<div style="${metaLabelStyle}" title="source: ${esc(val.assignedAssetId)}">source: ${esc(val.assignedAssetId)}</div>`:'';
+      const runtimeLabel=val.runtimeTargetPath?`<div style="${metaLabelStyle}" title="runtime: ${esc(val.runtimeTargetPath)}">runtime: ${esc(val.runtimeTargetPath)}</div>`:'';
+      slotsHtml+=`<div class="lm-card lm-card--sunken ep-slot filled" title="${esc(val.assetId)}">
+        ${isAudio
+          ?`<div style="width:80px;height:80px;background:var(--lm-surface-sunken);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer" onclick="this.querySelector('audio')?.paused?this.querySelector('audio')?.play():this.querySelector('audio')?.pause()">♪<audio src="${audioSrc}" style="display:none"></audio></div>`
+          :`<div onclick="if(assetMap['${val.assetId}'])openLightbox('${enc(src)}','${esc(val.assetId)}','${val.assetId}')" style="cursor:pointer">${assetThumb(val.assetId,80)}</div>`}
+        <div style="flex:1;min-width:0">
+          <div class="ep-slot-name">${slot.replace(/_/g,' ')}</div>
+          <div class="ep-slot-asset">${esc(a?.name||val.assetId)}</div>
+          ${sourceLabel}${runtimeLabel}
+          <span class="lm-badge ${decisionBadgeClass(status)} ep-slot-status ${status}">${status}</span>
+          ${isAudio&&audioSrc?`<div style="margin-top:4px"><audio controls src="${audioSrc}" style="height:24px;width:100%"></audio></div>`:''}
+          <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
+            <button class="lm-btn ep-assign" onclick="assignSlot('${entityId}','${slot}')">Reassign</button>
+            <button class="lm-btn lm-btn--danger ep-assign" onclick="unassignSlot('${entityId}','${slot}')">Remove</button>
+            ${!a?''
+              :status==='runtime-promoted'
+              ?`<button class="lm-btn lm-btn--danger sv-unpromote-btn" onclick="unpromoteAsset('${val.assetId}')">Unpromote</button>`
+              :`<button class="lm-btn lm-btn--primary sv-promote-btn" onclick="promoteAsset('${val.assetId}')">Promote</button>
+               <button class="lm-btn ep-assign" onclick="qualityCheck('${val.assetId}')">QC</button>`}
+          </div>
+          <div id="qg-${val.assetId.replace(/[^a-zA-Z0-9_-]/g,'_')}"></div>
+        </div>
+      </div>`;
+    }else{
+      slotsHtml+=`<div class="lm-card lm-card--sunken ep-slot ${isReq?'required':'empty'}">
+        <div style="width:80px;height:80px;background:var(--lm-surface-sunken);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--lm-text-muted)">+</div>
+        <div class="ep-slot-name">${slot.replace(/_/g,' ')}</div>
+        <div class="ep-slot-asset" style="color:var(--lm-text-muted)">${isReq?'Required':'Optional'}</div>
+        <button class="lm-btn ep-assign" onclick="assignSlot('${entityId}','${slot}')">Assign</button>
+      </div>`;
+    }
+  }
+  $('specialView').innerHTML=`
+    <button class="sv-back" onclick="svBack()">← Back to entities</button>
+    <div class="lm-card ep-detail">
+      <div class="ep-header">
+        <h2>${esc(e.label||entityId)}</h2>
+        <span class="ep-type">${e.type}</span>
+        <span style="font-size:11px;color:var(--lm-text-muted)">${e.gameId}</span>
+        <div style="flex:1"></div>
+        <button class="lm-btn sv-create-btn" onclick="autoSuggestSlots('${entityId}')">Auto-suggest</button>
+        <button class="lm-btn sv-export-btn" onclick="exportEntityJSON('${entityId}')">Export JSON</button>
+      </div>
+      <div class="ep-slots">${slotsHtml}</div>
+    </div>`;
+}
+
+// === Search Modal (replaces all prompt() dialogs) ===
+let smCallback=null,smFocusIdx=-1,smFilterFn=null;
+function openSearchModal(title,filterFn,callback){
+  smCallback=callback;smFocusIdx=-1;smFilterFn=filterFn;
+  $('smInput').placeholder=title||'Search assets...';$('smInput').value='';
+  $('smResults').innerHTML='<div class="sm-empty">Start typing to search...</div>';
+  $('searchModal').classList.add('open');
+  setTimeout(()=>$('smInput').focus(),50);
+}
+function closeSearchModal(){$('searchModal').classList.remove('open');smCallback=null;smFilterFn=null}
+function smSearch(q){
+  const ql=(q||'').toLowerCase().trim();
+  if(!ql){$('smResults').innerHTML='<div class="sm-empty">Start typing to search...</div>';smFocusIdx=-1;return}
+  let matches=assets.filter(a=>(a.id+' '+(a.name||'')+' '+(a.path||'')).toLowerCase().includes(ql));
+  if(smFilterFn)matches=matches.filter(smFilterFn);
+  matches=matches.slice(0,30);
+  if(!matches.length){$('smResults').innerHTML='<div class="sm-empty">No matches for "'+esc(q)+'"</div>';smFocusIdx=-1;return}
+  smFocusIdx=0;
+  $('smResults').innerHTML=matches.map((a,i)=>{
+    const src='/api/asset/image?id='+encodeURIComponent(a.id);
+    const isAudio=a.kind==='audio';
+    return`<div class="sm-item${i===0?' sm-focused':''}" data-idx="${i}" onclick="smPick(${i})">
+      ${isAudio?'<div style="width:48px;height:48px;background:var(--lm-surface-sunken);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px">♪</div>'
+      :`<img src="${enc(src)}" onerror="this.style.display='none'">`}
+      <div class="sm-item-info">
+        <div class="sm-item-name">${esc(a.name||a.id)}</div>
+        <div class="sm-item-meta">${a.kind||''} · ${a.category||''} · ${currentDecision(a)}</div>
+      </div>
+    </div>`}).join('');
+}
+function smPick(idx){
+  const items=$('smResults').querySelectorAll('.sm-item');
+  if(idx<0||idx>=items.length)return;
+  const q=$('smInput').value.toLowerCase().trim();
+  let matches=assets.filter(a=>(a.id+' '+(a.name||'')+' '+(a.path||'')).toLowerCase().includes(q));
+  if(smFilterFn)matches=matches.filter(smFilterFn);
+  matches=matches.slice(0,30);
+  if(idx>=matches.length)return;
+  const asset=matches[idx];
+  closeSearchModal();
+  if(smCallback)smCallback(asset);
+}
+$('smInput').addEventListener('input',function(){smSearch(this.value)});
+$('smInput').addEventListener('keydown',function(e){
+  const items=$('smResults').querySelectorAll('.sm-item');
+  if(e.key==='Escape'){closeSearchModal();return}
+  if(e.key==='ArrowDown'){e.preventDefault();smFocusIdx=Math.min(smFocusIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('sm-focused',i===smFocusIdx));items[smFocusIdx]?.scrollIntoView({block:'nearest'})}
+  if(e.key==='ArrowUp'){e.preventDefault();smFocusIdx=Math.max(smFocusIdx-1,0);items.forEach((el,i)=>el.classList.toggle('sm-focused',i===smFocusIdx));items[smFocusIdx]?.scrollIntoView({block:'nearest'})}
+  if(e.key==='Enter'){e.preventDefault();smPick(smFocusIdx)}
+});
+
+function assignSlot(entityId,slot){
+  openSearchModal('Assign asset to "'+slot.replace(/_/g,' ')+'"...',slotHasAudio(slot)?(asset=>asset.kind==='audio'):null,asset=>{
+    api('/api/entity-profile/bind',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entityId,slot,assetId:asset.id})})
+      .then((res)=>{
+        if(!PROFILES.entities[entityId])return;
+        const next=res.entity?.slots?.[slot]||{assetId:asset.id,status:currentDecision(asset)};
+        PROFILES.entities[entityId].slots[slot]=next;
+        toast(res.audioPromotion?'Replaced runtime audio for '+slot:'Bound '+asset.id+' → '+slot);renderSpecialView();
+      }).catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function unassignSlot(entityId,slot){
+  if(!confirm('Remove asset from "'+slot.replace(/_/g,' ')+'"?'))return;
+  api('/api/entity-profile/unbind',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entityId,slot})})
+    .then(()=>{
+      if(PROFILES.entities[entityId])PROFILES.entities[entityId].slots[slot]=null;
+      toast('Unbound '+slot);renderSpecialView();
+    }).catch(e=>toast('Error: '+e.message));
+}
+
+function addToZoneLayer(zoneId,layer){
+  const existing=new Set((ZONEPACKS.zones[zoneId]?.layers[layer])||[]);
+  openSearchModal('Add asset to "'+layer.replace(/_/g,' ')+'"...',a=>!existing.has(a.id),asset=>{
+    api('/api/zone-pack/add-asset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zoneId,layer,assetId:asset.id})})
+      .then(()=>{
+        if(ZONEPACKS.zones[zoneId])ZONEPACKS.zones[zoneId].layers[layer].push(asset.id);
+        toast('Added '+asset.id+' → '+layer);renderSpecialView();
+      }).catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function removeFromZoneLayer(zoneId,layer,assetId){
+  api('/api/zone-pack/remove-asset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zoneId,layer,assetId})})
+    .then(()=>{
+      if(ZONEPACKS.zones[zoneId]){const arr=ZONEPACKS.zones[zoneId].layers[layer];const i=arr.indexOf(assetId);if(i>=0)arr.splice(i,1)}
+      toast('Removed from '+layer);renderSpecialView();
+    }).catch(e=>toast('Error: '+e.message));
+}
+
+function addToCollection(collId){
+  const existing=new Set((COLLECTIONS.collections[collId]?.assetIds)||[]);
+  openSearchModal('Add asset to collection...',a=>!existing.has(a.id),asset=>{
+    api('/api/collection/add-asset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({collectionId:collId,assetId:asset.id})})
+      .then(()=>{
+        if(COLLECTIONS.collections[collId])COLLECTIONS.collections[collId].assetIds.push(asset.id);
+        toast('Added '+asset.id);renderSpecialView();
+      }).catch(e=>toast('Error: '+e.message));
+  });
+}
+
+function removeFromCollection(collId,assetId){
+  const c=COLLECTIONS.collections[collId];if(!c)return;
+  const newIds=(c.assetIds||[]).filter(id=>id!==assetId);
+  api('/api/collection/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:collId,label:c.label,category:c.category,assetIds:newIds,bindings:c.bindings||{}})})
+    .then(()=>{
+      c.assetIds=newIds;
+      toast('Removed from collection');renderSpecialView();
+    }).catch(e=>toast('Error: '+e.message));
+}
+
+// --- Zones List ---
+function renderZonesList(){
+  const zones=ZONEPACKS.zones||{};
+  const fl=svFilter.toLowerCase();
+  const sorted=Object.entries(zones).filter(([id,z])=>!fl||(z.label||id).toLowerCase().includes(fl)||id.includes(fl)).sort((a,b)=>a[0].localeCompare(b[0]));
+  let html=`<div class="sv-search"><input class="lm-input" placeholder="Filter zones..." value="${esc(svFilter)}" oninput="svFilter=this.value;renderZonesList()"><button class="lm-btn sv-create-btn" onclick="createZone()">+ New Zone</button></div>`;
+  html+='<div class="sv-section"><h2>Zone Packs ('+sorted.length+')</h2><div class="sv-grid">';
+  for(const[id,z]of sorted){
+    const layers=z.layers||{};
+    const total=Object.values(layers).reduce((s,a)=>s+a.length,0);
+    const filledLayers=Object.entries(layers).filter(([,a])=>a.length>0).length;
+    html+=`<div class="lm-card sv-card" onclick="svDetailView={type:'zone',id:'${id}'};renderSpecialView()">
+      <div class="sv-title">${esc(z.label||id)}</div>
+      <div class="sv-sub">${total} assets across ${filledLayers} layers</div>
+      <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
+        ${Object.entries(layers).map(([l,a])=>a.length?`<span class="lm-badge" style="font-size:10px">${l}: ${a.length}</span>`:'').join('')}
+      </div>
+    </div>`;
+  }
+  html+='</div></div>';
+  $('specialView').innerHTML=html;
+}
+
+// --- Zone Detail ---
+function renderZoneDetail(zoneId){
+  const z=(ZONEPACKS.zones||{})[zoneId];
+  if(!z){svBack();return}
+  const layers=z.layers||{};
+  let html=`<button class="sv-back" onclick="svBack()">← Back to zones</button>
+    <div class="lm-card ep-detail"><div class="ep-header"><h2>${esc(z.label||zoneId)}</h2>
+    <span style="font-size:11px;color:var(--lm-text-muted)">Maps: ${(z.mapIds||[]).join(', ')||'none'}</span>
+    <div style="flex:1"></div>
+    <button class="lm-btn lm-btn--primary sv-promote-btn" onclick="promoteZoneAccepted('${zoneId}')">Promote Accepted</button>
+    <button class="lm-btn sv-create-btn" onclick="dedupeZone('${zoneId}')">Deduplicate</button>
+    <button class="lm-btn sv-export-btn" onclick="exportZoneJSON('${zoneId}')">Export JSON</button></div>`;
+  for(const[layer,assetIds]of Object.entries(layers)){
+    html+=`<div class="zp-layer"><div class="zp-layer-title">${layer.replace(/_/g,' ')} (${assetIds.length})</div>`;
+    if(assetIds.length){
+      html+='<div class="zp-assets">';
+      for(const aid of assetIds.slice(0,50)){
+        const a=assetMap[aid];
+        if(a){
+          const src='/api/asset/image?id='+encodeURIComponent(a.id);
+          const aDecision=currentDecision(a);
+          html+=`<div class="zp-asset" title="${esc(aid)}${aDecision==='runtime-promoted'?' [PROMOTED]':''}"><img src="${enc(src)}" loading="lazy" onclick="event.stopPropagation();openLightbox('${enc(src)}','${esc(aid)}','${aid}')" style="${aDecision==='runtime-promoted'?'border:2px solid var(--lm-success);border-radius:3px':''}"><span class="zp-remove" onclick="removeFromZoneLayer('${zoneId}','${layer}','${aid}')">&times;</span>${aDecision==='runtime-promoted'?`<span class="lm-badge lm-badge--ok" style="position:absolute;bottom:2px;left:2px;font-size:8px;padding:0 3px">P</span>`:''}</div>`;
+        }else{
+          html+=`<div class="zp-asset" title="${esc(aid)}" style="display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--lm-text-muted)">${esc(aid.slice(0,12))}</div>`;
+        }
+      }
+      if(assetIds.length>50)html+=`<div style="font-size:10px;color:var(--lm-text-muted);padding:8px">+${assetIds.length-50} more</div>`;
+      html+='</div>';
+    }
+    html+=`<button class="lm-btn ep-assign" style="margin-top:6px" onclick="addToZoneLayer('${zoneId}','${layer}')">+ Add ${layer.replace(/_/g,' ')}</button>`;
+    html+='</div>';
+  }
+  html+='</div>';
+  $('specialView').innerHTML=html;
+}
+
+// --- Collections List ---
+function renderCollectionsList(){
+  const colls=COLLECTIONS.collections||{};
+  const fl=svFilter.toLowerCase();
+  const sorted=Object.entries(colls).filter(([id,c])=>!fl||(c.label||id).toLowerCase().includes(fl)||id.includes(fl)).sort((a,b)=>a[0].localeCompare(b[0]));
+  let html=`<div class="sv-search"><input class="lm-input" placeholder="Filter collections..." value="${esc(svFilter)}" oninput="svFilter=this.value;renderCollectionsList()"><button class="lm-btn sv-create-btn" onclick="createCollection()">+ New Collection</button></div>`;
+  html+='<div class="sv-section"><h2>Collections ('+sorted.length+')</h2><div class="sv-grid">';
+  for(const[id,c]of sorted){
+    const count=(c.assetIds||[]).length;
+    const bindings=Object.keys(c.bindings||{}).length;
+    const preview=(c.assetIds||[]).slice(0,3);
+    html+=`<div class="lm-card sv-card" onclick="svDetailView={type:'collection',id:'${id}'};renderSpecialView()">
+      <div style="display:flex;align-items:center;gap:6px">
+        ${preview.map(aid=>assetThumb(aid,28)).join('')}
+      </div>
+      <div class="sv-title" style="margin-top:6px">${esc(c.label||id)}</div>
+      <div class="sv-sub">${count} assets · ${bindings} bindings · ${c.category||'misc'}</div>
+    </div>`;
+  }
+  html+='</div></div>';
+  $('specialView').innerHTML=html;
+}
+
+// --- Collection Detail ---
+function renderCollectionDetail(collId){
+  const c=(COLLECTIONS.collections||{})[collId];
+  if(!c){svBack();return}
+  let html=`<button class="sv-back" onclick="svBack()">← Back to collections</button>
+    <div class="lm-card ep-detail"><div class="ep-header"><h2>${esc(c.label||collId)}</h2>
+    <span class="lm-badge ep-type">${c.category||'misc'}</span>
+    <div style="flex:1"></div>
+    <button class="lm-btn lm-btn--primary sv-promote-btn" onclick="promoteCollectionAccepted('${collId}')">Promote Accepted</button>
+    <button class="lm-btn sv-export-btn" onclick="exportCollectionJSON('${collId}')">Export JSON</button></div>
+    <div class="coll-grid">`;
+  for(const aid of(c.assetIds||[])){
+    const a=assetMap[aid];
+    const name=a?.name||aid;
+    const src='/api/asset/image?id='+encodeURIComponent(a?a.id:aid);
+    html+=`<div class="coll-item" style="position:relative">
+      <div onclick="if(assetMap['${aid}'])openLightbox('${enc(src)}','${esc(aid)}','${aid}')">${assetThumb(aid,64)}</div>
+      <span class="zp-remove" style="display:none;position:absolute;top:0;right:8px" onclick="removeFromCollection('${collId}','${aid}')">&times;</span>
+      <div class="coll-label" title="${esc(name)}">${esc(name.replace(/\.[^.]+$/,''))}</div>
+    </div>`;
+  }
+  html+=`<button class="lm-btn ep-assign" style="margin-top:8px" onclick="addToCollection('${collId}')">+ Add asset</button>`;
+  html+='</div>';
+  if(Object.keys(c.bindings||{}).length){
+    html+='<h3 class="lm-eyebrow" style="margin-top:16px;font-size:13px">Bindings</h3><div style="margin-top:6px">';
+    for(const[gameId,assetId]of Object.entries(c.bindings||{})){
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px">
+        <span style="color:var(--lm-text-muted);min-width:120px">${esc(gameId)}</span>
+        <span>→</span>
+        ${assetThumb(assetId,24)}
+        <span>${esc(assetId)}</span>
+      </div>`;
+    }
+    html+='</div>';
+  }
+  html+='</div>';
+  $('specialView').innerHTML=html;
+}
+
+// --- Coverage ---
+function renderCoverage(){
+  const ents=PROFILES.entities||{};
+  const zones=ZONEPACKS.zones||{};
+  let html='<div class="sv-section"><h2>Entity Coverage</h2>';
+  const byType={};
+  for(const[id,e]of Object.entries(ents)){
+    (byType[e.type]=byType[e.type]||[]).push([id,e]);
+  }
+  for(const[type,list]of Object.entries(byType)){
+    html+=`<h3 class="lm-eyebrow" style="margin:12px 0 6px">${type.charAt(0).toUpperCase()+type.slice(1)}s</h3>`;
+    for(const[id,e]of list.sort((a,b)=>a[0].localeCompare(b[0]))){
+      const slots=e.slots||{};const total=Object.keys(slots).length;
+      const filled=Object.values(slots).filter(s=>s!==null).length;
+      const req=REQUIRED_SLOTS[e.type]||[];
+      const reqFilled=req.filter(s=>slots[s]!==null).length;
+      const pct=total?Math.round(filled/total*100):0;
+      html+=`<div class="lm-card cov-entity" onclick="svDetailView={type:'entity',id:'${id}'};renderSpecialView()" style="cursor:pointer">
+        <div class="cov-header">
+          <span class="cov-name">${esc(e.label||id)}</span>
+          <span class="cov-pct">${filled}/${total} (${pct}%)</span>
+          <span style="font-size:10px;color:${reqFilled===req.length?'var(--lm-success)':'var(--lm-danger)'}">${reqFilled===req.length?'✓ req met':'✗ '+req.filter(s=>!slots[s]).join(', ')+' missing'}</span>
+          <div class="sv-bar" style="flex:1;max-width:120px"><div class="sv-fill${pct<30?' low':pct<70?' mid':''}" style="width:${pct}%"></div></div>
+        </div>
+        <div class="cov-slots">
+          ${Object.entries(slots).map(([s,v])=>`<span class="cov-slot ${v?'filled':'missing'}">${s.replace(/_/g,' ')}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+  html+='</div>';
+  html+='<div class="sv-section"><h2>Zone Coverage</h2>';
+  for(const[id,z]of Object.entries(zones).sort((a,b)=>a[0].localeCompare(b[0]))){
+    const layers=z.layers||{};
+    const filledLayers=Object.entries(layers).filter(([,a])=>a.length>0).length;
+    const totalLayers=Object.keys(layers).length;
+    html+=`<div class="lm-card cov-entity" onclick="svDetailView={type:'zone',id:'${id}'};renderSpecialView()" style="cursor:pointer">
+      <div class="cov-header">
+        <span class="cov-name">${esc(z.label||id)}</span>
+        <span class="cov-pct">${filledLayers}/${totalLayers} layers</span>
+      </div>
+      <div class="cov-slots">
+        ${Object.entries(layers).map(([l,a])=>`<span class="cov-slot ${a.length?'filled':'missing'}">${l.replace(/_/g,' ')} (${a.length})</span>`).join('')}
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  $('specialView').innerHTML=html;
+}
+
+// === Auto-advance after review (#3) ===
+const _origSaveReview=saveReview;
+saveReview=async function(a,decision,extra={}){
+  const active=document.activeElement;
+  const clickedReviewButton=!!(active&&active.closest&&active.closest('.cactions,.xbtns,.lr-actions'));
+  await _origSaveReview(a,decision,extra);
+  if(clickedReviewButton)return;
+  if(focusedCardId===a.id&&!isSpecialMode()){
+    const cards=[...document.querySelectorAll('.card,.list-row')];
+    const idx=cards.findIndex(c=>c.dataset.id===a.id);
+    if(idx>=0&&idx<cards.length-1){
+      const next=cards[idx+1];focusedCardId=next.dataset.id;
+      document.querySelectorAll('.focused').forEach(c=>c.classList.remove('focused'));
+      next.classList.add('focused');next.scrollIntoView({block:'nearest'});
+    }
+  }
+};
+
+// === Slideshow review mode (#6) ===
+let ssIndex=0,ssItems=[];
+function openSlideshow(){
+  ssItems=currentPageItems().filter(isVisualAsset);
+  if(!ssItems.length){toast('No visual assets to slideshow');return}
+  ssIndex=0;ssShowCurrent();$('slideshow').classList.add('open');document.addEventListener('keydown',ssKey);
+}
+function closeSlideshow(){$('slideshow').classList.remove('open');document.removeEventListener('keydown',ssKey)}
+function ssShowCurrent(){
+  const a=ssItems[ssIndex];if(!a)return;
+  const src=a.path_from_review_html||'../'+a.path;
+  $('ssMedia').src=enc(src);
+  const d=currentDecision(a);
+  $('ssInfo').innerHTML=`<b>${esc(a.id)}</b><br>${a.kind} · ${a.category} · <span class="cdec ${d}">${d}</span>${a.image?.width?' · '+a.image.width+'×'+a.image.height:''}`;
+  $('ssCounter').textContent=`${ssIndex+1}/${ssItems.length}`;
+}
+function ssNav(dir){ssIndex=(ssIndex+dir+ssItems.length)%ssItems.length;ssShowCurrent()}
+function ssReview(decision){
+  const a=ssItems[ssIndex];if(!a)return;
+  reviewAction(a,decision);
+  if(ssIndex<ssItems.length-1){ssIndex++;ssShowCurrent()}
+  else toast('End of slideshow');
+}
+function ssKey(e){
+  if(e.key==='Escape'){closeSlideshow();return}
+  if(e.key==='ArrowRight')ssNav(1);
+  if(e.key==='ArrowLeft')ssNav(-1);
+  if(e.key==='a'||e.key==='A')ssReview('accepted');
+  if(e.key==='r'||e.key==='R')ssReview('rejected');
+  if(e.key==='c'||e.key==='C')ssReview('needs-cleanup');
+  if(e.key==='l'||e.key==='L')ssReview('promote-later');
+}
+$('slideshowBtn').onclick=openSlideshow;
+
+// === Create new entities/zones/collections (#4) ===
+function createEntity(){
+  const name=prompt('Entity ID (e.g. monster_slimeling, npc_blacksmith):');
+  if(!name)return;
+  const types=['monster','npc','player','item','currency'];
+  const type=types.find(t=>name.startsWith(t+'_'))||prompt('Type (monster/npc/player/item/currency):');
+  if(!type||!types.includes(type))return;
+  const slots={};(ALL_SLOTS[type]||[]).forEach(s=>slots[s]=null);
+  const label=name.replace(/^(monster|npc|class|item|currency)_/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const gameIdTypes={monster:'MonsterId',npc:'NpcId',player:'ClassId',item:'ItemId',currency:'CurrencyId'};
+  const entity={type,gameId:name,gameIdType:gameIdTypes[type]||'',label,slots};
+  api('/api/entity-profile/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:name,...entity})})
+    .then(()=>{PROFILES.entities[name]=entity;toast('Created '+label);svDetailView={type:'entity',id:name};renderSpecialView()})
+    .catch(e=>toast('Error: '+e.message));
+}
+function createZone(){
+  const name=prompt('Zone ID (e.g. zone_crystal_caves):');
+  if(!name)return;
+  const label=name.replace(/^zone_/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const zone={label,mapIds:[],layers:{ground_tiles:[],decals:[],props:[],npcs:[],monsters:[],bgm:[],ambience:[]}};
+  api('/api/zone-pack/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:name,...zone})})
+    .then(()=>{ZONEPACKS.zones[name]=zone;toast('Created '+label);svDetailView={type:'zone',id:name};renderSpecialView()})
+    .catch(e=>toast('Error: '+e.message));
+}
+function createCollection(){
+  const name=prompt('Collection ID (e.g. healing_items, forest_props):');
+  if(!name)return;
+  const label=name.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  const coll={label,category:'misc',assetIds:[],bindings:{}};
+  api('/api/collection/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:name,...coll})})
+    .then(()=>{COLLECTIONS.collections[name]=coll;toast('Created '+label);svDetailView={type:'collection',id:name};renderSpecialView()})
+    .catch(e=>toast('Error: '+e.message));
+}
+
+// === Auto-suggest slot bindings (#5) ===
+function autoSuggestSlots(entityId){
+  const e=PROFILES.entities[entityId];if(!e)return;
+  const name=entityId.replace(/^(monster|npc|class|item|currency)_/,'');
+  const nameVar=name.replace(/_/g,'');
+  const emptySlots=Object.entries(e.slots).filter(([,v])=>v===null).map(([s])=>s);
+  if(!emptySlots.length){toast('All slots already filled');return}
+  const slotKeywords={idle_sprite:['idle','stand'],walk_sheet:['walk','run','move'],attack_sheet:['attack','slash','strike'],hit_sheet:['hit','hurt','damage'],death_sheet:['death','die','dead'],cast_sheet:['cast','spell','magic'],portrait:['portrait','face','bust'],attack_audio:['attack','slash','swing'],hit_audio:['hit','hurt','impact'],death_audio:['death','die'],move_audio:['step','walk','footstep'],death_vfx:['death_vfx','death_effect'],spawn_vfx:['spawn','appear'],loot_vfx:['loot','drop'],levelup_vfx:['levelup','level_up'],dialogue_audio:['dialogue','talk','voice'],interact_vfx:['interact'],icon:['icon'],drop_sprite:['drop'],use_vfx:['use_vfx'],use_audio:['use_audio'],equip_sprite:['equip'],footstep_audio:['footstep','step']};
+  let suggestions=[];
+  for(const slot of emptySlots){
+    const keywords=slotKeywords[slot]||[slot];
+    for(const a of assets){
+      const hay=(a.id+' '+(a.name||'')+' '+(a.path||'')).toLowerCase();
+      if(!hay.includes(nameVar)&&!hay.includes(name))continue;
+      if(keywords.some(kw=>hay.includes(kw))){suggestions.push({slot,asset:a});break}
+    }
+  }
+  if(!suggestions.length){toast('No suggestions found');return}
+  const msg=suggestions.map(s=>`${s.slot}: ${s.asset.id}`).join('\n');
+  if(!confirm('Auto-suggest found:\n\n'+msg+'\n\nApply all?'))return;
+  Promise.all(suggestions.map(s=>
+    api('/api/entity-profile/bind',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({entityId,slot:s.slot,assetId:s.asset.id})})
+      .then(()=>{e.slots[s.slot]={assetId:s.asset.id,status:currentDecision(s.asset)}})
+  )).then(()=>{toast('Applied '+suggestions.length+' suggestions');renderSpecialView()}).catch(e=>toast('Error: '+e.message));
+}
+
+// === Audio playback in entity slots (#7) ===
+function slotHasAudio(slot){return slot.includes('audio')}
+
+// === Deduplicate zone assets (#10) ===
+function dedupeZone(zoneId){
+  const z=ZONEPACKS.zones[zoneId];if(!z)return;
+  let removed=0;
+  for(const[layer,ids]of Object.entries(z.layers)){
+    const seen=new Set();const deduped=[];
+    for(const id of ids){if(seen.has(id)){removed++}else{seen.add(id);deduped.push(id)}}
+    z.layers[layer]=deduped;
+  }
+  if(!removed){toast('No duplicates found');return}
+  api('/api/zone-pack/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:zoneId,...z})})
+    .then(()=>{toast('Removed '+removed+' duplicates');renderSpecialView()})
+    .catch(e=>toast('Error: '+e.message));
+}
+
+// === Export JSON (#12) ===
+function exportEntityJSON(entityId){
+  const e=PROFILES.entities[entityId];if(!e)return;
+  const blob=new Blob([JSON.stringify({[entityId]:e},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=entityId+'.json';a.click();
+  toast('Exported '+entityId);
+}
+function exportZoneJSON(zoneId){
+  const z=ZONEPACKS.zones[zoneId];if(!z)return;
+  const blob=new Blob([JSON.stringify({[zoneId]:z},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=zoneId+'.json';a.click();
+  toast('Exported '+zoneId);
+}
+function exportCollectionJSON(collId){
+  const c=COLLECTIONS.collections[collId];if(!c)return;
+  const blob=new Blob([JSON.stringify({[collId]:c},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=collId+'.json';a.click();
+  toast('Exported '+collId);
+}
+
+// === Slot indicators helper (#11) ===
+function slotDotsHtml(entityId){
+  const e=PROFILES.entities[entityId];if(!e)return'';
+  const req=new Set(REQUIRED_SLOTS[e.type]||[]);
+  return'<div class="slot-dots" title="Slot coverage">'+Object.entries(e.slots||{}).map(([s,v])=>
+    `<div class="slot-dot ${v?'filled':req.has(s)?'missing':'opt'}" title="${s.replace(/_/g,' ')}${v?' ✓':' ✗'}"></div>`
+  ).join('')+'</div>';
+}
+
+// === Promote / Unpromote / Quality Check (Phase 3) ===
+const PROMOTE_TYPE_MAP={tile:'tile',ground_tiles:'tile',decal:'decal','transition-decal':'decal',prop:'prop',sprite:'sprite',spritesheet:'sprite',icon:'icon',portrait:'portrait',vfx:'vfx',audio:'audio',bgm:'bgm',ambience:'ambience'};
+function guessPromoteType(asset){
+  if(!asset)return'sprite';
+  const k=asset.kind||'';const cat=asset.category||'';const p=(asset.path||'').toLowerCase();
+  if(k==='tile'||p.includes('/tiles/'))return'tile';
+  if(k==='decal'||p.includes('/decal'))return'decal';
+  if(k==='prop'||cat==='props')return'prop';
+  if(k==='icon')return'icon';
+  if(k==='portrait')return'portrait';
+  if(k==='vfx')return'vfx';
+  if(k==='audio'){if(p.includes('bgm')||p.includes('music'))return'bgm';if(p.includes('ambien'))return'ambience';return'audio'}
+  return'sprite';
+}
+function isPromoted(assetId){
+  const d=currentDecision({id:assetId});return d==='runtime-promoted';
+}
+async function promoteAsset(assetId,promoteType,targetName,context){
+  const asset=assetMap[assetId];if(!asset){toast('Asset not found');return}
+  if(!promoteType)promoteType=guessPromoteType(asset);
+  if(!targetName){
+    const stem=(asset.path||'').split('/').pop()?.replace(/\.[^.]+$/,'')||assetId;
+    targetName=prompt('Target filename (no extension):',stem);
+    if(!targetName)return;
+  }
+  try{
+    const res=await api('/api/promote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assetId,type:promoteType,targetName,context:context||''})});
+    if(res.ok){
+      toast('Promoted → '+res.promoted.targetPath+(res.promoted.warnings?.length?' ('+res.promoted.warnings.length+' warnings)':''));
+      setLocalDecision(assetId,'runtime-promoted',{priority:'promoted',notes:'Promoted to runtime.'});
+      await load();
+      if(isSpecialMode())renderSpecialView();else render();
+    }else{
+      toast('Promote failed: '+(res.error||'unknown'));
+    }
+  }catch(e){toast('Promote error: '+e.message)}
+}
+async function unpromoteAsset(assetId){
+  if(!confirm('Unpromote '+assetId+'?\n\nThis clears the registry entry and marks the bank row accepted. Runtime files and content references are not deleted; any remaining references are reported after the operation.'))return;
+  try{
+    const res=await api('/api/unpromote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assetId})});
+    if(res.ok){
+      const used=(res.stillReferencedBy||[]).map(u=>`${u.file} (${u.count})`).join(', ');
+      toast('Unpromoted '+assetId+(used?` · still referenced by ${used}`:''));
+      setLocalDecision(assetId,'accepted',{priority:'normal'});
+      await load();
+      if(isSpecialMode())renderSpecialView();else render();
+    }else{
+      const used=(res.usedBy||[]).map(u=>`${u.file} (${u.count})`).join(', ');
+      toast('Unpromote failed: '+(res.error||'unknown')+(used?` — still used by ${used}`:''));
+    }
+  }catch(e){toast('Unpromote error: '+e.message)}
+}
+async function qualityCheck(assetId,promoteType){
+  const asset=assetMap[assetId];if(!asset){toast('Asset not found');return}
+  if(!promoteType)promoteType=guessPromoteType(asset);
+  try{
+    const res=await api('/api/quality-check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assetId,type:promoteType})});
+    let html='';
+    if(res.passed){
+      html=`<div class="qg-result pass">✓ Quality check passed`;
+      if(res.warnings?.length)html+=`<br>${res.warnings.map(w=>`<span class="qg-warn">⚠ ${esc(w)}</span>`).join('<br>')}`;
+      html+=`</div>`;
+    }else{
+      html=`<div class="qg-result fail">✗ Quality check failed<br>${(res.errors||[]).map(e=>'• '+esc(e)).join('<br>')}`;
+      if(res.warnings?.length)html+=`<br>${res.warnings.map(w=>`<span class="qg-warn">⚠ ${esc(w)}</span>`).join('<br>')}`;
+      html+=`</div>`;
+    }
+    const el=document.getElementById('qg-'+assetId.replace(/[^a-zA-Z0-9_-]/g,'_'));
+    if(el)el.innerHTML=html;
+    else toast(res.passed?'Quality check passed':'Quality check failed: '+(res.errors||[]).join(', '));
+  }catch(e){toast('Quality check error: '+e.message)}
+}
+
+async function promoteZoneAccepted(zoneId){
+  const z=(ZONEPACKS.zones||{})[zoneId];if(!z)return;
+  const promotable=[];
+  for(const[layer,ids]of Object.entries(z.layers||{})){
+    for(const aid of ids){
+      const a=assetMap[aid];if(!a)continue;
+      const d=currentDecision(a);
+      if(d==='accepted'){
+        const pType=PROMOTE_TYPE_MAP[layer]||guessPromoteType(a);
+        promotable.push({assetId:aid,type:pType,targetName:a.path?.split('/').pop()?.replace(/\.[^.]+$/,'')||aid,asset:a});
+      }
+    }
+  }
+  if(!promotable.length){toast('No accepted assets to promote');return}
+  if(!confirm(`Promote ${promotable.length} accepted assets from ${z.label||zoneId}?`))return;
+  let ok=0,fail=0;
+  for(const p of promotable){
+    try{
+      const res=await api('/api/promote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assetId:p.assetId,type:p.type,targetName:p.targetName})});
+      if(res.ok){ok++;setLocalDecision(p.assetId,'runtime-promoted',{priority:'promoted',notes:'Promoted to runtime.'})}else{fail++}
+    }catch{fail++}
+  }
+  toast(`Promoted ${ok}/${promotable.length}${fail?' ('+fail+' failed)':''}`);
+  await load();
+  renderSpecialView();
+}
+
+async function promoteCollectionAccepted(collId){
+  const c=(COLLECTIONS.collections||{})[collId];if(!c)return;
+  const promotable=[];
+  for(const aid of(c.assetIds||[])){
+    const a=assetMap[aid];if(!a)continue;
+    const d=currentDecision(a);
+    if(d==='accepted'){
+      const pType=guessPromoteType(a);
+      promotable.push({assetId:aid,type:pType,targetName:a.path?.split('/').pop()?.replace(/\.[^.]+$/,'')||aid});
+    }
+  }
+  if(!promotable.length){toast('No accepted assets to promote');return}
+  if(!confirm(`Promote ${promotable.length} accepted assets from ${c.label||collId}?`))return;
+  let ok=0,fail=0;
+  for(const p of promotable){
+    try{
+      const res=await api('/api/promote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({assetId:p.assetId,type:p.type,targetName:p.targetName})});
+      if(res.ok){ok++;setLocalDecision(p.assetId,'runtime-promoted',{priority:'promoted',notes:'Promoted to runtime.'})}else{fail++}
+    }catch{fail++}
+  }
+  toast(`Promoted ${ok}/${promotable.length}${fail?' ('+fail+' failed)':''}`);
+  await load();
+  renderSpecialView();
+}
+
+// Hook special views into render cycle
+const _origRender=render;
+render=function(append){
+  if(isSpecialMode()){renderSpecialView();return}
+  svDetailView=null;
+  $('specialView').style.display='none';$('layout').style.display='';
+  _origRender(append);
+};
+
+// Load profiles alongside main data
+const _origLoad=load;
+load=async function(){await _origLoad();if(!bankOfflineState)await loadProfiles()};
+
+load().catch(e=>{toast('Load failed: '+e.message);console.error(e)});
+</script>
+</body>
+</html>

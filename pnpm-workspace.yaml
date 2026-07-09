@@ -1,0 +1,11 @@
+packages:
+  - "tools"
+  - "packages/*"
+
+# esbuild backs tsx/vite and must build its native binary.
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: false
+
+# Keep installs explicit — hidden per-run installs stomp parallel worktree state.
+verifyDepsBeforeRun: false

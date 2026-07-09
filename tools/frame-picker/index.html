@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GameKit Frame Picker</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <strong>FRAME PICKER</strong>
+          <span id="position">0 / 0</span>
+          <span id="candidatePath"></span>
+        </div>
+        <div class="legend">
+          <span><i class="swatch selected"></i>selected</span>
+          <span><i class="swatch start"></i>start</span>
+          <span><i class="swatch end"></i>end</span>
+          <span><i class="swatch viewing"></i>viewing</span>
+        </div>
+      </header>
+
+      <section class="loader-panel" aria-label="Frame source controls">
+        <form id="loadForm" class="path-row">
+          <label for="candidateInput">Candidate</label>
+          <input id="candidateInput" type="text" spellcheck="false" placeholder="Folder with frames/raw" />
+          <button id="browseCandidate" type="button">Browse</button>
+          <button id="loadCandidate" type="submit">Load</button>
+        </form>
+        <form id="importForm" class="path-row">
+          <label for="importInput">Import</label>
+          <input id="importInput" type="text" spellcheck="false" placeholder="Folder of PNG, JPG, or WebP frames" />
+          <button id="browseImport" type="button">Browse</button>
+          <input id="importName" type="text" spellcheck="false" placeholder="Name" />
+          <button id="importFrames" type="submit">Import</button>
+        </form>
+        <span id="toolStatus"></span>
+      </section>
+
+      <section class="preview-panel">
+        <img id="preview" alt="Current animation frame" />
+      </section>
+
+      <section class="controls">
+        <button id="play">Play</button>
+        <button id="prev">Prev</button>
+        <button id="next">Next</button>
+        <label class="check">
+          <input id="selectedOnly" type="checkbox" />
+          <span>Selected only</span>
+        </label>
+        <label class="check">
+          <input id="skipSeam" type="checkbox" checked />
+          <span>Skip seam</span>
+        </label>
+        <label class="number compact">
+          <span>FPS</span>
+          <input id="playbackFps" type="number" min="1" max="30" value="10" />
+        </label>
+        <input id="scrubber" type="range" min="0" max="0" value="0" />
+        <button id="setStart">Set Start</button>
+        <button id="setEnd">Set End</button>
+        <label class="number">
+          <span>N</span>
+          <input id="targetCount" type="number" min="1" max="120" value="8" />
+        </label>
+        <button id="distribute">Distribute</button>
+        <button id="toggle" aria-pressed="false">Select: OFF</button>
+        <button id="clear">Clear</button>
+        <button id="save" class="primary">Save</button>
+      </section>
+
+      <section class="status">
+        <span id="currentName">current -</span>
+        <span id="startName">start -</span>
+        <span id="endName">end -</span>
+        <span id="selectedSummary">0 selected</span>
+        <span id="saveStatus"></span>
+      </section>
+
+      <section id="grid" class="grid" aria-label="Extracted frames"></section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

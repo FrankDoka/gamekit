@@ -1,0 +1,8 @@
+{
+  "verdict": "PASS",
+  "leg_change_fraction": 0.0,
+  "leg_change_tol": 0.02,
+  "hair_pixels": 1071,
+  "diff_threshold": 45,
+  "reason": ""
+}

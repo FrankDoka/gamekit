@@ -1,0 +1,645 @@
+<!doctype html>
+<html>
+<head>
+<script src="/devkit-auth-shim.js"></script>
+<meta charset="utf-8">
+<title>GameKit Dev Kit</title>
+<link rel="stylesheet" href="/tokens.css">
+<style>
+/* Page LAYOUT only (P5 Phase 3.5) — ALL component chrome comes from the served
+   /tokens.css lm-* kit; no local var remap, no hex in style blocks. The data-viz
+   palette (canvas minimap + legend swatches) lives in inline styles/JS and is
+   outside the ui-kit-lint contract. Layout rules MAY reference .lm-* classes
+   for geometry (width/margin/alignment) but never restate chrome. */
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--lm-bg);color:var(--lm-text);font:var(--lm-fw-regular) var(--lm-fs-400)/var(--lm-lh-normal) var(--lm-font-ui)}
+header{padding:14px 24px;border-bottom:1px solid var(--lm-border-cool);background:var(--lm-surface-solid);position:sticky;top:0;z-index:var(--lm-z-hud)}
+h1{margin:0 0 8px;font:var(--lm-fw-heavy) var(--lm-fs-800)/var(--lm-lh-tight) var(--lm-font-display);color:var(--lm-text-gold)}
+h2{margin:0 0 8px;font:var(--lm-fw-bold) var(--lm-fs-600)/var(--lm-lh-snug) var(--lm-font-ui)}
+h3.lm-eyebrow{margin:0 0 8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.action-row{justify-content:space-between}
+.primary-actions,.secondary-actions,.stats{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.secondary-actions{margin-left:auto}
+.stats{color:var(--lm-text-muted)}
+main{display:block;min-height:calc(100vh - 92px)}
+aside{padding:10px 24px;border-bottom:1px solid var(--lm-border-cool);background:var(--lm-surface-sunken)}
+.nav{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.nav .lm-btn{display:flex;justify-content:center;margin:0;min-width:0}
+.nav-note{margin:8px 0 0}
+section{padding:18px 24px}
+.panel{padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.grid>.lm-card{padding:14px}
+.small{color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.path{word-break:break-all;color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+iframe{width:100%;height:calc(100vh - 150px);border:1px solid var(--lm-border-cool);border-radius:var(--lm-radius-md);background:var(--lm-surface-sunken)}
+.list{display:grid;gap:8px}
+.list .lm-btn{justify-content:flex-start;text-align:left}
+.hidden{display:none}
+#toast{position:fixed;right:18px;bottom:18px;z-index:var(--lm-z-toast);display:none}
+.metric{font-size:var(--lm-fs-700);font-weight:var(--lm-fw-bold)}
+.metric-label{color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+pre.log{white-space:pre-wrap;overflow:auto;background:var(--lm-surface-sunken);border:1px solid var(--lm-border-cool);border-radius:var(--lm-radius-sm);padding:10px;font:var(--lm-fw-regular) var(--lm-fs-200)/var(--lm-lh-normal) var(--lm-font-mono)}
+kbd{background:var(--lm-surface-sunken);border:1px solid var(--lm-border-cool);border-bottom-width:2px;border-radius:4px;padding:1px 6px;font:var(--lm-fs-100) var(--lm-font-ui);color:var(--lm-text-gold)}
+#kbHelp{display:none;position:fixed;inset:0;background:color-mix(in srgb,var(--lm-bg) 74%,transparent);z-index:var(--lm-z-overlay)}
+/* utility classes — replace ad-hoc inline styles (finding 18); geometry/layout only */
+.mt-10{margin-top:10px}
+.push-right{margin-left:auto}
+.field-w{width:72px}
+.log--tall{max-height:360px}
+.log--mid{max-height:260px}
+.log--short{max-height:160px}
+.legend-row{gap:16px}
+.legend-row span{display:inline-flex;align-items:center;gap:6px}
+/* Swatch geometry only; the data-viz palette (fill/border) is set inline from the
+   shared ZONE_PALETTE JS constant, which is the single source the canvas also uses —
+   explicitly outside the ui-kit-lint chrome contract (see header note, finding 17). */
+.swatch{display:inline-block;width:12px;height:12px;vertical-align:middle}
+.swatch--dot{width:10px;height:10px;border-radius:50%}
+.zone-canvas-wrap{position:relative;overflow:auto}
+.zone-canvas{display:block;margin:0 auto}
+.empty-state{padding:32px 24px;text-align:center;color:var(--lm-text-muted)}
+.empty-state h3{color:var(--lm-text);margin-bottom:6px}
+/* DB card parsed fields (finding 11) */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:var(--lm-fs-200)}
+.kv dt{color:var(--lm-text-muted)}
+.kv dd{margin:0;word-break:break-all}
+/* activity feed (finding 10) */
+.feed{display:grid;gap:4px;max-height:200px;overflow:auto}
+.feed .row{gap:8px;flex-wrap:nowrap}
+.feed time{color:var(--lm-text-muted);font-size:var(--lm-fs-100);font-family:var(--lm-font-mono);white-space:nowrap}
+.staleness{color:var(--lm-text-muted);font-size:var(--lm-fs-200)}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--lm-border-cool);border-top-color:var(--lm-text-gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.copy-btn{cursor:pointer}
+details.raw>summary{cursor:pointer;color:var(--lm-text-muted);font-size:var(--lm-fs-200);margin-top:8px}
+.kb-card{max-width:640px;margin:8vh auto;padding:18px 22px}
+.kb-title{margin-top:0}
+.kb-esc{float:right}
+.kb-grid{grid-template-columns:1fr 1fr;gap:4px 24px;font-size:var(--lm-fs-200)}
+@media(max-width:860px){header{padding:12px 16px}aside,section{padding-left:16px;padding-right:16px}iframe{height:70vh}.secondary-actions{margin-left:0}.stats{width:100%}#stack .row{flex-direction:column;align-items:stretch}#stack .row>.lm-btn,#stack .row>.lm-select,#stack .row>label{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>GameKit Dev Kit</h1>
+  <div class="bar action-row">
+    <div class="primary-actions">
+      <button class="lm-btn lm-btn--primary" data-open-tab="stack">Stack Ops</button>
+      <button class="lm-btn lm-btn--primary" id="startAssetBank">Start Asset Bank</button>
+    </div>
+    <div class="secondary-actions">
+      <button class="lm-btn" id="refreshAudio">Refresh Audio Review</button>
+      <button class="lm-btn" id="writeBridge">Update Z:\Assets Bridge</button>
+      <a class="lm-btn" href="/tool-map.html" target="_blank" title="Generated one-page map of DevKit tools">Tool Map</a>
+      <a class="lm-btn" href="/api-docs.html" target="_blank" title="Generated API reference for hub + DevKit + Asset Bank">API Docs</a>
+      <button class="lm-btn" id="kbHelpBtn" title="Keyboard shortcuts (?)"><kbd>?</kbd> Shortcuts</button>
+    </div>
+    <span class="stats" id="topStats"><span class="lm-badge">Loading</span></span>
+  </div>
+</header>
+<main>
+<aside>
+  <div class="nav">
+    <button class="lm-btn lm-btn--toggle" aria-pressed="true" data-tab="home">Home</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="stack">Stack Ops</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="asset-bank">Asset Bank</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="audio">Audio</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="frame-picker">Frame Picker</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="promotion">Promotion</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="captures">Captures</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="world">World</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="pipeline">Pipeline</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="zone-layouts">Zone Layouts</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="procgen">Procgen Dungeon</button>
+    <button class="lm-btn lm-btn--toggle" aria-pressed="false" data-tab="cleanup">Cleanup Queues</button>
+  </div>
+  <p class="small nav-note">One app shell, specialized modules underneath. Asset files stay in <code>Z:\Assets</code>; durable tooling lives in the repo.</p>
+</aside>
+<section>
+  <div id="home" class="tab">
+    <div class="grid">
+      <div class="lm-card"><h3 class="lm-eyebrow">Stack</h3><div class="metric" id="stackState">-</div><div class="metric-label">DB · server · tunnel</div><p class="small" id="stackDetail"></p><button class="lm-btn lm-btn--primary" data-open-tab="stack">Open Stack Ops</button></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Asset Bank</h3><div class="metric" id="assetVisible">-</div><div class="metric-label">visible review assets</div><p class="small" id="assetBankState"></p><button class="lm-btn lm-btn--primary" data-open-tab="asset-bank">Open Asset Bank</button></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Audio</h3><div class="metric" id="audioState">-</div><div class="metric-label">audio review HTML</div><p class="small">Generated candidates live under <code>Z:\Assets\audio\generated</code>.</p><button class="lm-btn" data-open-tab="audio">Open Audio</button></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Frame Picker</h3><div class="metric" id="frameState">-</div><div class="metric-label">server state</div><p class="small">Launches the existing Pipeline v4 Frame Picker with a selected candidate folder.</p><button class="lm-btn" data-open-tab="frame-picker">Open Frame Picker</button></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Queues</h3><div class="metric" id="queueCount">-</div><div class="metric-label">review queues</div><p class="small">Best-first, cleanup, audio, transparency, additive VFX, and downscale queues.</p><button class="lm-btn" data-open-tab="cleanup">Open Queues</button></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Zone Layouts</h3><div class="metric" id="zoneCount">-</div><div class="metric-label">layout files</div><p class="small">Visual preview of <code>.layout.json</code> zone definitions.</p><div class="row"><button class="lm-btn" data-open-tab="zone-layouts">Preview</button><a class="lm-btn lm-btn--primary" href="/zone-editor.html">Open Editor</a></div></div>
+      <div class="lm-card"><h3 class="lm-eyebrow">Zone Loop</h3><div class="metric" id="loopState">Ready</div><div class="metric-label">save · export · restart · reload</div><p class="small">Runs the editor handoff loop from the hub.</p><button class="lm-btn lm-btn--primary" data-open-tab="pipeline">Open Pipeline</button></div>
+    </div>
+    <div class="lm-card panel">
+      <h2>Workflow</h2>
+      <ol>
+        <li>Review candidates in Asset Bank or a queue.</li>
+        <li>Use Audio for detailed listening/reclassify/move plans.</li>
+        <li>Use Frame Picker only for animation candidate folders with <code>frames/raw</code>.</li>
+        <li>Generate promotion plans/packs before copying anything into runtime folders.</li>
+      </ol>
+    </div>
+  </div>
+  <div id="stack" class="tab hidden">
+    <div class="row" style="justify-content:space-between"><span class="staleness" id="stackStale">—</span><span class="small" id="stackDbOwner"></span></div>
+    <div class="grid" id="serviceCards"></div>
+    <div class="lm-card panel">
+      <h2>Profiles</h2>
+      <div class="row">
+        <button class="lm-btn" data-profile="dev">Dev Mode</button>
+        <button class="lm-btn" data-profile="online">Online Mode</button>
+        <button class="lm-btn" data-launcher="build-client">Build Client</button>
+        <button class="lm-btn" data-launcher="dev-client">Dev Client</button>
+        <button class="lm-btn" data-launcher="validate">Validate</button>
+        <button class="lm-btn" data-launcher="open-game">Open Game</button>
+      </div>
+      <div class="row mt-10">
+        <label><input type="checkbox" id="guestMode"> Guest mode</label>
+        <label><input type="checkbox" id="autoRestart"> Watchdog</label>
+        <label><input type="checkbox" id="windowsAutostart"> Windows autostart</label>
+        <label>Auto <select class="lm-select" id="autoProfile"><option value="none">None</option><option value="dev">Dev</option><option value="online">Online</option></select></label>
+        <label>Backup keep <input class="lm-input field-w" id="backupMax" type="number" min="1" max="99"></label>
+        <button class="lm-btn" id="savePrefs">Save Prefs</button>
+        <button class="lm-btn" id="enableTray">Enable Toasts</button>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="lm-card panel">
+        <h2>Database</h2>
+        <dl class="kv" id="dbFields"><dt>status</dt><dd class="small">Loading…</dd></dl>
+      </div>
+      <div class="lm-card panel">
+        <h2>Activity</h2>
+        <div id="activityFeed" class="feed"><span class="small">No activity yet this session.</span></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="lm-card panel">
+        <h2>Backups</h2>
+        <div class="row"><button class="lm-btn lm-btn--primary" id="backupNow">Backup DB</button><select class="lm-select" id="restoreFile"></select><button class="lm-btn lm-btn--danger" id="restoreBackup">Restore</button></div>
+        <p class="path small mt-10">Backups dir: <span id="backupDir">—</span> <button class="lm-btn copy-btn" id="copyBackupDir" title="Copy path">Copy</button></p>
+        <div id="backupList" class="list mt-10"></div>
+      </div>
+      <div class="lm-card panel">
+        <h2>Logs</h2>
+        <div class="row">
+          <select class="lm-select" id="logName"><option value="server">server.log</option><option value="tunnel">tunnel.log</option><option value="hub">hub.log</option><option value="dev-client">dev-client.log</option></select>
+          <button class="lm-btn" id="refreshLog">Refresh</button>
+          <button class="lm-btn" id="clearLog">Clear</button>
+          <button class="lm-btn" id="rotateLog">Rotate</button>
+          <button class="lm-btn copy-btn" id="copyLog" title="Copy log tail">Copy</button>
+        </div>
+        <pre id="logTail" class="log log--tall"></pre>
+      </div>
+    </div>
+    <div class="lm-card panel">
+      <h2>Diagnostics <button class="lm-btn copy-btn" id="copyDiag" title="Copy raw JSON">Copy</button></h2>
+      <div id="diagCards" class="grid"></div>
+      <details class="raw"><summary>Raw diagnostics JSON</summary><pre id="diagnostics" class="log log--mid"></pre></details>
+    </div>
+  </div>
+  <div id="asset-bank" class="tab hidden">
+    <div class="lm-card panel row"><button class="lm-btn lm-btn--primary" id="assetBankFrameStart">Start/Refresh Asset Bank</button><a class="lm-btn" href="http://127.0.0.1:8765/_review/asset-review-server.html" target="_blank">Open New Tab</a><span class="small">Shared status database for asset decisions and promotion packs.</span></div>
+    <iframe id="assetBankFrame" src="http://127.0.0.1:8765/_review/asset-review-server.html"></iframe>
+  </div>
+  <div id="audio" class="tab hidden">
+    <div class="lm-card panel row"><button class="lm-btn lm-btn--primary" id="audioRefreshInline">Regenerate Audio Review</button><a class="lm-btn" id="audioOpenTab" href="/assets-file/audio/generated/audio-review.html" target="_blank">Open New Tab</a><span class="small">Use this for audio-specific listening, shortlist, and move-plan export.</span></div>
+    <div id="audioBody"></div>
+  </div>
+  <div id="frame-picker" class="tab hidden">
+    <div class="lm-card panel">
+      <h2>Frame Picker Launcher</h2>
+      <p class="small">Pick a candidate with <code>frames/raw</code>, then launch the existing Frame Picker. This preserves Pipeline v4's manual curation workflow.</p>
+      <div class="row"><input class="lm-input" id="candidatePath" size="72" placeholder="Candidate folder path with frames/raw"><button class="lm-btn lm-btn--primary" id="startFramePicker">Start Frame Picker</button><a class="lm-btn" href="http://127.0.0.1:5217/" target="_blank">Open Frame Picker</a></div>
+    </div>
+    <div class="lm-card panel"><h3 class="lm-eyebrow">Recent Candidates</h3><div id="frameCandidates" class="list"></div></div>
+    <iframe src="http://127.0.0.1:5217/"></iframe>
+  </div>
+  <div id="promotion" class="tab hidden">
+    <div class="lm-card panel"><h2>Promotion Center</h2><p>Promotion plans are generated by Asset Bank after assets are accepted. Review plans before copying files into runtime folders.</p><p class="path">Z:\Assets\_promotion-plans\generated</p><a class="lm-btn lm-btn--primary" href="/assets-file/_promotion-plans/promotion-plan-template.md" target="_blank">Open Template</a></div>
+  </div>
+  <div id="captures" class="tab hidden">
+    <div class="lm-card panel row"><button class="lm-btn" id="refreshCaptures">Refresh</button><span class="small">Recent zone and editor proof PNGs from the repo capture folders.</span></div>
+    <div id="captureGallery" class="grid"></div>
+  </div>
+  <div id="world" class="tab hidden">
+    <div class="lm-card panel row"><button class="lm-btn" id="refreshWorld">Refresh</button><span id="worldOnline" class="lm-badge">-</span><span id="worldTotals" class="small"></span></div>
+    <div id="worldMaps" class="grid"></div>
+  </div>
+  <div id="pipeline" class="tab hidden">
+    <div class="lm-card panel">
+      <h2>Zone Edit Loop</h2>
+      <div class="row">
+        <select class="lm-select" id="loopMap"><option value="">All zones</option></select>
+        <button class="lm-btn lm-btn--primary" id="runZoneLoop">Run Loop</button>
+        <button class="lm-btn" id="dryRunZoneLoop">Dry Run</button>
+        <a class="lm-btn" id="reloadGame" href="http://127.0.0.1:5173/" target="_blank">Reload Game</a>
+      </div>
+      <div id="zoneLoopSteps" class="list" style="margin-top:10px"></div>
+    </div>
+    <div class="lm-card panel">
+      <h2>Apply Status</h2>
+      <div class="row"><button class="lm-btn" id="refreshApplyStatus">Refresh</button><span id="applyStatusSummary" class="small"></span></div>
+      <div id="applyStatusBody" class="list" style="margin-top:10px"><span class="small">Loading…</span></div>
+    </div>
+    <div class="lm-card panel">
+      <h2>Promote → Place → Export</h2>
+      <div class="row"><button class="lm-btn" id="refreshPipeline">Refresh</button><span id="pipelineCounts" class="small"></span></div>
+      <div id="pipelineRows" class="list" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div id="zone-layouts" class="tab hidden">
+    <div class="lm-card panel row">
+      <select class="lm-select" id="zoneSelect"><option value="">Select a layout...</option></select>
+      <span class="small" id="zoneInfo"></span>
+      <a class="lm-btn lm-btn--primary" href="/zone-editor.html" style="margin-left:auto">Open Full Editor</a>
+    </div>
+    <div class="lm-card lm-card--sunken panel zone-canvas-wrap">
+      <canvas id="zoneCanvas" width="800" height="600" class="zone-canvas"></canvas>
+    </div>
+    <div class="lm-card panel hidden" id="zoneLegend">
+      <h3 class="lm-eyebrow">Legend</h3>
+      <div class="row legend-row" id="zoneLegendRow"></div>
+    </div>
+  </div>
+  <div id="procgen" class="tab hidden">
+    <iframe id="procgenFrame" src="/procgen-preview.html" title="Procgen dungeon preview"></iframe>
+  </div>
+  <div id="cleanup" class="tab hidden">
+    <div class="lm-card panel"><h2>Cleanup Queues</h2><p class="small">Click a queue to focus it in Asset Bank or open the raw JSON for inspection.</p><div id="queueList" class="list"></div></div>
+  </div>
+</section>
+</main>
+<div id="toast" class="lm-toast"></div>
+<div id="kbHelp" onclick="if(event.target===this)toggleKbHelp(false)">
+  <div class="lm-card panel kb-card">
+    <h2 class="kb-title">Keyboard Shortcuts <span class="small kb-esc">Esc closes</span></h2>
+    <div class="grid kb-grid">
+      <div><kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> Switch tab · <kbd>C</kbd> Cleanup queues</div>
+      <div><kbd>[</kbd> / <kbd>]</kbd> Previous / next tab</div>
+      <div><kbd>R</kbd> Refresh current view</div>
+      <div><kbd>G</kbd> Open game</div>
+      <div><kbd>B</kbd> Start/refresh Asset Bank</div>
+      <div><kbd>V</kbd> Run validate</div>
+      <div><kbd>L</kbd> Run zone loop (confirms) · <kbd>Shift</kbd>+<kbd>L</kbd> Dry run</div>
+      <div><kbd>Shift</kbd>+<kbd>D</kbd>/<kbd>S</kbd>/<kbd>T</kbd> Toggle database / server / tunnel</div>
+      <div><kbd>Shift</kbd>+<kbd>K</kbd> Backup DB (confirms)</div>
+      <div><kbd>P</kbd> Save prefs</div>
+      <div><kbd>?</kbd> This help</div>
+      <div class="small">Zone editor and Asset Bank pages have their own keys (press <kbd>?</kbd> there).</div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let status=null;
+let hub=null;
+function toast(msg){const el=$('toast');el.textContent=msg;el.style.display='flex';el.classList.remove('lm-toast--enter');void el.offsetWidth;el.classList.add('lm-toast--enter');setTimeout(()=>el.style.display='none',2200)}
+async function api(path,opts){const r=await fetch(path,opts);if(!r.ok)throw new Error(await r.text());return r.json()}
+function esc(s){return String(s==null?'':s).replace(/[<>&]/g,ch=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[ch]))}
+// Data-viz palette — SINGLE source shared by the canvas renderer and the legend (finding 17).
+// This is data-viz territory (canvas + inline legend swatches), explicitly outside the
+// ui-kit-lint chrome contract per the <style>-block header note.
+const ZONE_PALETTE={
+  bg:'#1a2030',bounds:'#4a5870',
+  ground:{fill:'#345a49',line:'#4a7a5f',label:'#8bc49a'},
+  decal:{fill:'rgba(160,120,255,0.3)',line:'#a078ff',label:'#c4a8ff'},
+  prop:{fill:'rgba(100,200,255,0.3)',line:'#64c8ff',label:'#9ad8ff'},
+  npc:{fill:'rgba(124,207,145,0.35)',line:'#7ccf91',label:'#dbffe4'},
+  monster:{fill:'rgba(220,119,119,0.35)',line:'#dc7777',label:'#f0a0a0'},
+  portal:{fill:'rgba(155,226,111,0.35)',line:'#9be26f',label:'#d0ffc0'},
+  spawn:{fill:'#ffe2a0',line:'#b89040'},
+};
+const LEGEND=[['Ground','ground'],['Decal','decal'],['Prop','prop'],['NPC','npc'],['Monster Zone','monster'],['Portal','portal'],['Spawn Point','spawn']];
+function renderLegend(){
+  $('zoneLegendRow').innerHTML=LEGEND.map(([label,key])=>{const p=ZONE_PALETTE[key];const dot=key==='spawn';return `<span><span class="swatch${dot?' swatch--dot':''}" style="background:${p.fill}${dot?'':`;border:1px solid ${p.line}`}"></span> ${label}</span>`}).join('');
+}
+// Activity feed (finding 10): keep last-N action/result/timestamp entries on the Stack tab.
+const activity=[];
+function logActivity(action,ok,detail){
+  activity.unshift({action,ok,detail:detail||'',at:new Date()});
+  if(activity.length>30)activity.length=30;
+  const el=$('activityFeed');if(!el)return;
+  el.innerHTML=activity.length?activity.map(a=>`<div class="row"><span class="lm-badge ${a.ok===null?'':a.ok?'lm-badge--ok':'lm-badge--danger'}">${a.ok===null?'…':a.ok?'ok':'fail'}</span><strong>${esc(a.action)}</strong>${a.detail?`<span class="small">${esc(a.detail)}</span>`:''}<time class="push-right">${a.at.toLocaleTimeString()}</time></div>`).join(''):'<span class="small">No activity yet this session.</span>';
+}
+async function copyText(text,label){
+  try{await navigator.clipboard.writeText(text);toast(`${label||'Text'} copied`)}
+  catch(e){toast('Copy failed: '+(e.message||e))}
+}
+// In-flight button guard (findings 1,2): disables + shows a spinner label for the duration,
+// catches errors, toasts + records to the activity feed. Always re-enables in finally.
+async function withBusy(btn,label,fn){
+  const el=typeof btn==='string'?$(btn):btn;
+  const original=el?el.innerHTML:'';
+  if(el){el.disabled=true;el.innerHTML=`<span class="spinner"></span>${label}…`}
+  logActivity(label,null);
+  try{const r=await fn();logActivity(label,true);return r}
+  catch(e){const msg=e&&e.message?e.message:String(e);toast(`${label} failed: ${msg}`);logActivity(label,false,msg);throw e}
+  finally{if(el){el.disabled=false;el.innerHTML=original}}
+}
+let stackPoll=null;
+// Live polling (finding 7): while the Stack tab is visible, re-fetch hub health every 4s so a
+// dying service stops showing HEALTHY forever. Paused when the tab is hidden or the browser tab
+// is backgrounded (visibilitychange) to avoid needless probing.
+function stackPolling(on){
+  if(on&&!stackPoll){stackPoll=setInterval(()=>{if(document.hidden)return;api('/api/hub/status').then(h=>{hub=h;renderHub()}).catch(()=>{})},4000)}
+  else if(!on&&stackPoll){clearInterval(stackPoll);stackPoll=null}
+}
+function tab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(name).classList.remove('hidden');document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===name)));stackPolling(name==='stack')}
+async function load(){
+  status=await api('/api/status');
+  hub=await api('/api/hub/status');
+  $('topStats').innerHTML=`<span class="lm-badge lm-badge--info">${status.assetCounts.visible} visible assets</span><span class="lm-badge">${status.queues.length} queues</span>`;
+  renderHub();
+  $('assetVisible').textContent=status.assetCounts.visible;
+  $('assetBankState').textContent=status.assetBank.running?'Asset Bank server is running.':'Asset Bank server is stopped.';
+  if(!status.assetBank.running)$('assetBankFrame').src=assetBankStoppedUrl();
+  $('audioState').textContent=status.audio.reviewExists?'ready':'missing';
+  renderAudio();
+  $('frameState').textContent=status.framePicker.running?'running':'stopped';
+  $('queueCount').textContent=status.queues.length;
+  $('queueList').innerHTML=status.queues.map(q=>{const live=Number.isFinite(q.liveCount)?q.liveCount:q.count;const stale=Number.isFinite(q.staleCount)?q.staleCount:Math.max(0,q.count-live);const label=stale?`${live}/${q.count}`:q.count;const title=stale?`${live} live assets, ${stale} stale entries`: `${q.count} live assets`;return`<button class="lm-btn" onclick="openQueue('${q.name}')" title="${title}">${q.name} (${label})${stale?` <span class="small">stale ${stale}</span>`:''}</button>`}).join('');
+  const candidates=await api('/api/frame-picker-candidates');
+  $('frameCandidates').innerHTML=candidates.candidates.length?candidates.candidates.map(c=>`<button class="lm-btn" onclick="pickCandidate('${c.path.replaceAll('\\\\','\\\\\\\\')}')">${c.frameCount} frames${c.hasSelection?' · has selection':''}<br><span class="path">${c.path}</span></button>`).join(''):'<span class="small">No candidate folders with frames/raw found yet.</span>';
+}
+// Distinct visible state per status (finding 8): unmanaged/degraded/error no longer look like starting.
+function statusClass(s){
+  if(s==='healthy')return 'lm-badge--ok';
+  if(s==='starting')return 'lm-badge--warn';
+  if(s==='unmanaged'||s==='degraded')return 'lm-badge--warn';
+  if(s==='error')return 'lm-badge--danger';
+  return 'lm-badge--danger';
+}
+let hubFetchedAt=0;
+// "as of Xs ago" staleness readout (finding 7) — ticks every second off the last hub fetch.
+function tickStaleness(){
+  const el=$('stackStale');if(!el)return;
+  if(!hubFetchedAt){el.textContent='—';return}
+  const secs=Math.round((Date.now()-hubFetchedAt)/1000);
+  el.textContent=`health as of ${secs}s ago`;
+  el.className='staleness'+(secs>12?' lm-badge lm-badge--warn':'');
+}
+setInterval(tickStaleness,1000);
+function renderHub(){
+  hubFetchedAt=Date.now();tickStaleness();
+  const health=hub.health||[];
+  const healthy=health.filter(h=>h.status==='healthy').length;
+  $('stackState').textContent=`${healthy}/3`;
+  $('stackDetail').textContent=health.map(h=>`${h.service}: ${h.status}`).join(' · ');
+  $('serviceCards').innerHTML=health.map(h=>{
+    // Surface watchdog "gave up" + last failure line on the card (finding 9).
+    const wd=(h.detail||'').includes('watchdog:')?`<p class="small">${esc(h.detail.split('watchdog:').slice(1).join('watchdog:').trim())}</p>`:'';
+    const stateNote=h.status==='error'?'<span class="lm-badge lm-badge--danger">watchdog gave up</span>':h.status==='unmanaged'?'<span class="lm-badge lm-badge--warn">orphaned / not tracked</span>':h.status==='degraded'?'<span class="lm-badge lm-badge--warn">reachable but unhealthy</span>':'';
+    return `<div class="lm-card"><h3 class="lm-eyebrow">${h.service}</h3><div class="row"><span class="lm-badge ${statusClass(h.status)}">${h.status}</span>${stateNote}</div><p class="small">${esc(h.detail||'')}</p>${wd}<p class="path">${h.pid?`pid ${h.pid} · `:''}${h.latencyMs!=null?`${h.latencyMs}ms · `:''}${h.desired?'watching':'not desired'}</p><div class="row"><button class="lm-btn" onclick="service('${h.service}','start')">Start</button><button class="lm-btn" onclick="service('${h.service}','stop')">Stop</button><button class="lm-btn" onclick="service('${h.service}','restart')">Restart</button></div></div>`;
+  }).join('');
+  renderDbCard(health.find(h=>h.service==='database'));
+  $('guestMode').checked=!!hub.prefs.guestMode;
+  $('autoRestart').checked=!!hub.prefs.autoRestart;
+  $('windowsAutostart').checked=!!hub.prefs.windowsAutostart;
+  $('autoProfile').value=hub.prefs.autoStartProfile||'none';
+  $('backupMax').value=hub.prefs.backupMaxCount||10;
+  if(hub.logs&&hub.logs.server)$('backupDir').textContent=(hub.logs.server.replace(/[\\/][^\\/]*$/,'')+'\\backups');
+  const backups=hub.backups||[];
+  $('restoreFile').innerHTML=backups.length?backups.map(b=>`<option value="${b.file}">${b.file}</option>`).join(''):'<option value="">No backups</option>';
+  $('backupList').innerHTML=backups.length?backups.map(b=>{const age=ageOf(b.modifiedAt);return `<div class="row"><span class="path">${esc(b.file)}</span><span class="small">${Math.round(b.sizeBytes/1024)} KB · ${age} · ${new Date(b.modifiedAt).toLocaleString()}</span><button class="lm-btn copy-btn push-right" onclick="copyText('${(b.path||b.file).replaceAll('\\\\','\\\\\\\\')}','Backup path')">Copy path</button></div>`}).join(''):'<span class="small">No backups yet. <strong>Backup DB</strong> pg_dumps the running database into the backups dir above.</span>';
+  loadLog().catch(()=>{});
+  api('/api/hub/diagnostics').then(d=>renderDiagnostics(d.diagnostics)).catch(e=>{$('diagnostics').textContent='diagnostics unavailable: '+(e.message||e)});
+}
+function ageOf(iso){const ms=Date.now()-Date.parse(iso);if(!Number.isFinite(ms))return '';const m=Math.floor(ms/60000);if(m<1)return 'just now';if(m<60)return `${m}m ago`;const h=Math.floor(m/60);if(h<24)return `${h}h ago`;return `${Math.floor(h/24)}d ago`}
+// Parse `docker compose ps` table (finding 11) into fields instead of dumping the raw table.
+function renderDbCard(db){
+  const el=$('dbFields');if(!el)return;
+  const rows=[];
+  if(db){rows.push(['status',`<span class="lm-badge ${statusClass(db.status)}">${db.status}</span>`]);if(db.latencyMs!=null)rows.push(['latency',`${db.latencyMs}ms`]);if(db.detail)rows.push(['detail',esc(db.detail)])}
+  const table=(hub.docker||'').trim();
+  if(table){
+    const lines=table.split(/\r?\n/).filter(Boolean);
+    const body=lines.filter(l=>!/^\s*NAME\b/i.test(l));
+    for(const line of body){const cols=line.trim().split(/\s{2,}/);if(cols.length>=2){rows.push(['container',esc(cols[0])]);if(cols[1])rows.push(['image',esc(cols[1])]);if(cols[2])rows.push(['uptime',esc(cols.slice(2).join(' '))])}}
+  }
+  el.innerHTML=rows.length?rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join(''):'<dt>status</dt><dd class="small">No database container reported.</dd>';
+  // Surface the 5432 port owner from diagnostics (fixes-lane DB identity guard).
+  $('stackDbOwner').textContent='';
+}
+// Curate diagnostics into sectioned cards (finding 12); raw JSON stays behind the details toggle.
+function renderDiagnostics(d){
+  $('diagnostics').textContent=JSON.stringify(d,null,2);
+  const cards=[];
+  if(Array.isArray(d.health))cards.push(diagCard('Services',d.health.map(h=>`${h.service}: ${h.status}`).join(' · ')));
+  if(d.hubUptimeSec!=null)cards.push(diagCard('Hub',`uptime ${Math.floor(d.hubUptimeSec/60)}m · root ${esc(d.repoRoot||'')}`));
+  if(Array.isArray(d.backups))cards.push(diagCard('Backups',`${d.backups.length} file(s)`));
+  if(Array.isArray(d.db5432Owners)&&d.db5432Owners.length){cards.push(diagCard('Port 5432 owner',d.db5432Owners.map(o=>`${esc(o.name||'unknown')}${o.project?` (project ${esc(o.project)})`:''}`).join(' · ')));$('stackDbOwner').textContent='5432: '+d.db5432Owners.map(o=>o.name||'unknown').join(', ')}
+  if(d.logs)cards.push(diagCard('Logs',Object.entries(d.logs).map(([k,v])=>`${k}: ${v?Math.round(v.sizeBytes/1024)+' KB':'—'}`).join(' · ')));
+  $('diagCards').innerHTML=cards.join('')||'<span class="small">No diagnostics sections.</span>';
+}
+function diagCard(title,body){return `<div class="lm-card"><h3 class="lm-eyebrow">${title}</h3><p class="small">${body}</p></div>`}
+function renderAudio(){
+  const el=$('audioBody');if(!el||!status)return;
+  if(status.audio&&status.audio.reviewExists){el.innerHTML='<iframe src="/assets-file/audio/generated/audio-review.html"></iframe>'}
+  else{el.innerHTML='<div class="lm-card panel empty-state"><h3>No audio review yet</h3><p>The audio review page has not been generated. Click <strong>Regenerate Audio Review</strong> above to build it from the current candidates.</p><button class="lm-btn lm-btn--primary" onclick="refreshAudio()">Regenerate Audio Review</button></div>'}
+}
+async function service(name,action){try{const r=await api('/api/hub/service',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service:name,action})});toast(`${name} ${action}: ${r.ok?'ok':'failed'}`);logActivity(`${name} ${action}`,r.ok,r.ok?'':(r.output||'').split(/\r?\n/).slice(-1)[0]||'');setTimeout(load,900)}catch(e){toast(`${name} ${action} failed: ${e.message||e}`);logActivity(`${name} ${action}`,false,e.message||String(e))}}
+async function savePrefs(){await withBusy('savePrefs','Save prefs',async()=>{await api('/api/hub/prefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guestMode:$('guestMode').checked,autoRestart:$('autoRestart').checked,windowsAutostart:$('windowsAutostart').checked,autoStartProfile:$('autoProfile').value,backupMaxCount:Number($('backupMax').value)||10})});toast('Prefs saved');await load()})}
+async function profile(name){const btn=document.querySelector(`[data-profile="${name}"]`);await withBusy(btn,`${name} profile`,async()=>{const r=await api('/api/hub/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile:name})});
+  // Honesty: the profile response carries per-service output; report failures rather than a blanket success (finding 6).
+  const out=String(r.output||'');const failed=/:\s*(failed|refus|error|did not|not reachable)/i.test(out)||r.ok===false;
+  if(failed)throw new Error(out.split(/\r?\n/).filter(Boolean).slice(-1)[0]||'profile reported a failing service');
+  toast(`${name} profile applied`)}).catch(()=>{}).finally(()=>setTimeout(load,900))}
+async function launcher(action){const btn=document.querySelector(`[data-launcher="${action}"]`);const label=action.replace(/-/g,' ');await withBusy(btn,label,async()=>{const r=await api('/api/hub/launcher',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});if(!r.ok)throw new Error((r.error||r.output||'').split(/\r?\n/).slice(-1)[0]||'launcher failed');if(r.url)window.open(r.url,'_blank');toast(`${label}: ok`);return r})}
+async function loadLog(){const r=await api(`/api/hub/logs?log=${encodeURIComponent($('logName').value)}&lines=80`);$('logTail').textContent=(r.lines||[]).join('\n')}
+async function backupNow(){await withBusy('backupNow','Backup DB',async()=>{const r=await api('/api/hub/backup',{method:'POST',body:'{}'});if(!r.ok)throw new Error(r.error||'backup failed');toast('Backup saved');await load()})}
+async function restoreBackup(){const file=$('restoreFile').value;if(!file){toast('Pick a backup to restore first');return}if(!confirm(`Restore ${file}? This overwrites the current database.`))return;await withBusy('restoreBackup','Restore DB',async()=>{const r=await api('/api/hub/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file,confirm:true})});if(!r.ok)throw new Error((r.output||'restore failed').split(/\r?\n/).slice(-1)[0]);toast('Restore complete')})}
+function pickCandidate(path){$('candidatePath').value=path}
+function assetBankStoppedUrl(){return `/asset-review-server.html?stopped=1&t=${Date.now()}`}
+function assetBankUrl(extra=''){const sep=extra?'&':'?';return `http://127.0.0.1:8765/_review/asset-review-server.html${extra}${sep}t=${Date.now()}`}
+function openQueue(name){const url=assetBankUrl(`?queue=${encodeURIComponent(name)}`);tab('asset-bank');$('assetBankFrame').src=url;toast(`Opened ${name} in Asset Bank`)}
+async function startAssetBank(){
+  // Non-destructive by default: if :8765 is already healthy the server reports "already running"
+  // and embeds it (no kill+respawn, so no console flash / silent no-op — backlog p0). It only
+  // spawns when the port is free, and verifies the launch before claiming success.
+  toast('Starting Asset Bank…');
+  let r;try{r=await api('/api/start-asset-bank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})}catch(e){toast('Asset Bank start failed: '+e.message);return}
+  if(!r.ok){toast('Asset Bank did not start: '+(r.error||'unknown'));if(r.logTail&&r.logTail.length)console.error('[asset-bank]\n'+r.logTail.join('\n'));return}
+  $('assetBankFrame').src=assetBankUrl();
+  toast(r.alreadyRunning?'Asset Bank already running':r.restarted?'Asset Bank restarted':'Asset Bank started');
+  setTimeout(load,800);
+}
+async function refreshAudio(){try{await api('/api/refresh-audio-review',{method:'POST'});toast('Audio review refresh started');logActivity('Regenerate audio review',true);setTimeout(()=>load().catch(()=>{}),1500)}catch(e){toast('Audio refresh failed: '+(e.message||e));logActivity('Regenerate audio review',false,e.message||String(e))}}
+async function startFramePicker(){
+  const candidate=$('candidatePath').value.trim();
+  let r;try{r=await api('/api/start-frame-picker',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({candidate})})}catch(e){toast('Frame Picker start failed: '+e.message);return}
+  if(!r.ok){toast('Frame Picker did not start: '+(r.error||'unknown'));return}
+  toast(r.alreadyRunning?'Frame Picker already running':'Frame Picker started');
+  setTimeout(load,900);
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+document.querySelectorAll('[data-open-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.openTab));
+$('startAssetBank').onclick=startAssetBank;$('assetBankFrameStart').onclick=startAssetBank;$('refreshAudio').onclick=refreshAudio;$('audioRefreshInline').onclick=refreshAudio;$('startFramePicker').onclick=startFramePicker;
+$('writeBridge').onclick=()=>withBusy('writeBridge','Update assets bridge',async()=>{await api('/api/write-assets-bridge',{method:'POST'});toast('Z:\\Assets bridge updated')}).catch(()=>{});
+document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>profile(b.dataset.profile));
+document.querySelectorAll('[data-launcher]').forEach(b=>b.onclick=()=>launcher(b.dataset.launcher).catch(()=>{}));
+$('savePrefs').onclick=savePrefs;$('backupNow').onclick=backupNow;$('restoreBackup').onclick=restoreBackup;$('refreshLog').onclick=()=>loadLog().catch(e=>toast('Log load failed: '+(e.message||e)));$('logName').onchange=()=>loadLog().catch(()=>{});
+$('clearLog').onclick=()=>withBusy('clearLog','Clear log',async()=>{await api('/api/hub/logs/clear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({log:$('logName').value})});toast('Log cleared');await loadLog()}).catch(()=>{});
+$('rotateLog').onclick=()=>withBusy('rotateLog','Rotate log',async()=>{await api('/api/hub/logs/rotate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({log:$('logName').value})});toast('Log rotate checked');await loadLog()}).catch(()=>{});
+$('enableTray').onclick=()=>withBusy('enableTray','Enable toasts',async()=>{await api('/api/hub/tray',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true})});if('Notification'in window&&Notification.permission==='default')await Notification.requestPermission();if('Notification'in window&&Notification.permission==='granted')new Notification('GameKit Hub',{body:'Toasts enabled'});toast('Toasts enabled')}).catch(()=>{});
+// Auto-generate the audio review on first open if it is missing (added scope), so the tab never
+// shows a raw ENOENT. Guarded to fire at most once per session.
+let audioAutoTried=false;
+document.querySelectorAll('[data-tab="audio"]').forEach(b=>b.addEventListener('click',()=>{
+  if(!audioAutoTried&&status&&status.audio&&!status.audio.reviewExists){audioAutoTried=true;toast('Generating audio review…');refreshAudio()}
+}));
+$('copyLog').onclick=()=>copyText($('logTail').textContent||'','Log tail');
+$('copyDiag').onclick=()=>copyText($('diagnostics').textContent||'','Diagnostics JSON');
+$('copyBackupDir').onclick=()=>copyText($('backupDir').textContent||'','Backups dir');
+let zoneLayouts=[];
+async function loadZoneLayouts(){
+  const r=await api('/api/zone-layouts');
+  zoneLayouts=r.layouts;
+  $('zoneCount').textContent=zoneLayouts.length;
+  const sel=$('zoneSelect');
+  sel.innerHTML='<option value="">Select a layout...</option>'+zoneLayouts.map((l,i)=>`<option value="${i}">${l.mapId}</option>`).join('');
+  $('loopMap').innerHTML='<option value="">All zones</option>'+zoneLayouts.map(l=>`<option value="${l.mapId}">${l.mapId}</option>`).join('');
+}
+$('zoneSelect').onchange=function(){
+  const i=parseInt(this.value);
+  if(isNaN(i)){$('zoneLegend').classList.add('hidden');return}
+  renderZoneLayout(zoneLayouts[i].data);
+  $('zoneLegend').classList.remove('hidden');
+  const d=zoneLayouts[i].data;
+  $('zoneInfo').textContent=`${d.bounds.width}×${d.bounds.height} · ${d.ground.length} ground · ${d.decals.length} decals · ${d.props.length} props · ${d.npcs.length} NPCs · ${d.monsterSpawns.length} spawns · ${d.portals.length} portals`;
+};
+function renderZoneLayout(layout){
+  const canvas=$('zoneCanvas');
+  const maxW=canvas.parentElement.clientWidth-28;
+  const scale=Math.min(maxW/layout.bounds.width,600/layout.bounds.height,1);
+  canvas.width=Math.ceil(layout.bounds.width*scale);
+  canvas.height=Math.ceil(layout.bounds.height*scale);
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();ctx.scale(scale,scale);
+  const P=ZONE_PALETTE;
+  // background
+  ctx.fillStyle=P.bg;ctx.fillRect(0,0,layout.bounds.width,layout.bounds.height);
+  // ground regions
+  for(const g of layout.ground){ctx.fillStyle=P.ground.fill;ctx.fillRect(g.x,g.y,g.width,g.height);ctx.strokeStyle=P.ground.line;ctx.lineWidth=1/scale;ctx.strokeRect(g.x,g.y,g.width,g.height);ctx.fillStyle=P.ground.label;ctx.font=`${Math.max(10,12/scale)}px system-ui`;ctx.fillText(g.assetKey,g.x+4,g.y+14/scale)}
+  // decals
+  ctx.fillStyle=P.decal.fill;ctx.strokeStyle=P.decal.line;
+  for(const d of layout.decals){const s=d.scale??1;const r=16*s;ctx.beginPath();ctx.arc(d.x,d.y,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=P.decal.label;ctx.font=`${Math.max(8,10/scale)}px system-ui`;ctx.fillText(d.assetKey,d.x+r+2,d.y+3);ctx.fillStyle=P.decal.fill}
+  // props
+  ctx.fillStyle=P.prop.fill;ctx.strokeStyle=P.prop.line;
+  for(const p of layout.props){ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=P.prop.label;ctx.font=`${Math.max(8,10/scale)}px system-ui`;ctx.fillText(p.assetKey,p.x+14,p.y+3);ctx.fillStyle=P.prop.fill}
+  // monster spawn zones
+  ctx.fillStyle=P.monster.fill;ctx.strokeStyle=P.monster.line;ctx.lineWidth=2/scale;ctx.setLineDash([6/scale,4/scale]);
+  for(const m of layout.monsterSpawns){ctx.fillRect(m.x,m.y,m.width,m.height);ctx.strokeRect(m.x,m.y,m.width,m.height);ctx.fillStyle=P.monster.label;ctx.font=`${Math.max(10,12/scale)}px system-ui`;ctx.fillText(`${m.monsterId} (×${m.maxAlive})`,m.x+4,m.y+14/scale);ctx.fillStyle=P.monster.fill}
+  ctx.setLineDash([]);
+  // NPCs
+  for(const n of layout.npcs){ctx.fillStyle=P.npc.fill;ctx.strokeStyle=P.npc.line;ctx.lineWidth=2/scale;ctx.beginPath();ctx.arc(n.x,n.y,n.radius,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=P.npc.label;ctx.font=`bold ${Math.max(10,12/scale)}px system-ui`;ctx.textAlign='center';ctx.fillText(n.npcId,n.x,n.y-n.radius-4/scale);ctx.textAlign='left'}
+  // portals
+  for(const p of layout.portals){ctx.fillStyle=P.portal.fill;ctx.strokeStyle=P.portal.line;ctx.lineWidth=2/scale;if(p.shape.type==='circle'){ctx.beginPath();ctx.arc(p.shape.x,p.shape.y,p.shape.radius,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=P.portal.label;ctx.font=`${Math.max(9,11/scale)}px system-ui`;ctx.textAlign='center';ctx.fillText(p.portalId,p.shape.x,p.shape.y+3);ctx.textAlign='left'}else{ctx.fillRect(p.shape.x,p.shape.y,p.shape.width,p.shape.height);ctx.strokeRect(p.shape.x,p.shape.y,p.shape.width,p.shape.height);ctx.fillStyle=P.portal.label;ctx.font=`${Math.max(9,11/scale)}px system-ui`;ctx.fillText(p.portalId,p.shape.x+4,p.shape.y+14/scale)}}
+  // spawn points
+  for(const s of layout.spawnPoints){ctx.fillStyle=P.spawn.fill;ctx.beginPath();ctx.arc(s.x,s.y,6/scale,0,Math.PI*2);ctx.fill();ctx.strokeStyle=P.spawn.line;ctx.lineWidth=1.5/scale;ctx.stroke();ctx.fillStyle=P.spawn.fill;ctx.font=`bold ${Math.max(10,12/scale)}px system-ui`;ctx.textAlign='center';ctx.fillText(s.id,s.x,s.y-8/scale);ctx.textAlign='left'}
+  // bounds outline
+  ctx.strokeStyle=P.bounds;ctx.lineWidth=2/scale;ctx.strokeRect(0,0,layout.bounds.width,layout.bounds.height);
+  ctx.restore();
+}
+async function loadCaptures(){
+  const r=await api('/api/hub/captures');
+  const cards=[];
+  for(const group of r.groups||[]){
+    if(!group.captures.length){cards.push(`<div class="lm-card"><h3 class="lm-eyebrow">${group.kind}</h3><p class="small">No captures in ${group.root}</p></div>`);continue}
+    cards.push(...group.captures.slice(0,12).map(c=>`<div class="lm-card"><h3 class="lm-eyebrow">${group.kind}</h3><a href="${c.url}" target="_blank"><img src="${c.url}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--lm-border-cool);border-radius:6px;background:var(--lm-surface-sunken)"></a><p class="small">${new Date(c.modifiedAt).toLocaleString()}</p><p class="path">${c.path}</p></div>`));
+  }
+  $('captureGallery').innerHTML=cards.join('')||'<div class="lm-card"><p class="small">No capture folders found yet.</p></div>';
+}
+async function loadWorld(){
+  const r=await api('/api/hub/world');
+  $('worldOnline').textContent=r.online.serverReachable?`server ${r.online.matchmakeStatus}`:'server offline';
+  $('worldOnline').className=`lm-badge ${r.online.serverReachable?'lm-badge--ok':'lm-badge--warn'}`;
+  $('worldTotals').textContent=`${r.totals.maps} maps · ${r.totals.spawnPoints} spawn points · ${r.totals.npcs} NPCs · ${r.totals.monsterSpawns} monster zones · ${r.totals.portals} portals`;
+  $('worldMaps').innerHTML=(r.maps||[]).map(m=>`<div class="lm-card"><h3 class="lm-eyebrow">${m.mapId}</h3><p class="small">${m.bounds.width}×${m.bounds.height} · ${m.npcCount} NPCs · ${m.monsterSpawnCount} monster zones · ${m.portalCount} portals</p><p><strong>Spawns</strong></p><p class="path">${m.spawnPoints.map(s=>`${s.id} (${Math.round(s.x)}, ${Math.round(s.y)})`).join(' · ')}</p><p><strong>Monsters</strong></p><p class="path">${m.monsterSpawns.slice(0,6).map(s=>`${s.monsterId} ×${s.maxAlive}`).join(' · ')||'none'}</p></div>`).join('');
+}
+async function loadPipeline(){
+  const r=await api('/api/hub/pipeline');
+  $('pipelineCounts').textContent=`${r.counts.accepted} accepted · ${r.counts.promoted} promoted · ${r.counts.placedPromoted} placed · ${r.counts.maps} maps`;
+  $('pipelineRows').innerHTML=(r.rows||[]).slice(0,80).map(row=>`<div class="lm-card"><div class="row"><span class="lm-badge ${row.placements.length?'lm-badge--ok':'lm-badge--warn'}">${row.placements.length?'placed':'not placed'}</span><strong>${row.key}</strong><span class="small">${row.type}</span></div><p class="path">${row.sourcePath||'no source path'}</p><p class="small">${row.placements.map(p=>`${p.mapId}/${p.layer}/${p.instanceId}`).join(' · ')||'Promoted, but not used by any layout yet.'}</p></div>`).join('')||'<span class="small">No promoted runtime assets found.</span>';
+}
+function fmtTime(iso){if(!iso)return'never';const d=new Date(iso);return isNaN(d)?'—':d.toLocaleString()}
+async function loadApplyStatus(){
+  const r=await api('/api/hub/apply-status');
+  const maps=r.maps||{rows:[]};
+  const gen=r.generatedAssets||{};
+  const reg=r.promotedRegistry||{};
+  $('applyStatusSummary').textContent=`${maps.total} maps · ${maps.stale} stale · ${reg.count} promoted · sync ${gen.stale?'STALE':'ok'}`;
+  const mapRows=(maps.rows||[]).map(m=>`<div class="row"><span class="lm-badge ${m.fresh?'lm-badge--ok':'lm-badge--warn'}">${m.fresh?'in-sync':'stale'}</span><strong>${esc(m.mapId)}</strong>${m.detail?`<span class="small">${esc(m.detail)}</span>`:`<span class="small path">layout ${esc(String(m.layoutHash||'').slice(0,10))} = compiled ${esc(String(m.compiledHash||'').slice(0,10))}</span>`}</div>`).join('')||'<span class="small">No compiled maps with a source hash.</span>';
+  $('applyStatusBody').innerHTML=
+    `<div class="lm-card"><h3 class="lm-eyebrow">Layout → compiled map</h3>${mapRows}</div>`+
+    `<div class="lm-card"><div class="row"><span class="lm-badge">registry</span><strong>${reg.count} entries</strong><span class="small">updated ${fmtTime(reg.updatedAt)}</span></div>`+
+    `<div class="row"><span class="lm-badge ${gen.stale?'lm-badge--warn':'lm-badge--ok'}">${gen.stale?'stale':'in-sync'}</span><strong>promoted-assets.ts</strong><span class="small">generated ${fmtTime(gen.updatedAt)}${gen.stale?' — run pnpm promoted-asset-sync':''}</span></div></div>`;
+}
+function renderZoneLoop(result){
+  const steps=result.steps||[];
+  const passed=steps.filter(s=>s.ok).length;
+  $('loopState').textContent=result.ok?`Done (${passed}/${steps.length})`:`Blocked (${passed}/${steps.length})`;
+  $('reloadGame').href=result.reloadUrl||'http://127.0.0.1:5173/';
+  // Summarize pass/fail per step; raw stdout stays behind a per-step details toggle (finding 13).
+  $('zoneLoopSteps').innerHTML=steps.map(step=>{
+    const out=String(step.output||'').trim();
+    const firstLine=out.split(/\r?\n/).filter(Boolean).slice(-1)[0]||'';
+    return `<div class="lm-card"><div class="row"><span class="lm-badge ${step.ok?'lm-badge--ok':'lm-badge--warn'}">${step.ok?'ok':'failed'}</span><strong>${esc(step.label)}</strong>${step.dryRun?'<span class="small">dry run</span>':''}${firstLine?`<span class="small push-right">${esc(firstLine.slice(0,80))}</span>`:''}</div>${out?`<details class="raw"><summary>output (${out.split(/\r?\n/).length} lines)</summary><pre class="log log--short">${esc(out)}</pre></details>`:''}</div>`;
+  }).join('');
+}
+async function runZoneLoop(dryRun){
+  $('loopState').textContent='Running';
+  $('zoneLoopSteps').innerHTML='<div class="lm-card"><span class="lm-badge lm-badge--warn">running</span> Working through the loop...</div>';
+  const mapId=$('loopMap').value||undefined;
+  const r=await api('/api/hub/zone-loop',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mapId,dryRun})});
+  renderZoneLoop(r);
+  if(r.ok&&!dryRun) window.open(r.reloadUrl||'http://127.0.0.1:5173/','_blank');
+}
+renderLegend();
+loadZoneLayouts().catch(()=>{});
+loadCaptures().catch(()=>{});
+loadWorld().catch(()=>{});
+loadPipeline().catch(()=>{});
+loadApplyStatus().catch(()=>{});
+$('refreshCaptures').onclick=()=>loadCaptures().then(()=>toast('Captures refreshed'));
+$('refreshWorld').onclick=()=>loadWorld().then(()=>toast('World refreshed'));
+$('refreshPipeline').onclick=()=>loadPipeline().then(()=>toast('Pipeline refreshed'));
+$('refreshApplyStatus').onclick=()=>loadApplyStatus().then(()=>toast('Apply status refreshed'));
+$('runZoneLoop').onclick=()=>runZoneLoop(false).catch(e=>{toast('Zone loop failed');renderZoneLoop({ok:false,steps:[{label:'Loop error',ok:false,output:e.message||String(e)}]})});
+$('dryRunZoneLoop').onclick=()=>runZoneLoop(true).catch(e=>{toast('Dry run failed');renderZoneLoop({ok:false,steps:[{label:'Dry run error',ok:false,output:e.message||String(e)}]})});
+
+// Keyboard-first UX (P4): every high-frequency hub action without the mouse; ? shows the map.
+const TAB_ORDER=['home','stack','asset-bank','audio','frame-picker','promotion','captures','world','pipeline','zone-layouts','cleanup'];
+function activeTab(){const b=document.querySelector('[data-tab][aria-pressed="true"]');return b?b.dataset.tab:'home'}
+function toggleKbHelp(show){$('kbHelp').style.display=(show??$('kbHelp').style.display==='none')?'block':'none'}
+$('kbHelpBtn').onclick=()=>toggleKbHelp(true);
+function refreshActive(){const t=activeTab();load().catch(()=>{});if(t==='captures')loadCaptures();else if(t==='world')loadWorld();else if(t==='pipeline'){loadPipeline();loadApplyStatus();}else if(t==='zone-layouts')loadZoneLayouts();toast('Refreshed')}
+function kbZoneLoop(dryRun){tab('pipeline');if(!dryRun&&!confirm('Run the FULL zone loop (validate → sync → export → build → restart)?'))return;runZoneLoop(dryRun).catch(e=>{toast('Zone loop failed');renderZoneLoop({ok:false,steps:[{label:'Loop error',ok:false,output:e.message||String(e)}]})})}
+function kbToggleService(name){tab('stack');const h=(hub&&hub.health||[]).find(x=>x.service===name);const action=h&&h.status==='healthy'?'stop':'start';if(!confirm(`${action} ${name}?`))return;service(name,action)}
+document.addEventListener('keydown',e=>{
+  const t=e.target.tagName;if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key==='Escape'){toggleKbHelp(false);return}
+  if(e.key==='?'){toggleKbHelp();return}
+  if($('kbHelp').style.display!=='none')return;
+  if(/^[0-9]$/.test(e.key)){const i=e.key==='0'?9:Number(e.key)-1;if(TAB_ORDER[i])tab(TAB_ORDER[i]);return}
+  if(e.key==='['||e.key===']'){const i=TAB_ORDER.indexOf(activeTab());const n=(i+(e.key===']'?1:TAB_ORDER.length-1))%TAB_ORDER.length;tab(TAB_ORDER[n]);return}
+  switch(e.key){
+    case 'c':tab('cleanup');break;
+    case 'r':refreshActive();break;
+    case 'g':launcher('open-game');break;
+    case 'b':startAssetBank();break;
+    case 'v':launcher('validate').then(()=>toast('Validate finished'));toast('Validate started');break;
+    case 'l':kbZoneLoop(false);break;
+    case 'L':kbZoneLoop(true);break;
+    case 'D':kbToggleService('database');break;
+    case 'S':kbToggleService('server');break;
+    case 'T':kbToggleService('tunnel');break;
+    case 'K':tab('stack');if(confirm('Backup the database now?'))backupNow();break;
+    case 'p':tab('stack');savePrefs();break;
+  }
+});
+load().catch(e=>{$('topStats').textContent='Failed to load Dev Kit status';console.error(e)});
+</script>
+</body>
+</html>

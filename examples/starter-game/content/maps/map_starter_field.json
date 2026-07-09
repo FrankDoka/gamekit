@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "map_starter_field",
+  "nameKey": "map.starter_field.name",
+  "size": {
+    "width": 1600,
+    "height": 1200
+  },
+  "spawnPoints": [
+    {
+      "instanceId": "sp_default",
+      "id": "default",
+      "x": 800,
+      "y": 600
+    }
+  ],
+  "collision": {
+    "tileSize": 32,
+    "blocked": [
+      [
+        0,
+        0
+      ]
+    ]
+  },
+  "portals": [],
+  "portalPlacements": [],
+  "musicId": "music_starter",
+  "visual": {
+    "ground": [
+      {
+        "instanceId": "ground_field",
+        "assetKey": "ground_grass",
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1200
+      }
+    ],
+    "decals": [],
+    "props": []
+  },
+  "placements": {
+    "npcs": [
+      {
+        "instanceId": "npc_guide_1",
+        "npcId": "npc_guide",
+        "x": 640,
+        "y": 520,
+        "radius": 48
+      }
+    ],
+    "monsterSpawns": [
+      {
+        "instanceId": "monster_spawn_field_slime_1",
+        "monsterId": "monster_field_slime",
+        "x": 980,
+        "y": 640,
+        "width": 320,
+        "height": 240,
+        "maxAlive": 3,
+        "respawnMs": 8000
+      }
+    ]
+  },
+  "compiledFrom": {
+    "path": "zones/map_starter_field.layout.json",
+    "sourceHash": "f51496594bb68b57251e91c13552ba5b2934c7e28cb3301642a02ab17488f0b2"
+  }
+}

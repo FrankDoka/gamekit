@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "monster_field_slime",
+  "nameKey": "monster.field_slime.name",
+  "rank": "normal",
+  "stats": {
+    "hp": 40,
+    "atk": 6,
+    "def": 2,
+    "matk": 0,
+    "mdef": 1,
+    "hit": 80,
+    "flee": 40,
+    "crit": 1,
+    "moveSpeed": 60
+  },
+  "spawn": {
+    "mapId": "map_starter_field",
+    "maxAlive": 4,
+    "respawnMs": 8000
+  },
+  "lootTableId": "loot_field_slime",
+  "behavior": "passive",
+  "xpReward": 12
+}

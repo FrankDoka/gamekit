@@ -1,0 +1,25 @@
+{
+  "_comment": "DELIBERATELY BROKEN fixture for tools/src/zone-lint-selftest.ts — each field below trips exactly one zone-lint check so the gate is proven to fire. NOT a real zone; lives outside content/zones/ so zone:validate/zone:lint:ci never pick it up.",
+  "schemaVersion": 1,
+  "mapId": "map_harbor_outskirts",
+  "bounds": { "width": 2400, "height": 1800 },
+  "ground": [
+    { "instanceId": "g_base", "assetKey": "cel_grass_ground_master_1024", "x": 0, "y": 0, "width": 2400, "height": 1800, "zIndex": -1 }
+  ],
+  "decals": [],
+  "props": [
+    { "instanceId": "p_scale_bad", "assetKey": "cel_fish_market_stall_503px", "x": 100, "y": 100, "scale": 2.0 },
+    { "instanceId": "p_missing_on_disk", "assetKey": "totally_missing_key_xyz", "x": 200, "y": 200, "scale": 1 },
+    { "instanceId": "p_out_of_bounds", "assetKey": "cel_fish_market_stall_503px", "x": 99999, "y": 100, "scale": 1 },
+    { "instanceId": "p_dup_a", "assetKey": "cel_fish_market_stall_503px", "x": 300, "y": 300, "scale": 1 },
+    { "instanceId": "p_dup_b", "assetKey": "cel_fish_market_stall_503px", "x": 300, "y": 300, "scale": 1 }
+  ],
+  "npcs": [],
+  "monsterSpawns": [
+    { "instanceId": "monster_spawn_field_0", "monsterId": "monster_harbor_saltglass_crab", "x": 320, "y": 220, "width": 200, "height": 180, "maxAlive": 1, "respawnMs": 8000 },
+    { "instanceId": "monster_spawn_no_ordinal", "monsterId": "monster_harbor_saltglass_crab", "x": 520, "y": 220, "width": 200, "height": 180, "maxAlive": 1, "respawnMs": 8000 }
+  ],
+  "portals": [],
+  "spawnPoints": [{ "instanceId": "sp_0", "id": "spawn_default", "x": 300, "y": 300 }],
+  "collision": { "tileSize": 32, "blocked": [] }
+}

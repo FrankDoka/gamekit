@@ -1,0 +1,27 @@
+{
+  "tool": "recipes.py",
+  "mode": "identity-palette",
+  "target": "tools/asset-cleanup/fixtures/b2-negative/player_baldbase_swing_1h.clean.png",
+  "options": {
+    "--cell": "384",
+    "--canon": "client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp"
+  },
+  "result": "FAIL",
+  "checks": [
+    {
+      "name": "costume_drift",
+      "status": "FAIL",
+      "detail": "max frame-vs-median L1=0.830 at f07 (floor 0.75; B2 morph fixtures 0.83-0.91, all positives <= 0.64)"
+    },
+    {
+      "name": "canon_sheet_width_divisible_by_cell",
+      "status": "FAIL",
+      "detail": "canon client/public/assets/sprites/player_blackhair_cel_idle_east_256.webp: width=2560 cell=384 (remainder 256) - measure the sheet, never guess the cell"
+    },
+    {
+      "name": "identity_palette_metrics",
+      "status": "WARN",
+      "detail": "{\"cell\":384,\"frames\":11,\"frameVsMedianL1\":{\"f00\":0.153,\"f01\":0.123,\"f02\":0.146,\"f03\":0.156,\"f04\":0.822,\"f05\":0.819,\"f06\":0.291,\"f07\":0.83,\"f08\":0.815,\"f09\":0.13,\"f10\":0.172}}"
+    }
+  ]
+}

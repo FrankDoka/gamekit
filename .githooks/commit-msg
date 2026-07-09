@@ -1,0 +1,22 @@
+#!/bin/sh
+# GameKit toolkit commit-msg hook (generic).
+#
+# Enforces a conventional-style first line: "<type>(<scope>): <summary>"
+#   e.g.  feat(devkit): add db identity guard
+#         fix(hooks): drop game-specific zone check
+# Merge / revert / fixup / squash commits are exempt. Bypass (rare): git commit --no-verify.
+#
+# GENERICIZED from the prior game project: the game-specific bypass-var audit
+# (prefixed env flags tied to that game's zoom/zone/visual gates) was removed —
+# those gates do not exist in this toolkit. The format check is the generic-useful part.
+msg_file="$1"
+first_line=$(head -n 1 "$msg_file")
+case "$first_line" in
+  Merge*|Revert*|fixup!*|squash!*) exit 0 ;;
+esac
+if ! printf '%s' "$first_line" | grep -Eqi '^[a-z]+(\([a-z0-9_./ -]+\))?: .+'; then
+  echo "[commit-msg] first line must match '<type>(<scope>): <summary>' — e.g. feat(devkit): add db stack" >&2
+  echo "[commit-msg] got: $first_line" >&2
+  exit 1
+fi
+exit 0

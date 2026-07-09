@@ -1,0 +1,48 @@
+{
+  "path": "tools/asset-cleanup/fixtures/opaque-magenta-ring/player_baldbase_swing_1h.defective-ring.clean.png",
+  "result": "FAIL",
+  "threshold": 150,
+  "cell": 384,
+  "frames": 11,
+  "counts": [
+    938,
+    912,
+    896,
+    946,
+    935,
+    877,
+    876,
+    962,
+    866,
+    826,
+    881
+  ],
+  "interiorCounts": [
+    6,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    8,
+    1
+  ],
+  "max": 962,
+  "failingFrames": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "fail": true
+}

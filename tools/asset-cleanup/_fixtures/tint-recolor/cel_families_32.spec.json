@@ -1,0 +1,22 @@
+{
+  "families": {
+    "cloth_tint": {
+      "source": [
+        "#2f8f8a",
+        "#1e605c",
+        "#60beb9"
+      ],
+      "target": "#c94f2f",
+      "tolerance": 20
+    },
+    "skin": {
+      "source": [
+        "#e8b98f",
+        "#c98a63",
+        "#f5d6b6"
+      ],
+      "target": "#3f8f4a",
+      "tolerance": 20
+    }
+  }
+}

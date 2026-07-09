@@ -1,0 +1,16 @@
+{
+  "headOrigin": [
+    0.4995,
+    0.7481
+  ],
+  "hairSize": [
+    40,
+    31
+  ],
+  "baldHeadAnchor": [
+    47.98,
+    31.19
+  ],
+  "baldBodyHeight": 105,
+  "source": "DRIFT_haired.png"
+}

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "sheet": "assets/sources/accepted/player_baldbase/swing_1h/video-pilot-20260707/runtime/player_baldbase_swing_1h.clean.png",
+  "frameWidth": 384,
+  "frameHeight": 320,
+  "frameCount": 11,
+  "provenance": {
+    "tool": "tools/art-pipeline/anchor_measure.py",
+    "measuredAt": "2026-07-07T21:44:18Z",
+    "params": {
+      "frames": 11,
+      "alphaThreshold": 16,
+      "headTopFraction": 0.32,
+      "minHeadPixels": 24,
+      "handMode": "required",
+      "minHandPixels": 48
+    },
+    "reviewPanel": "assets/sources/anchor-sidecar-review/player_baldbase_swing_1h.clean.png.anchors-panel.png"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "handX": 214.93,
+      "handY": 216.64,
+      "headX": 187.75,
+      "headY": 143.62
+    },
+    {
+      "index": 1,
+      "handX": 221.1,
+      "handY": 224.1,
+      "headX": 192.38,
+      "headY": 160.98
+    },
+    {
+      "index": 2,
+      "handX": 216.75,
+      "handY": 226.75,
+      "headX": 178.73,
+      "headY": 162.56
+    },
+    {
+      "index": 3,
+      "handX": 215.61,
+      "handY": 230.54,
+      "headX": 169.76,
+      "headY": 159.4
+    },
+    {
+      "index": 4,
+      "handX": 219.8,
+      "handY": 225.42,
+      "headX": 177.56,
+      "headY": 163.53
+    },
+    {
+      "index": 5,
+      "handX": 224.67,
+      "handY": 224.78,
+      "headX": 183.54,
+      "headY": 166.23
+    },
+    {
+      "index": 6,
+      "handX": 216.77,
+      "handY": 241.08,
+      "headX": 213.19,
+      "headY": 169.81
+    },
+    {
+      "index": 7,
+      "handX": 222.07,
+      "handY": 218.86,
+      "headX": 207.84,
+      "headY": 156.5
+    },
+    {
+      "index": 8,
+      "handX": 222.21,
+      "handY": 218.62,
+      "headX": 204.7,
+      "headY": 152.32
+    },
+    {
+      "index": 9,
+      "handX": 214.72,
+      "handY": 218.87,
+      "headX": 188.3,
+      "headY": 140.72
+    },
+    {
+      "index": 10,
+      "handX": 213.85,
+      "handY": 214.79,
+      "headX": 188.84,
+      "headY": 136.41
+    }
+  ]
+}
